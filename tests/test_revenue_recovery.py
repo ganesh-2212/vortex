@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import uuid
 from fastapi.testclient import TestClient
@@ -43,7 +43,7 @@ def test_risk_engine_low_risk(seeded_db):
         event_type=RevenueEventType.PAYMENT_FAILED,
         amount=Decimal("50.00"),
         status="FAILED",
-        occurred_at=datetime.utcnow()
+        occurred_at=datetime.now(timezone.utc)
     )
     result = assess_risk(event, existing_failures_count=0)
     assert result.risk_level == RiskLevel.LOW
@@ -59,7 +59,7 @@ def test_risk_engine_high_risk_by_amount(seeded_db):
         event_type=RevenueEventType.PAYMENT_FAILED,
         amount=Decimal("15000.00"),
         status="FAILED",
-        occurred_at=datetime.utcnow()
+        occurred_at=datetime.now(timezone.utc)
     )
     result = assess_risk(event, existing_failures_count=0)
     assert result.risk_level == RiskLevel.HIGH
@@ -73,7 +73,7 @@ def test_risk_engine_high_risk_by_repeated_failures(seeded_db):
         event_type=RevenueEventType.PAYMENT_FAILED,
         amount=Decimal("500.00"),
         status="FAILED",
-        occurred_at=datetime.utcnow()
+        occurred_at=datetime.now(timezone.utc)
     )
     result = assess_risk(event, existing_failures_count=2)
     assert result.risk_level == RiskLevel.HIGH
@@ -87,7 +87,7 @@ def test_risk_engine_critical_risk_by_value(seeded_db):
         event_type=RevenueEventType.PAYMENT_FAILED,
         amount=Decimal("55000.00"),
         status="FAILED",
-        occurred_at=datetime.utcnow()
+        occurred_at=datetime.now(timezone.utc)
     )
     result = assess_risk(event, existing_failures_count=0)
     assert result.risk_level == RiskLevel.CRITICAL
@@ -100,7 +100,7 @@ def test_risk_engine_critical_risk_by_overdue(seeded_db):
         event_type=RevenueEventType.INVOICE_OVERDUE,
         amount=Decimal("12000.00"),
         status="OVERDUE",
-        occurred_at=datetime.utcnow()
+        occurred_at=datetime.now(timezone.utc)
     )
     result = assess_risk(event, existing_failures_count=0)
     assert result.risk_level == RiskLevel.CRITICAL
@@ -116,7 +116,7 @@ def test_post_revenue_event_creates_case(seeded_db):
         "event_type": "PAYMENT_FAILED",
         "amount": "1000.00",
         "status": "FAILED",
-        "occurred_at": datetime.utcnow().isoformat()
+        "occurred_at": datetime.now(timezone.utc).isoformat()
     })
     assert response.status_code == 200
     
@@ -134,7 +134,7 @@ def test_retry_action_allowed_under_limit(seeded_db):
         "event_type": "PAYMENT_FAILED",
         "amount": "1000.00",
         "status": "FAILED",
-        "occurred_at": datetime.utcnow().isoformat()
+        "occurred_at": datetime.now(timezone.utc).isoformat()
     })
     case_id = list(seeded_db.recovery_cases.keys())[0]
 
@@ -156,12 +156,12 @@ def test_retry_action_blocked_after_maximum_attempts(seeded_db):
         "event_type": "PAYMENT_FAILED",
         "amount": "1000.00",
         "status": "FAILED",
-        "occurred_at": datetime.utcnow().isoformat()
+        "occurred_at": datetime.now(timezone.utc).isoformat()
     })
     case_id = list(seeded_db.recovery_cases.keys())[0]
 
     # Inject 3 allowed attempts in the store (spaced by > 24 hours to avoid cooldown blocks)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     for i in range(1, 4):
         action_id = uuid.uuid4()
         seeded_db.recovery_actions[action_id] = RecoveryAction(
@@ -191,7 +191,7 @@ def test_retry_cooldown_allowed_after_24_hours(seeded_db):
         "event_type": "PAYMENT_FAILED",
         "amount": "1000.00",
         "status": "FAILED",
-        "occurred_at": datetime.utcnow().isoformat()
+        "occurred_at": datetime.now(timezone.utc).isoformat()
     })
     case_id = list(seeded_db.recovery_cases.keys())[0]
 
@@ -203,7 +203,7 @@ def test_retry_cooldown_allowed_after_24_hours(seeded_db):
         action_type=RecoveryActionType.RETRY_PAYMENT,
         status=RecoveryActionStatus.ALLOWED,
         attempt_number=1,
-        created_at=datetime.utcnow() - timedelta(hours=25)
+        created_at=datetime.now(timezone.utc) - timedelta(hours=25)
     )
 
     # Propose retry
@@ -222,7 +222,7 @@ def test_retry_cooldown_blocked_under_24_hours(seeded_db):
         "event_type": "PAYMENT_FAILED",
         "amount": "1000.00",
         "status": "FAILED",
-        "occurred_at": datetime.utcnow().isoformat()
+        "occurred_at": datetime.now(timezone.utc).isoformat()
     })
     case_id = list(seeded_db.recovery_cases.keys())[0]
 
@@ -234,7 +234,7 @@ def test_retry_cooldown_blocked_under_24_hours(seeded_db):
         action_type=RecoveryActionType.RETRY_PAYMENT,
         status=RecoveryActionStatus.ALLOWED,
         attempt_number=1,
-        created_at=datetime.utcnow() - timedelta(hours=5)
+        created_at=datetime.now(timezone.utc) - timedelta(hours=5)
     )
 
     # Propose retry
@@ -254,7 +254,7 @@ def test_action_blocked_when_case_is_recovered(seeded_db):
         "event_type": "PAYMENT_FAILED",
         "amount": "1000.00",
         "status": "FAILED",
-        "occurred_at": datetime.utcnow().isoformat()
+        "occurred_at": datetime.now(timezone.utc).isoformat()
     })
     case_id = list(seeded_db.recovery_cases.keys())[0]
     
@@ -278,7 +278,7 @@ def test_escalation_allowed(seeded_db):
         "event_type": "PAYMENT_FAILED",
         "amount": "1000.00",
         "status": "FAILED",
-        "occurred_at": datetime.utcnow().isoformat()
+        "occurred_at": datetime.now(timezone.utc).isoformat()
     })
     case_id = list(seeded_db.recovery_cases.keys())[0]
 
@@ -301,7 +301,7 @@ def test_audit_logs_generated_for_actions(seeded_db):
         "event_type": "PAYMENT_FAILED",
         "amount": "1000.00",
         "status": "FAILED",
-        "occurred_at": datetime.utcnow().isoformat()
+        "occurred_at": datetime.now(timezone.utc).isoformat()
     })
     case_id = list(seeded_db.recovery_cases.keys())[0]
 
@@ -321,7 +321,7 @@ def test_audit_logs_generated_for_actions(seeded_db):
         action_type=RecoveryActionType.RETRY_PAYMENT,
         status=RecoveryActionStatus.ALLOWED,
         attempt_number=1,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     client.post(f"/api/v1/recovery-cases/{case_id}/actions", json={
         "action_type": "RETRY_PAYMENT"

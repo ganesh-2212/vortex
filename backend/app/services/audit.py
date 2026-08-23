@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 import uuid
 from app.models.domain import AuditLog
@@ -19,7 +19,7 @@ def log_audit_event(
         actor_type=actor_type,
         action=action,
         details=details,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     store.audit_logs.append(log_entry)
     return log_entry

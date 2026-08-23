@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -51,7 +51,7 @@ class Merchant(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     name: str
     email: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Customer(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -59,7 +59,7 @@ class Customer(BaseModel):
     name: str
     email: Optional[str] = None
     phone: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class RevenueEvent(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -71,7 +71,7 @@ class RevenueEvent(BaseModel):
     status: str
     occurred_at: datetime
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class RecoveryCase(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -82,8 +82,8 @@ class RecoveryCase(BaseModel):
     risk_level: RiskLevel
     risk_reason: Optional[str] = None
     status: RecoveryCaseStatus = RecoveryCaseStatus.OPEN
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class RecoveryAction(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -94,7 +94,7 @@ class RecoveryAction(BaseModel):
     reason: Optional[str] = None
     executed_at: Optional[datetime] = None
     result: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AuditLog(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -102,7 +102,7 @@ class AuditLog(BaseModel):
     actor_type: str  # SYSTEM, MERCHANT, CUSTOMER, etc.
     action: str      # CASE_CREATED, ACTION_PROPOSED, ACTION_ALLOWED, ACTION_BLOCKED, etc.
     details: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # --- API Request/Response Schemas ---
 
@@ -140,3 +140,58 @@ class RecoveryCaseDetailResponse(BaseModel):
     case: RecoveryCase
     actions: List[RecoveryAction]
     audit_history: List[AuditLog]
+
+# --- F03 Intelligence response models ---
+
+class RiskDistribution(BaseModel):
+    critical_amount: Decimal
+    critical_count: int
+    high_amount: Decimal
+    high_count: int
+    medium_amount: Decimal
+    medium_count: int
+    low_amount: Decimal
+    low_count: int
+
+class LeakageCategory(BaseModel):
+    event_type: RevenueEventType
+    case_count: int
+    amount_at_risk: Decimal
+    percentage_of_total: float
+
+class PriorityBreakdown(BaseModel):
+    risk_severity_score: float
+    amount_score: float
+    failure_count_score: float
+    recovery_opportunity_score: float
+    age_score: float
+
+class IntelligenceReason(BaseModel):
+    message: str
+    type: str  # 'risk', 'priority', 'signal'
+
+class TimeSensitivity(BaseModel):
+    case_age_seconds: float
+    hours_since_event: float
+    category: str  # FRESH, AGING, STALE
+
+class PriorityCase(BaseModel):
+    case_id: uuid.UUID
+    amount_at_risk: Decimal
+    risk_level: RiskLevel
+    priority_score: float
+    priority_breakdown: PriorityBreakdown
+    reasons: List[IntelligenceReason]
+    time_sensitivity: TimeSensitivity
+    estimated_recoverable: Decimal
+
+class RevenueIntelligenceSummary(BaseModel):
+    revenue_at_risk: Decimal
+    estimated_recoverable: Decimal
+    open_case_count: int
+    critical_amount: Decimal
+    high_amount: Decimal
+    medium_amount: Decimal
+    low_amount: Decimal
+    top_leakage_type: Optional[str]
+    generated_at: datetime

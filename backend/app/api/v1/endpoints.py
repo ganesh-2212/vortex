@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 import uuid
 from decimal import Decimal
@@ -30,7 +30,7 @@ async def create_merchant(merchant_in: MerchantCreate):
         id=uuid.uuid4(),
         name=merchant_in.name,
         email=merchant_in.email,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     store.merchants[merchant.id] = merchant
     return merchant
@@ -49,7 +49,7 @@ async def create_customer(customer_in: CustomerCreate):
         name=customer_in.name,
         email=customer_in.email,
         phone=customer_in.phone,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     store.customers[customer.id] = customer
     return customer
@@ -78,7 +78,7 @@ async def create_revenue_event(event_in: RevenueEventCreate):
         status=event_in.status,
         occurred_at=event_in.occurred_at,
         metadata=event_in.metadata,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     store.revenue_events[event.id] = event
     
@@ -122,8 +122,8 @@ async def create_revenue_event(event_in: RevenueEventCreate):
             risk_level=risk_result.risk_level,
             risk_reason=risk_result.reason,
             status=RecoveryCaseStatus.OPEN,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
         store.recovery_cases[case.id] = case
         
@@ -213,7 +213,7 @@ async def propose_recovery_action(
         raise HTTPException(status_code=404, detail="Recovery case not found")
         
     case = store.recovery_cases[case_id]
-    current_time = datetime.utcnow()
+    current_time = datetime.now(timezone.utc)
     
     # 1. Audit Action Proposed
     log_audit_event(
