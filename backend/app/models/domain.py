@@ -265,3 +265,35 @@ class RecoveryOutcomeSummary(BaseModel):
     recovery_rate: float
     successful_retry_count: int
     failed_retry_count: int
+
+# --- F08 Automation & Recommendation Models ---
+
+class RecommendationReason(BaseModel):
+    type: str
+    message: str
+    impact: str # e.g. positive, negative, neutral
+
+class RecoveryRecommendation(BaseModel):
+    case_id: uuid.UUID
+    recommended_action: RecoveryActionType
+    confidence: int
+    priority_score: float
+    risk_level: RiskLevel
+    time_sensitivity: str
+    estimated_recoverable: Decimal
+    guardrail_status: str
+    reasons: List[RecommendationReason]
+    generated_at: datetime
+
+class RecommendationResponse(BaseModel):
+    case_id: uuid.UUID
+    recommendation: RecoveryRecommendation
+    alternative_actions: List[RecoveryActionType] = Field(default_factory=list)
+    generated_at: datetime
+
+class AutomationSummary(BaseModel):
+    cases_evaluated: int
+    retry_recommended: int
+    escalation_recommended: int
+    stop_recommended: int
+    blocked_retry_count: int

@@ -17,7 +17,8 @@ import {
   TrendingUp,
   Clock,
   Check,
-  XCircle
+  XCircle,
+  Zap
 } from 'lucide-react'
 import { API_BASE_URL } from './config'
 
@@ -135,6 +136,35 @@ interface RecoveryOutcomeSummary {
   failed_retry_count: number
 }
 
+// --- F08 Automation Recommendation Interfaces ---
+
+interface RecommendationReason {
+  type: string
+  message: string
+  impact: string
+}
+
+interface RecoveryRecommendation {
+  case_id: string
+  recommended_action: string
+  confidence: number
+  priority_score: number
+  risk_level: string
+  time_sensitivity: string
+  estimated_recoverable: string
+  guardrail_status: string
+  reasons: RecommendationReason[]
+  generated_at: string
+}
+
+interface RecommendationResponse {
+  case_id: string
+  recommendation: RecoveryRecommendation
+  alternative_actions: string[]
+  generated_at: string
+}
+
+
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
@@ -145,12 +175,15 @@ function App() {
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
   const [selectedCaseDetail, setSelectedCaseDetail] = useState<PriorityCase | null>(null)
 
-  // --- F06 & F07 Execution/Lifecycle States ---
+  // --- F06, F07 & F08 Execution/Lifecycle/Automation States ---
   const [caseActions, setCaseActions] = useState<RecoveryAction[]>([])
   const [caseStatus, setCaseStatus] = useState<string | null>(null)
   const [caseLifecycle, setCaseLifecycle] = useState<RecoveryLifecycle | null>(null)
   const [caseAttempts, setCaseAttempts] = useState<RecoveryAttempt[]>([])
   const [stats, setStats] = useState<RecoveryOutcomeSummary | null>(null)
+
+  const [recommendations, setRecommendations] = useState<RecommendationResponse[]>([])
+  const [caseRecommendation, setCaseRecommendation] = useState<RecoveryRecommendation | null>(null)
 
   const [proposing, setProposing] = useState<boolean>(false)
   const [proposedActionType, setProposedActionType] = useState<string>("RETRY_PAYMENT")
@@ -162,19 +195,20 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [detailError, setDetailError] = useState<string | null>(null)
 
-  // Fetch Summary, Leakage, Priorities, and Lifecycle Stats concurrently
+  // Fetch Summary, Leakage, Priorities, Lifecycle Stats, Recommendations, and Automation Stats
   const fetchDashboardData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const [summaryRes, leakageRes, prioritiesRes, statsRes] = await Promise.all([
+      const [summaryRes, leakageRes, prioritiesRes, statsRes, recsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/v1/intelligence/summary`),
         fetch(`${API_BASE_URL}/api/v1/intelligence/leakage`),
         fetch(`${API_BASE_URL}/api/v1/intelligence/priorities`),
-        fetch(`${API_BASE_URL}/api/v1/recovery-statistics`)
+        fetch(`${API_BASE_URL}/api/v1/recovery-statistics`),
+        fetch(`${API_BASE_URL}/api/v1/recommendations`)
       ])
 
-      if (!summaryRes.ok || !leakageRes.ok || !prioritiesRes.ok || !statsRes.ok) {
+      if (!summaryRes.ok || !leakageRes.ok || !prioritiesRes.ok || !statsRes.ok || !recsRes.ok) {
         throw new Error('Failed to load intelligence metrics')
       }
 
@@ -182,11 +216,13 @@ function App() {
       const leakageData = await leakageRes.json()
       const prioritiesData = await prioritiesRes.json()
       const statsData = await statsRes.json()
+      const recsData = await recsRes.json()
 
       setSummary(summaryData)
       setLeakage(leakageData)
       setPriorities(prioritiesData)
       setStats(statsData)
+      setRecommendations(recsData)
     } catch (err: any) {
       console.error(err)
       setError('Could not connect to the Revenue Sentinel backend. Please verify uvicorn is running.')
@@ -195,16 +231,17 @@ function App() {
     }
   }, [])
 
-  // Fetch single case details, its actions log, lifecycle state, and chronological attempts
+  // Fetch single case details, actions log, lifecycle state, chronological attempts, and case recommendation
   const fetchCaseDetail = useCallback(async (caseId: string) => {
     setDetailLoading(true)
     setDetailError(null)
     try {
-      const [intelRes, recoveryRes, lifecycleRes, attemptsRes] = await Promise.all([
+      const [intelRes, recoveryRes, lifecycleRes, attemptsRes, recRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/v1/intelligence/cases/${caseId}`),
         fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}`),
         fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/lifecycle`),
-        fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/attempts`)
+        fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/attempts`),
+        fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/recommendation`)
       ])
 
       if (!intelRes.ok || !recoveryRes.ok || !lifecycleRes.ok || !attemptsRes.ok) {
@@ -216,11 +253,18 @@ function App() {
       const lifecycleData = await lifecycleRes.json()
       const attemptsData = await attemptsRes.json()
 
+      let recData = null
+      if (recRes.ok) {
+        const recResponse = await recRes.json()
+        recData = recResponse.recommendation
+      }
+
       setSelectedCaseDetail(intelData)
       setCaseActions(recoveryData.actions || [])
       setCaseStatus(recoveryData.case?.status || null)
       setCaseLifecycle(lifecycleData)
       setCaseAttempts(attemptsData || [])
+      setCaseRecommendation(recData)
     } catch (err: any) {
       console.error(err)
       setDetailError('Failed to load case recovery details.')
@@ -303,6 +347,7 @@ function App() {
       setCaseStatus(null)
       setCaseLifecycle(null)
       setCaseAttempts([])
+      setCaseRecommendation(null)
     }
   }, [selectedCaseId, fetchCaseDetail])
 
@@ -442,8 +487,8 @@ function App() {
             <div>
               <p className="text-xs font-medium text-gray-300">Sandbox Merchant</p>
               <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] text-gray-500 font-mono">F07 Monitoring active</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                <span className="text-[10px] text-gray-500 font-mono">F08 Recommendations Queue</span>
               </div>
             </div>
           </div>
@@ -595,7 +640,7 @@ function App() {
                   {/* Stats Metric 2: Confirmed Recovered Revenue */}
                   <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all border-emerald-500/20">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-emerald-400">Actual Recovered Revenue</span>
+                      <span className="text-xs font-medium text-emerald-400">Actual Confirmed Recovered</span>
                       <TrendingUp className="w-4.5 h-4.5 text-emerald-400" />
                     </div>
                     {loading ? (
@@ -839,6 +884,85 @@ function App() {
                         </div>
                       )}
                     </div>
+
+                    {/* F08 Recovery Recommendation Queue */}
+                    <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6">
+                      <h3 className="text-sm font-semibold text-gray-200 mb-4 flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Zap className="w-4 h-4 text-purple-400" />
+                          Recovery Recommendation Queue (Decision Support)
+                        </span>
+                        <span className="text-[10px] text-gray-500 font-mono">Deterministic policy recommendation</span>
+                      </h3>
+                      {loading ? (
+                        <div className="space-y-2">
+                          <div className="h-12 bg-[#202430] animate-pulse rounded w-full"></div>
+                          <div className="h-12 bg-[#202430] animate-pulse rounded w-full"></div>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="border-b border-[#202430] text-gray-400 font-medium">
+                                <th className="pb-3 pl-2">Case ID</th>
+                                <th className="pb-3">Risk Level</th>
+                                <th className="pb-3 text-center">Score</th>
+                                <th className="pb-3">Recommended Action</th>
+                                <th className="pb-3 text-center">Confidence</th>
+                                <th className="pb-3 pr-2 text-right">Guardrails</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#202430]">
+                              {recommendations.map((item) => {
+                                const colors = getRiskColor(item.recommendation.risk_level)
+                                const isSelected = selectedCaseId === item.case_id
+                                const isBlocked = item.recommendation.guardrail_status === "BLOCKED"
+
+                                return (
+                                  <tr
+                                    key={item.case_id}
+                                    onClick={() => setSelectedCaseId(item.case_id)}
+                                    className={`cursor-pointer transition-all duration-150 ${
+                                      isSelected
+                                        ? 'bg-purple-600/10 border-l-2 border-purple-500'
+                                        : 'hover:bg-[#1a1c24]/50'
+                                    }`}
+                                  >
+                                    <td className="py-3.5 pl-2 font-mono text-gray-400">
+                                      {item.case_id.substring(0, 8)}...
+                                    </td>
+                                    <td className="py-3.5">
+                                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${colors.bg} ${colors.text} border ${colors.border}`}>
+                                        <span className={`w-1 h-1 rounded-full ${colors.indicator}`}></span>
+                                        {item.recommendation.risk_level}
+                                      </span>
+                                    </td>
+                                    <td className="py-3.5 text-center font-bold text-gray-300 font-mono">
+                                      {item.recommendation.priority_score.toFixed(0)}
+                                    </td>
+                                    <td className="py-3.5 font-semibold text-gray-200">
+                                      {item.recommendation.recommended_action.replace(/_/g, ' ')}
+                                    </td>
+                                    <td className="py-3.5 text-center">
+                                      <span className="bg-[#1b1e28] text-purple-300 font-bold border border-[#2e3445] px-2 py-0.5 rounded font-mono">
+                                        {item.recommendation.confidence}%
+                                      </span>
+                                    </td>
+                                    <td className="py-3.5 pr-2 text-right">
+                                      <span className={`text-[10px] font-bold tracking-wide ${
+                                        isBlocked ? 'text-rose-400' : 'text-emerald-400'
+                                      }`}>
+                                        {item.recommendation.guardrail_status}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Right Column (1/3 width) - Case Detail */}
@@ -942,6 +1066,55 @@ function App() {
                                 </p>
                               </div>
                             </div>
+
+                            {/* F08 Decision Support Recommendation details */}
+                            {caseRecommendation && (
+                              <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3.5 space-y-2 border-purple-500/20">
+                                <div className="flex items-center justify-between border-b border-[#202430] pb-1.5">
+                                  <span className="text-[10px] text-purple-400 uppercase font-semibold tracking-wider">Automated Recommendation</span>
+                                  <span className="text-[9px] text-gray-500 font-mono">Decision Support</span>
+                                </div>
+                                <div className="space-y-2 text-left">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-gray-200">
+                                      {caseRecommendation.recommended_action.replace(/_/g, ' ')}
+                                    </span>
+                                    <span className="bg-[#1b1e28] text-purple-300 font-bold border border-[#2e3445] px-2 py-0.5 rounded font-mono text-[10px]">
+                                      {caseRecommendation.confidence}% Confidence
+                                    </span>
+                                  </div>
+
+                                  {/* Progress bar confidence */}
+                                  <div className="h-1.5 bg-[#202430] rounded-full overflow-hidden">
+                                    <div className="h-full bg-purple-500" style={{ width: `${caseRecommendation.confidence}%` }}></div>
+                                  </div>
+
+                                  {/* Explanation list reasons */}
+                                  <div className="space-y-1 pt-1.5">
+                                    <span className="text-[8px] text-gray-500 uppercase tracking-wider">Explainability Factors</span>
+                                    <div className="space-y-1">
+                                      {caseRecommendation.reasons.map((r, i) => (
+                                        <div key={i} className="text-[9px] text-gray-400 leading-normal flex items-start gap-1.5">
+                                          <span className={`w-1 h-1 rounded-full shrink-0 mt-1.5 ${
+                                            r.impact === 'positive'
+                                              ? 'bg-emerald-400'
+                                              : r.impact === 'negative'
+                                                ? 'bg-rose-400'
+                                                : 'bg-gray-400'
+                                          }`}></span>
+                                          <span>{r.message}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {/* Safety Notice statement */}
+                                  <div className="bg-purple-950/20 border border-purple-500/20 text-purple-300 p-2 rounded text-[8px] text-center uppercase tracking-wider font-semibold">
+                                    Recommendation only — no action has been executed.
+                                  </div>
+                                </div>
+                              </div>
+                            )}
 
                             {/* Lifecycle Analytics parameters */}
                             {caseLifecycle && (

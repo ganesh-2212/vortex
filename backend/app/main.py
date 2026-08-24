@@ -5,6 +5,7 @@ from app.api.v1.endpoints import router as api_router
 from app.api.v1.intelligence import router as intelligence_router
 from app.api.v1.webhooks import router as webhooks_router
 from app.api.v1.lifecycle import router as lifecycle_router
+from app.api.v1.recommendations import router as recommendations_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -24,6 +25,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(intelligence_router, prefix=f"{settings.API_V1_STR}/intelligence")
 app.include_router(webhooks_router, prefix=f"{settings.API_V1_STR}/webhooks")
 app.include_router(lifecycle_router, prefix=settings.API_V1_STR)
+app.include_router(recommendations_router, prefix=settings.API_V1_STR)
 
 @app.get(f"{settings.API_V1_STR}/health")
 async def health_check():
