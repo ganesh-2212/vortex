@@ -18,6 +18,12 @@ from app.store import store
 from app.services.guardrails import evaluate_guardrails
 from app.services.audit import log_audit_event
 from app.services.providers import MockPaymentProvider
+from app.services.outcomes import (
+    record_retry_success,
+    record_retry_failure,
+    record_stop_recovery,
+    record_escalation
+)
 
 def execute_recovery_action(
     case: RecoveryCase,
@@ -119,8 +125,7 @@ def execute_recovery_action(
                 "provider_response": provider_result.raw_response
             }
             
-            case.status = RecoveryCaseStatus.RECOVERED
-            case.updated_at = current_time
+            record_retry_success(case, provider_result.transaction_id, current_time)
             
             # Log successful execution and recovery
             log_audit_event(
@@ -151,7 +156,7 @@ def execute_recovery_action(
                 "error_code": provider_result.error_code,
                 "provider_response": provider_result.raw_response
             }
-            # Failed retry keeps the case OPEN / IN_PROGRESS as allowed by guardrails
+            record_retry_failure(case, current_time)
             
             # Log failed execution
             log_audit_event(
@@ -171,8 +176,7 @@ def execute_recovery_action(
         action.executed_at = current_time
         action.result = {"message": "Recovery stopped successfully"}
         
-        case.status = RecoveryCaseStatus.STOPPED
-        case.updated_at = current_time
+        record_stop_recovery(case, current_time)
         
         log_audit_event(
             recovery_case_id=case.id,
@@ -195,8 +199,7 @@ def execute_recovery_action(
         action.executed_at = current_time
         action.result = {"message": "Escalated to human support queue"}
         
-        case.status = RecoveryCaseStatus.ESCALATED
-        case.updated_at = current_time
+        record_escalation(case, current_time)
         
         log_audit_event(
             recovery_case_id=case.id,

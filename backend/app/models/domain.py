@@ -82,6 +82,10 @@ class RecoveryCase(BaseModel):
     risk_level: RiskLevel
     risk_reason: Optional[str] = None
     status: RecoveryCaseStatus = RecoveryCaseStatus.OPEN
+    recovered_amount: Decimal = Decimal("0.00")
+    recovered_at: Optional[datetime] = None
+    outcome: Optional[str] = None
+    provider_transaction_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -214,3 +218,50 @@ class ActionExecutionResponse(BaseModel):
     executed_at: Optional[datetime] = None
     result: Dict[str, Any] = Field(default_factory=dict)
     updated_case_status: RecoveryCaseStatus
+
+# --- F07 Lifecycle & Outcome Models ---
+
+class RecoveryAttempt(BaseModel):
+    case_id: uuid.UUID
+    action_id: uuid.UUID
+    attempt_number: int
+    action_type: RecoveryActionType
+    status: RecoveryActionStatus
+    amount_attempted: Decimal
+    amount_recovered: Decimal
+    provider_transaction_id: Optional[str] = None
+    executed_timestamp: Optional[datetime] = None
+    failure_reason: Optional[str] = None
+
+class RecoveryOutcome(BaseModel):
+    case_id: uuid.UUID
+    status: RecoveryCaseStatus
+    outcome: Optional[str] = None # SUCCESS, FAILED, STOPPED, ESCALATED
+    actual_recovered_amount: Decimal
+    recovered_at: Optional[datetime] = None
+    provider_transaction_id: Optional[str] = None
+    recovery_duration_seconds: Optional[float] = None
+
+class RecoveryLifecycle(BaseModel):
+    case_id: uuid.UUID
+    current_status: RecoveryCaseStatus
+    total_attempts: int
+    successful_attempts: int
+    failed_attempts: int
+    actual_recovered_amount: Decimal
+    first_attempt_timestamp: Optional[datetime] = None
+    last_attempt_timestamp: Optional[datetime] = None
+    recovery_duration_seconds: Optional[float] = None
+    final_outcome: Optional[str] = None
+
+class RecoveryOutcomeSummary(BaseModel):
+    total_cases: int
+    open_cases: int
+    recovered_cases: int
+    stopped_cases: int
+    escalated_cases: int
+    total_amount_at_risk: Decimal
+    actual_recovered_revenue: Decimal
+    recovery_rate: float
+    successful_retry_count: int
+    failed_retry_count: int

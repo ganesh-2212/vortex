@@ -13,7 +13,11 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  Clock,
+  Check,
+  XCircle
 } from 'lucide-react'
 import { API_BASE_URL } from './config'
 
@@ -78,7 +82,7 @@ interface PriorityCase {
   estimated_recoverable: string
 }
 
-// --- F06 Domain Interfaces ---
+// --- F06 & F07 Domain Interfaces ---
 
 interface RecoveryAction {
   id: string
@@ -92,6 +96,44 @@ interface RecoveryAction {
   created_at: string
 }
 
+interface RecoveryAttempt {
+  case_id: string
+  action_id: string
+  attempt_number: number
+  action_type: string
+  status: string
+  amount_attempted: string
+  amount_recovered: string
+  provider_transaction_id: string | null
+  executed_timestamp: string | null
+  failure_reason: string | null
+}
+
+interface RecoveryLifecycle {
+  case_id: string
+  current_status: string
+  total_attempts: number
+  successful_attempts: number
+  failed_attempts: number
+  actual_recovered_amount: string
+  first_attempt_timestamp: string | null
+  last_attempt_timestamp: string | null
+  recovery_duration_seconds: number | null
+  final_outcome: string | null
+}
+
+interface RecoveryOutcomeSummary {
+  total_cases: number
+  open_cases: number
+  recovered_cases: number
+  stopped_cases: number
+  escalated_cases: number
+  total_amount_at_risk: string
+  actual_recovered_revenue: string
+  recovery_rate: number
+  successful_retry_count: number
+  failed_retry_count: number
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
@@ -103,9 +145,12 @@ function App() {
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
   const [selectedCaseDetail, setSelectedCaseDetail] = useState<PriorityCase | null>(null)
 
-  // --- F06 Execution States ---
+  // --- F06 & F07 Execution/Lifecycle States ---
   const [caseActions, setCaseActions] = useState<RecoveryAction[]>([])
   const [caseStatus, setCaseStatus] = useState<string | null>(null)
+  const [caseLifecycle, setCaseLifecycle] = useState<RecoveryLifecycle | null>(null)
+  const [caseAttempts, setCaseAttempts] = useState<RecoveryAttempt[]>([])
+  const [stats, setStats] = useState<RecoveryOutcomeSummary | null>(null)
 
   const [proposing, setProposing] = useState<boolean>(false)
   const [proposedActionType, setProposedActionType] = useState<string>("RETRY_PAYMENT")
@@ -117,28 +162,31 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [detailError, setDetailError] = useState<string | null>(null)
 
-  // Fetch Summary, Leakage, and Priorities concurrently
+  // Fetch Summary, Leakage, Priorities, and Lifecycle Stats concurrently
   const fetchDashboardData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const [summaryRes, leakageRes, prioritiesRes] = await Promise.all([
+      const [summaryRes, leakageRes, prioritiesRes, statsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/v1/intelligence/summary`),
         fetch(`${API_BASE_URL}/api/v1/intelligence/leakage`),
-        fetch(`${API_BASE_URL}/api/v1/intelligence/priorities`)
+        fetch(`${API_BASE_URL}/api/v1/intelligence/priorities`),
+        fetch(`${API_BASE_URL}/api/v1/recovery-statistics`)
       ])
 
-      if (!summaryRes.ok || !leakageRes.ok || !prioritiesRes.ok) {
+      if (!summaryRes.ok || !leakageRes.ok || !prioritiesRes.ok || !statsRes.ok) {
         throw new Error('Failed to load intelligence metrics')
       }
 
       const summaryData = await summaryRes.json()
       const leakageData = await leakageRes.json()
       const prioritiesData = await prioritiesRes.json()
+      const statsData = await statsRes.json()
 
       setSummary(summaryData)
       setLeakage(leakageData)
       setPriorities(prioritiesData)
+      setStats(statsData)
     } catch (err: any) {
       console.error(err)
       setError('Could not connect to the Revenue Sentinel backend. Please verify uvicorn is running.')
@@ -147,26 +195,32 @@ function App() {
     }
   }, [])
 
-  // Fetch single case details, its actions log, and status
+  // Fetch single case details, its actions log, lifecycle state, and chronological attempts
   const fetchCaseDetail = useCallback(async (caseId: string) => {
     setDetailLoading(true)
     setDetailError(null)
     try {
-      const [intelRes, recoveryRes] = await Promise.all([
+      const [intelRes, recoveryRes, lifecycleRes, attemptsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/v1/intelligence/cases/${caseId}`),
-        fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}`)
+        fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}`),
+        fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/lifecycle`),
+        fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/attempts`)
       ])
 
-      if (!intelRes.ok || !recoveryRes.ok) {
+      if (!intelRes.ok || !recoveryRes.ok || !lifecycleRes.ok || !attemptsRes.ok) {
         throw new Error('Failed to fetch case details')
       }
 
       const intelData = await intelRes.json()
       const recoveryData = await recoveryRes.json()
+      const lifecycleData = await lifecycleRes.json()
+      const attemptsData = await attemptsRes.json()
 
       setSelectedCaseDetail(intelData)
       setCaseActions(recoveryData.actions || [])
       setCaseStatus(recoveryData.case?.status || null)
+      setCaseLifecycle(lifecycleData)
+      setCaseAttempts(attemptsData || [])
     } catch (err: any) {
       console.error(err)
       setDetailError('Failed to load case recovery details.')
@@ -247,6 +301,8 @@ function App() {
       setSelectedCaseDetail(null)
       setCaseActions([])
       setCaseStatus(null)
+      setCaseLifecycle(null)
+      setCaseAttempts([])
     }
   }, [selectedCaseId, fetchCaseDetail])
 
@@ -387,7 +443,7 @@ function App() {
               <p className="text-xs font-medium text-gray-300">Sandbox Merchant</p>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] text-gray-500 font-mono">F06 Execution Active</span>
+                <span className="text-[10px] text-gray-500 font-mono">F07 Monitoring active</span>
               </div>
             </div>
           </div>
@@ -436,78 +492,174 @@ function App() {
                 </div>
               )}
 
-              {/* Summary Metrics Row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                {/* Metric 1: Revenue at Risk */}
-                <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-gray-400">Revenue at Risk</span>
-                    <AlertTriangle className="w-4.5 h-4.5 text-rose-400" />
+              {/* Heuristic Risk & Value Indicators Row (F03/F04) */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] text-gray-400 uppercase font-semibold tracking-wider">Heuristic Opportunities Analysis</span>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                  {/* Metric 1: Revenue at Risk */}
+                  <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-400">Revenue at Risk</span>
+                      <AlertTriangle className="w-4.5 h-4.5 text-rose-400" />
+                    </div>
+                    {loading ? (
+                      <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
+                    ) : (
+                      <h3 className="text-2xl font-bold text-gray-100">
+                        {formatCurrency(summary?.revenue_at_risk || '0')}
+                      </h3>
+                    )}
+                    <p className="text-[10px] text-rose-400/80 mt-1 tracking-wide">
+                      Exposed in active open cases
+                    </p>
                   </div>
-                  {loading ? (
-                    <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
-                  ) : (
-                    <h3 className="text-2xl font-bold text-gray-100">
-                      {formatCurrency(summary?.revenue_at_risk || '0')}
-                    </h3>
-                  )}
-                  <p className="text-[10px] text-rose-400/80 mt-1 tracking-wide">
-                    Exposed in active open cases
-                  </p>
-                </div>
 
-                {/* Metric 2: Estimated Recoverable */}
-                <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-purple-300">Estimated Recoverable</span>
-                    <Sparkles className="w-4.5 h-4.5 text-purple-400 animate-pulse" />
+                  {/* Metric 2: Estimated Recoverable */}
+                  <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-purple-300">Estimated Recoverable</span>
+                      <Sparkles className="w-4.5 h-4.5 text-purple-400" />
+                    </div>
+                    {loading ? (
+                      <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
+                    ) : (
+                      <h3 className="text-2xl font-bold text-purple-300">
+                        {formatCurrency(summary?.estimated_recoverable || '0')}
+                      </h3>
+                    )}
+                    <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                      *Heuristic Estimate — not money actually recovered
+                    </p>
                   </div>
-                  {loading ? (
-                    <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
-                  ) : (
-                    <h3 className="text-2xl font-bold text-purple-300">
-                      {formatCurrency(summary?.estimated_recoverable || '0')}
-                    </h3>
-                  )}
-                  <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
-                    *Heuristic Estimate - not money actually recovered
-                  </p>
-                </div>
 
-                {/* Metric 3: Open Cases */}
-                <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-gray-400">Open Recovery Cases</span>
-                    <Activity className="w-4.5 h-4.5 text-yellow-400" />
+                  {/* Metric 3: Open Cases */}
+                  <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-400">Open Recovery Cases</span>
+                      <Activity className="w-4.5 h-4.5 text-yellow-400" />
+                    </div>
+                    {loading ? (
+                      <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
+                    ) : (
+                      <h3 className="text-2xl font-bold text-gray-100">
+                        {summary?.open_case_count || 0}
+                      </h3>
+                    )}
+                    <p className="text-[10px] text-yellow-400/80 mt-1">
+                      Requiring intervention
+                    </p>
                   </div>
-                  {loading ? (
-                    <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
-                  ) : (
-                    <h3 className="text-2xl font-bold text-gray-100">
-                      {summary?.open_case_count || 0}
-                    </h3>
-                  )}
-                  <p className="text-[10px] text-yellow-400/80 mt-1">
-                    Requiring intervention
-                  </p>
-                </div>
 
-                {/* Metric 4: Top Leakage Type */}
-                <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-gray-400">Top Leakage Origin</span>
-                    <Layers className="w-4.5 h-4.5 text-gray-400" />
+                  {/* Metric 4: Top Leakage Type */}
+                  <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-400">Top Leakage Origin</span>
+                      <Layers className="w-4.5 h-4.5 text-gray-400" />
+                    </div>
+                    {loading ? (
+                      <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
+                    ) : (
+                      <h3 className="text-base font-bold text-gray-200 truncate">
+                        {(summary?.top_leakage_type || 'None').replace(/_/g, ' ')}
+                      </h3>
+                    )}
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      Highest value event category
+                    </p>
                   </div>
-                  {loading ? (
-                    <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
-                  ) : (
-                    <h3 className="text-base font-bold text-gray-200 truncate">
-                      {(summary?.top_leakage_type || 'None').replace(/_/g, ' ')}
-                    </h3>
-                  )}
-                  <p className="text-[10px] text-gray-500 mt-1">
-                    Highest value event category
-                  </p>
+                </div>
+              </div>
+
+              {/* Confirmed Operations Recovery Performance Grid (F07) */}
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[10px] text-gray-400 uppercase font-semibold tracking-wider">Confirmed Operational Statistics</span>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                  {/* Stats Metric 1: Total Cases Tracked */}
+                  <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-400">Total Cases Tracked</span>
+                      <Layers className="w-4.5 h-4.5 text-purple-400" />
+                    </div>
+                    {loading ? (
+                      <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
+                    ) : (
+                      <h3 className="text-2xl font-bold text-gray-100">
+                        {stats?.total_cases || 0}
+                      </h3>
+                    )}
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      All processed recovery lifecycles
+                    </p>
+                  </div>
+
+                  {/* Stats Metric 2: Confirmed Recovered Revenue */}
+                  <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all border-emerald-500/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-emerald-400">Actual Recovered Revenue</span>
+                      <TrendingUp className="w-4.5 h-4.5 text-emerald-400" />
+                    </div>
+                    {loading ? (
+                      <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
+                    ) : (
+                      <h3 className="text-2xl font-bold text-emerald-400">
+                        {formatCurrency(stats?.actual_recovered_revenue || '0')}
+                      </h3>
+                    )}
+                    <p className="text-[10px] text-emerald-500/80 mt-1 tracking-wide font-medium">
+                      Confirmed recovered payment retries
+                    </p>
+                  </div>
+
+                  {/* Stats Metric 3: Recovery Rate */}
+                  <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all border-purple-500/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-purple-300">Actual Recovery Rate</span>
+                      <CheckCircle2 className="w-4.5 h-4.5 text-purple-400" />
+                    </div>
+                    {loading ? (
+                      <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
+                    ) : (
+                      <h3 className="text-2xl font-bold text-purple-300 font-mono">
+                        {(stats?.recovery_rate || 0).toFixed(1)}%
+                      </h3>
+                    )}
+                    <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                      Based on resolved cases outcome
+                    </p>
+                  </div>
+
+                  {/* Stats Metric 4: Attempt statistics log */}
+                  <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 relative overflow-hidden group hover:border-[#2e3445] transition-all">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-400">Attempts Performance</span>
+                      <Sliders className="w-4.5 h-4.5 text-gray-400" />
+                    </div>
+                    {loading ? (
+                      <div className="h-7 w-28 bg-[#202430] animate-pulse rounded my-1.5"></div>
+                    ) : (
+                      <div className="flex items-center gap-4 mt-1">
+                        <div>
+                          <div className="text-sm font-bold text-emerald-400 font-mono">{stats?.successful_retry_count || 0}</div>
+                          <div className="text-[8px] text-gray-500 uppercase tracking-wide">Success</div>
+                        </div>
+                        <div className="h-6 w-px bg-[#202430]"></div>
+                        <div>
+                          <div className="text-sm font-bold text-rose-400 font-mono">{stats?.failed_retry_count || 0}</div>
+                          <div className="text-[8px] text-gray-500 uppercase tracking-wide">Failed</div>
+                        </div>
+                        <div className="h-6 w-px bg-[#202430]"></div>
+                        <div>
+                          <div className="text-sm font-bold text-yellow-400 font-mono">
+                            {(stats?.stopped_cases || 0) + (stats?.escalated_cases || 0)}
+                          </div>
+                          <div className="text-[8px] text-gray-500 uppercase tracking-wide">Ended</div>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-gray-500 mt-2.5">
+                      Retry outcomes statistics log
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -756,37 +908,82 @@ function App() {
                                   {formatCurrency(selectedCaseDetail.amount_at_risk)}
                                 </div>
                               </div>
-                              <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3">
-                                <span className="text-[10px] text-gray-500 uppercase font-medium">Heuristic Est.</span>
-                                <div className="text-xs font-bold text-purple-300 mt-1 font-mono">
-                                  {formatCurrency(selectedCaseDetail.estimated_recoverable)}
+                              <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3 border-emerald-500/20">
+                                <span className="text-[10px] text-emerald-400 uppercase font-semibold">Actual Recovered</span>
+                                <div className="text-xs font-bold text-emerald-400 mt-1 font-mono">
+                                  {formatCurrency(caseLifecycle ? caseLifecycle.actual_recovered_amount : 0)}
                                 </div>
                               </div>
                             </div>
 
-                            {/* Time Sensitivity & Case Status */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3 flex flex-col justify-center">
-                                <span className="text-[10px] text-gray-500 uppercase font-medium">Case Age</span>
-                                <div className="text-xs font-bold text-gray-300 font-mono mt-0.5">
-                                  {selectedCaseDetail.time_sensitivity.hours_since_event.toFixed(1)} hrs elapsed
+                            {/* Separation of Confirmed vs Estimated recovery */}
+                            <div className="space-y-2 bg-[#0d0e12] p-3 rounded-lg border border-[#202430]">
+                              <div>
+                                <div className="flex justify-between text-[10px]">
+                                  <span className="font-semibold text-emerald-400">Actual Recovered:</span>
+                                  <span className="font-bold text-emerald-400 font-mono">
+                                    {formatCurrency(caseLifecycle ? caseLifecycle.actual_recovered_amount : 0)}
+                                  </span>
                                 </div>
+                                <p className="text-[8px] text-gray-500 mt-0.5">
+                                  Confirmed revenue recovered through successful recovery execution.
+                                </p>
                               </div>
-                              <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3 flex flex-col justify-center">
-                                <span className="text-[10px] text-gray-500 uppercase font-medium">Case Status</span>
-                                <span className={`text-[10px] font-bold mt-0.5 uppercase font-mono ${
-                                  caseStatus === 'RECOVERED'
-                                    ? 'text-emerald-400 font-semibold'
-                                    : caseStatus === 'STOPPED'
-                                      ? 'text-rose-400 font-semibold'
-                                      : caseStatus === 'ESCALATED'
-                                        ? 'text-yellow-400 font-semibold'
-                                        : 'text-purple-400 font-semibold'
-                                }`}>
-                                  {caseStatus || 'ACTIVE'}
-                                </span>
+                              <div className="h-px bg-[#202430]"></div>
+                              <div>
+                                <div className="flex justify-between text-[10px]">
+                                  <span className="font-semibold text-purple-400">Estimated Recoverable:</span>
+                                  <span className="font-bold text-purple-400 font-mono">
+                                    {formatCurrency(selectedCaseDetail.estimated_recoverable)}
+                                  </span>
+                                </div>
+                                <p className="text-[8px] text-gray-500 mt-0.5">
+                                  Heuristic estimate — not money actually recovered.
+                                </p>
                               </div>
                             </div>
+
+                            {/* Lifecycle Analytics parameters */}
+                            {caseLifecycle && (
+                              <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3.5 space-y-2">
+                                <div className="flex items-center justify-between border-b border-[#202430] pb-1.5">
+                                  <span className="text-[10px] text-gray-400 uppercase font-semibold">Lifecycle Analytics</span>
+                                  <span className={`text-[10px] font-bold uppercase font-mono ${
+                                    caseStatus === 'RECOVERED'
+                                      ? 'text-emerald-400'
+                                      : caseStatus === 'STOPPED'
+                                        ? 'text-rose-400'
+                                        : caseStatus === 'ESCALATED'
+                                          ? 'text-yellow-400'
+                                          : 'text-purple-400'
+                                  }`}>
+                                    {caseStatus || 'ACTIVE'}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 text-center">
+                                  <div>
+                                    <div className="text-xs font-bold text-gray-300 font-mono">{caseLifecycle.total_attempts}</div>
+                                    <div className="text-[8px] text-gray-500 uppercase">Attempts</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-bold text-emerald-400 font-mono">{caseLifecycle.successful_attempts}</div>
+                                    <div className="text-[8px] text-gray-500 uppercase">Success</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-bold text-rose-400 font-mono">{caseLifecycle.failed_attempts}</div>
+                                    <div className="text-[8px] text-gray-500 uppercase">Failed</div>
+                                  </div>
+                                </div>
+                                {caseLifecycle.recovery_duration_seconds !== null && (
+                                  <div className="pt-1 flex items-center justify-between text-[9px] text-gray-400">
+                                    <span>Recovery Duration:</span>
+                                    <span className="font-semibold text-emerald-400 font-mono">
+                                      {(caseLifecycle.recovery_duration_seconds / 60).toFixed(1)} mins
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
                             {/* Priority Breakdown Progress bars */}
                             <div className="space-y-2.5">
@@ -917,7 +1114,7 @@ function App() {
                                             >
                                               {isExecuting ? (
                                                 <>
-                                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                                                   Executing...
                                                 </>
                                               ) : (
@@ -928,6 +1125,73 @@ function App() {
                                         )}
                                       </div>
                                     );
+                                  })
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Attempt Timeline */}
+                            <div className="space-y-3 pt-3 border-t border-[#202430]">
+                              <span className="text-[10px] text-gray-400 uppercase font-semibold">Attempt Timeline</span>
+                              <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                                {caseAttempts.length === 0 ? (
+                                  <p className="text-[10px] text-gray-500 italic py-1 text-center">No execution attempts recorded yet.</p>
+                                ) : (
+                                  caseAttempts.map((attempt, index) => {
+                                    const isSuccess = attempt.status === 'EXECUTED';
+                                    const isFailed = attempt.status === 'FAILED';
+                                    const isBlocked = attempt.status === 'BLOCKED';
+
+                                    let badgeColor = 'text-gray-400 bg-gray-950/20 border-gray-500/20';
+                                    let Icon = Clock;
+                                    if (isSuccess) {
+                                      badgeColor = 'text-emerald-400 bg-emerald-950/20 border-emerald-500/20';
+                                      Icon = Check;
+                                    } else if (isFailed) {
+                                      badgeColor = 'text-rose-500 bg-rose-950/30 border-rose-600/30';
+                                      Icon = XCircle;
+                                    } else if (isBlocked) {
+                                      badgeColor = 'text-orange-400 bg-orange-950/20 border-orange-500/20';
+                                      Icon = AlertTriangle;
+                                    }
+
+                                    return (
+                                      <div key={attempt.action_id} className="relative pl-6 pb-1">
+                                        {/* vertical timeline connector line */}
+                                        {index < caseAttempts.length - 1 && (
+                                          <span className="absolute left-[9px] top-[18px] bottom-[-18px] w-0.5 bg-[#202430]"></span>
+                                        )}
+                                        {/* timeline dot */}
+                                        <span className={`absolute left-0 top-[2px] w-5 h-5 rounded-full border flex items-center justify-center ${badgeColor}`}>
+                                          <Icon className="w-3 h-3" />
+                                        </span>
+                                        <div className="space-y-0.5 text-left">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold text-gray-200">
+                                              Attempt #{attempt.attempt_number}: {attempt.action_type.replace(/_/g, ' ')}
+                                            </span>
+                                            <span className="text-[8px] text-gray-500 font-mono">
+                                              {attempt.executed_timestamp ? new Date(attempt.executed_timestamp).toLocaleTimeString() : 'N/A'}
+                                            </span>
+                                          </div>
+                                          <p className="text-[9px] text-gray-400">
+                                            {isSuccess && `Successful — ${formatCurrency(attempt.amount_recovered)} recovered`}
+                                            {isFailed && `Failed — ₹0 recovered`}
+                                            {isBlocked && `Blocked by Guardrails`}
+                                          </p>
+                                          {attempt.provider_transaction_id && (
+                                            <p className="text-[8px] text-emerald-500 font-mono font-semibold">
+                                              Txn ID: {attempt.provider_transaction_id}
+                                            </p>
+                                          )}
+                                          {attempt.failure_reason && (
+                                            <p className="text-[8px] text-rose-400">
+                                              Reason: {attempt.failure_reason}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )
                                   })
                                 )}
                               </div>
