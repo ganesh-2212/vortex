@@ -336,3 +336,8 @@ def test_audit_logs_generated_for_actions(seeded_db):
     assert "ACTION_PROPOSED" in actions
     assert "ACTION_ALLOWED" in actions
     assert "ACTION_BLOCKED" in actions
+
+def test_list_audit_logs(seeded_db):
+    response = client.get("/api/v1/audit-logs")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)

@@ -177,6 +177,15 @@ async def list_recovery_cases():
     """
     return list(store.recovery_cases.values())
 
+@router.get("/audit-logs", response_model=List[AuditLog])
+async def list_audit_logs():
+    """
+    Returns all audit logs in the store chronologically.
+    """
+    logs = list(store.audit_logs)
+    logs.sort(key=lambda x: x.created_at)
+    return logs
+
 @router.get("/recovery-cases/{case_id}", response_model=RecoveryCaseDetailResponse)
 async def get_recovery_case(case_id: uuid.UUID = Path(...)):
     """
