@@ -12,7 +12,8 @@ from app.models.domain import (
     RecoveryAction, ProposedActionCreate, ActionEvaluationResponse,
     AuditLog,
     RevenueEventType, RecoveryCaseStatus,
-    RecoveryActionStatus, RecoveryActionType
+    RecoveryActionStatus, RecoveryActionType,
+    ActionExecutionRequest, ActionExecutionResponse
 )
 from app.store import store
 from app.services.risk_engine import assess_risk
@@ -296,3 +297,37 @@ async def propose_recovery_action(
         status=status,
         reason=guardrail_result.reason
     )
+
+@router.post(
+    "/recovery-cases/{case_id}/actions/{action_id}/execute",
+    response_model=ActionExecutionResponse
+)
+async def execute_case_action(
+    case_id: uuid.UUID = Path(...),
+    action_id: uuid.UUID = Path(...),
+    req_in: ActionExecutionRequest = Body(...)
+):
+    """
+    Executes an allowed recovery action after verifying guardrails.
+    """
+    if case_id not in store.recovery_cases:
+        raise HTTPException(status_code=404, detail="Recovery case not found")
+
+    case = store.recovery_cases[case_id]
+
+    if action_id not in store.recovery_actions:
+        raise HTTPException(status_code=404, detail="Recovery action not found")
+
+    action = store.recovery_actions[action_id]
+
+    if action.recovery_case_id != case_id:
+        raise HTTPException(status_code=400, detail="Action does not belong to this recovery case")
+
+    try:
+        from app.services.execution import execute_recovery_action
+        result = execute_recovery_action(case, action, req_in.payload)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=400, detail=str(e))

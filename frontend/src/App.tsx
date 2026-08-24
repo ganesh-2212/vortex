@@ -78,6 +78,21 @@ interface PriorityCase {
   estimated_recoverable: string
 }
 
+// --- F06 Domain Interfaces ---
+
+interface RecoveryAction {
+  id: string
+  recovery_case_id: string
+  action_type: string
+  status: string
+  attempt_number: number
+  reason: string | null
+  executed_at: string | null
+  result: Record<string, any>
+  created_at: string
+}
+
+
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
@@ -87,6 +102,15 @@ function App() {
   const [priorities, setPriorities] = useState<PriorityCase[]>([])
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
   const [selectedCaseDetail, setSelectedCaseDetail] = useState<PriorityCase | null>(null)
+
+  // --- F06 Execution States ---
+  const [caseActions, setCaseActions] = useState<RecoveryAction[]>([])
+  const [caseStatus, setCaseStatus] = useState<string | null>(null)
+
+  const [proposing, setProposing] = useState<boolean>(false)
+  const [proposedActionType, setProposedActionType] = useState<string>("RETRY_PAYMENT")
+  const [executingActionId, setExecutingActionId] = useState<string | null>(null)
+  const [simulateFailure, setSimulateFailure] = useState<boolean>(false)
 
   const [loading, setLoading] = useState<boolean>(true)
   const [detailLoading, setDetailLoading] = useState<boolean>(false)
@@ -123,17 +147,26 @@ function App() {
     }
   }, [])
 
-  // Fetch single case details
+  // Fetch single case details, its actions log, and status
   const fetchCaseDetail = useCallback(async (caseId: string) => {
     setDetailLoading(true)
     setDetailError(null)
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/intelligence/cases/${caseId}`)
-      if (!res.ok) {
-        throw new Error('Failed to fetch case telemetry details')
+      const [intelRes, recoveryRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/v1/intelligence/cases/${caseId}`),
+        fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}`)
+      ])
+
+      if (!intelRes.ok || !recoveryRes.ok) {
+        throw new Error('Failed to fetch case details')
       }
-      const data = await res.json()
-      setSelectedCaseDetail(data)
+
+      const intelData = await intelRes.json()
+      const recoveryData = await recoveryRes.json()
+
+      setSelectedCaseDetail(intelData)
+      setCaseActions(recoveryData.actions || [])
+      setCaseStatus(recoveryData.case?.status || null)
     } catch (err: any) {
       console.error(err)
       setDetailError('Failed to load case recovery details.')
@@ -141,6 +174,65 @@ function App() {
       setDetailLoading(false)
     }
   }, [])
+
+  // Action Proposal handler
+  const handleProposeAction = async () => {
+    if (!selectedCaseId) return
+    setProposing(true)
+    setDetailError(null)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${selectedCaseId}/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action_type: proposedActionType })
+      })
+      if (!res.ok) {
+        throw new Error('Failed to propose action under guardrails')
+      }
+      await Promise.all([
+        fetchCaseDetail(selectedCaseId),
+        fetchDashboardData()
+      ])
+    } catch (err: any) {
+      console.error(err)
+      setDetailError(err.message || 'Failed to propose action.')
+    } finally {
+      setProposing(false)
+    }
+  }
+
+  // Action Execution handler
+  const handleExecuteAction = async (actionId: string) => {
+    if (!selectedCaseId) return
+    setExecutingActionId(actionId)
+    setDetailError(null)
+    try {
+      const payload: Record<string, any> = {}
+      if (simulateFailure) {
+        payload.simulate_failure = true
+        payload.error_code = 'INSUFFICIENT_FUNDS'
+      }
+      const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${selectedCaseId}/actions/${actionId}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload })
+      })
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.detail || 'Execution rejected by guardrails')
+      }
+      await Promise.all([
+        fetchCaseDetail(selectedCaseId),
+        fetchDashboardData()
+      ])
+      setSimulateFailure(false)
+    } catch (err: any) {
+      console.error(err)
+      setDetailError(err.message || 'Execution error.')
+    } finally {
+      setExecutingActionId(null)
+    }
+  }
 
   // Initial fetch on mount
   useEffect(() => {
@@ -153,6 +245,8 @@ function App() {
       fetchCaseDetail(selectedCaseId)
     } else {
       setSelectedCaseDetail(null)
+      setCaseActions([])
+      setCaseStatus(null)
     }
   }, [selectedCaseId, fetchCaseDetail])
 
@@ -232,7 +326,7 @@ function App() {
           indicator: 'bg-yellow-500'
         }
       case 'LOW':
-        default:
+      default:
         return {
           text: 'text-emerald-400',
           bg: 'bg-emerald-950/30',
@@ -293,7 +387,7 @@ function App() {
               <p className="text-xs font-medium text-gray-300">Sandbox Merchant</p>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] text-gray-500 font-mono">F03 Intelligence Active</span>
+                <span className="text-[10px] text-gray-500 font-mono">F06 Execution Active</span>
               </div>
             </div>
           </div>
@@ -670,17 +764,28 @@ function App() {
                               </div>
                             </div>
 
-                            {/* Time Sensitivity */}
-                            <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3 flex items-center justify-between">
-                              <div>
-                                <span className="text-[10px] text-gray-500 uppercase font-medium">Time Sensitivity</span>
+                            {/* Time Sensitivity & Case Status */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3 flex flex-col justify-center">
+                                <span className="text-[10px] text-gray-500 uppercase font-medium">Case Age</span>
                                 <div className="text-xs font-bold text-gray-300 font-mono mt-0.5">
                                   {selectedCaseDetail.time_sensitivity.hours_since_event.toFixed(1)} hrs elapsed
                                 </div>
                               </div>
-                              <span className="bg-purple-900/30 text-purple-300 border border-purple-800/40 text-[9px] font-bold px-2 py-0.5 rounded font-mono uppercase tracking-wider">
-                                {selectedCaseDetail.time_sensitivity.category}
-                              </span>
+                              <div className="bg-[#1b1e28]/40 border border-[#202430] rounded-lg p-3 flex flex-col justify-center">
+                                <span className="text-[10px] text-gray-500 uppercase font-medium">Case Status</span>
+                                <span className={`text-[10px] font-bold mt-0.5 uppercase font-mono ${
+                                  caseStatus === 'RECOVERED'
+                                    ? 'text-emerald-400 font-semibold'
+                                    : caseStatus === 'STOPPED'
+                                      ? 'text-rose-400 font-semibold'
+                                      : caseStatus === 'ESCALATED'
+                                        ? 'text-yellow-400 font-semibold'
+                                        : 'text-purple-400 font-semibold'
+                                }`}>
+                                  {caseStatus || 'ACTIVE'}
+                                </span>
+                              </div>
                             </div>
 
                             {/* Priority Breakdown Progress bars */}
@@ -707,7 +812,7 @@ function App() {
                                 </div>
                                 <div>
                                   <div className="flex justify-between mb-0.5">
-                                    <span>Time Sensitivity (15%)</span>
+                                    <span>Time/Age (15%)</span>
                                     <span className="font-mono text-gray-300">{selectedCaseDetail.priority_breakdown.age_score.toFixed(0)}</span>
                                   </div>
                                   <div className="h-1 bg-[#202430] rounded-full overflow-hidden">
@@ -720,7 +825,7 @@ function App() {
                             {/* Explainability Reasons */}
                             <div className="space-y-2">
                               <span className="text-[10px] text-gray-400 uppercase font-semibold">Risk Explainability Reasons</span>
-                              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                              <div className="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
                                 {selectedCaseDetail.reasons.map((reason, idx) => (
                                   <div key={idx} className="bg-[#1b1e28]/20 border border-[#202430] rounded p-2 text-[10px] leading-relaxed text-gray-300 flex items-start gap-2">
                                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1 ${
@@ -733,6 +838,98 @@ function App() {
                                     <span>{reason.message}</span>
                                   </div>
                                 ))}
+                              </div>
+                            </div>
+
+                            {/* Action Control Center */}
+                            <div className="space-y-3 pt-3 border-t border-[#202430]">
+                              <span className="text-[10px] text-gray-400 uppercase font-semibold">Action Control Center</span>
+
+                              {/* Inline Propose Form */}
+                              {caseStatus !== 'RECOVERED' && caseStatus !== 'STOPPED' && (
+                                <div className="flex items-center gap-2 bg-[#0d0e12] p-2 rounded border border-[#202430]">
+                                  <select
+                                    value={proposedActionType}
+                                    onChange={(e) => setProposedActionType(e.target.value)}
+                                    className="bg-[#1b1e28] text-xs text-gray-300 rounded px-2 py-1 outline-none border border-[#2e3445] flex-1"
+                                    disabled={proposing}
+                                  >
+                                    <option value="RETRY_PAYMENT">RETRY_PAYMENT</option>
+                                    <option value="ESCALATE_TO_HUMAN">ESCALATE_TO_HUMAN</option>
+                                    <option value="STOP_RECOVERY">STOP_RECOVERY</option>
+                                  </select>
+                                  <button
+                                    onClick={handleProposeAction}
+                                    disabled={proposing}
+                                    className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800/40 text-white text-xs px-3 py-1 rounded font-medium transition cursor-pointer"
+                                  >
+                                    {proposing ? 'Proposing...' : 'Propose'}
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* List of Case Actions */}
+                              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                                {caseActions.length === 0 ? (
+                                  <p className="text-[10px] text-gray-500 italic py-2 text-center">No actions proposed yet.</p>
+                                ) : (
+                                  caseActions.map((act) => {
+                                    const isAllowed = act.status === 'ALLOWED';
+                                    const isExecuting = executingActionId === act.id;
+
+                                    // Status styling
+                                    let statusColor = 'text-gray-400 bg-gray-950/30 border-gray-500/20';
+                                    if (act.status === 'ALLOWED') statusColor = 'text-purple-400 bg-purple-950/20 border-purple-500/20';
+                                    if (act.status === 'BLOCKED') statusColor = 'text-rose-400 bg-rose-950/20 border-rose-500/20';
+                                    if (act.status === 'EXECUTED') statusColor = 'text-emerald-400 bg-emerald-950/20 border-emerald-500/20';
+                                    if (act.status === 'FAILED') statusColor = 'text-rose-500 bg-rose-950/30 border-rose-600/30';
+
+                                    return (
+                                      <div key={act.id} className="bg-[#1b1e28]/20 border border-[#202430] rounded p-2.5 space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[10px] font-semibold text-gray-200">
+                                            {act.action_type.replace(/_/g, ' ')} {act.action_type === 'RETRY_PAYMENT' ? `#${act.attempt_number}` : ''}
+                                          </span>
+                                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${statusColor}`}>
+                                            {act.status}
+                                          </span>
+                                        </div>
+                                        {act.reason && (
+                                          <p className="text-[9px] text-gray-400 leading-normal">{act.reason}</p>
+                                        )}
+                                        {isAllowed && (
+                                          <div className="pt-1 flex flex-col gap-1.5">
+                                            {act.action_type === 'RETRY_PAYMENT' && (
+                                              <label className="flex items-center gap-1.5 text-[9px] text-gray-500 cursor-pointer select-none">
+                                                <input
+                                                  type="checkbox"
+                                                  checked={simulateFailure}
+                                                  onChange={(e) => setSimulateFailure(e.target.checked)}
+                                                  className="accent-purple-500"
+                                                />
+                                                Simulate Failure
+                                              </label>
+                                            )}
+                                            <button
+                                              onClick={() => handleExecuteAction(act.id)}
+                                              disabled={isExecuting || executingActionId !== null}
+                                              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800/40 text-white text-[10px] py-1 rounded font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
+                                            >
+                                              {isExecuting ? (
+                                                <>
+                                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                                  Executing...
+                                                </>
+                                              ) : (
+                                                'Run Execution'
+                                              )}
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })
+                                )}
                               </div>
                             </div>
                           </div>

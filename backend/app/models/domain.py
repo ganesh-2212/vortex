@@ -195,3 +195,22 @@ class RevenueIntelligenceSummary(BaseModel):
     low_amount: Decimal
     top_leakage_type: Optional[str]
     generated_at: datetime
+
+# --- F06 Execution Models ---
+
+class ActionExecutionRequest(BaseModel):
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+class ProviderExecutionResult(BaseModel):
+    success: bool
+    transaction_id: Optional[str] = None
+    error_code: Optional[str] = None
+    raw_response: Dict[str, Any] = Field(default_factory=dict)
+
+class ActionExecutionResponse(BaseModel):
+    action_id: uuid.UUID
+    action_type: RecoveryActionType
+    status: RecoveryActionStatus
+    executed_at: Optional[datetime] = None
+    result: Dict[str, Any] = Field(default_factory=dict)
+    updated_case_status: RecoveryCaseStatus
