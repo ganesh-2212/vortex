@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api.v1.endpoints import router as api_router
 from app.api.v1.intelligence import router as intelligence_router
+from app.api.v1.webhooks import router as webhooks_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -20,6 +21,7 @@ app.add_middleware(
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(intelligence_router, prefix=f"{settings.API_V1_STR}/intelligence")
+app.include_router(webhooks_router, prefix=f"{settings.API_V1_STR}/webhooks")
 
 @app.get(f"{settings.API_V1_STR}/health")
 async def health_check():

@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Revenue Sentinel"
     API_V1_STR: str = "/api/v1"
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/revenue_sentinel"
+    RAZORPAY_WEBHOOK_SECRET: str = "test_webhook_secret"
 
     # Allow custom .env file path configuration
     model_config = SettingsConfigDict(
