@@ -99,3 +99,28 @@ export async function executeRecoveryAction(caseId: string, actionId: string, si
   }
   return res.json()
 }
+
+export async function getMerchantConfig(merchantId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/merchants/${merchantId}/config`)
+  if (!res.ok) throw new Error('Failed to fetch merchant configuration')
+  return res.json()
+}
+
+export async function updateMerchantConfig(merchantId: string, config: any) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/merchants/${merchantId}/config`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  })
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.detail || 'Failed to update merchant configuration')
+  }
+  return res.json()
+}
+
+export async function getProviderInfo() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/provider-info`)
+  if (!res.ok) throw new Error('Failed to fetch payment provider details')
+  return res.json()
+}

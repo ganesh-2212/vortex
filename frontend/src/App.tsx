@@ -6,6 +6,9 @@ import RecoveryCasesPage from './components/cases/RecoveryCasesPage'
 import CaseDetailExperience from './components/cases/CaseDetailExperience'
 import RecommendationsPage from './components/recommendations/RecommendationsPage'
 import ActivityEventsPage from './components/events/ActivityEventsPage'
+import WebhooksPage from './components/webhooks/WebhooksPage'
+import GuardrailsPage from './components/guardrails/GuardrailsPage'
+import ConfigurationPage from './components/config/ConfigurationPage'
 import { LoadingState, ErrorState } from './components/common/LoaderAndStates'
 
 import {
@@ -22,7 +25,10 @@ import {
   getRevenueEvents,
   getAuditLogs,
   proposeRecoveryAction,
-  executeRecoveryAction
+  executeRecoveryAction,
+  getMerchantConfig,
+  updateMerchantConfig,
+  getProviderInfo
 } from './api'
 
 function App() {
@@ -44,10 +50,13 @@ function App() {
   const [stats, setStats] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [merchantConfig, setMerchantConfig] = useState<any>(null)
+  const [providerInfo, setProviderInfo] = useState<any>(null)
 
   // Selected Case Telemetry Detail States
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
+  const [detailSuccess, setDetailSuccess] = useState<string | null>(null)
   const [selectedCaseDetail, setSelectedCaseDetail] = useState<any>(null)
   const [caseActions, setCaseActions] = useState<any[]>([])
   const [caseStatus, setCaseStatus] = useState<string | null>(null)
@@ -75,7 +84,9 @@ function App() {
         statsData,
         recsData,
         eventsData,
-        logsData
+        logsData,
+        configData,
+        providerData
       ] = await Promise.all([
         getIntelligenceSummary(),
         getLeakage(),
@@ -84,7 +95,9 @@ function App() {
         getRecoveryStatistics(),
         getRecommendations(),
         getRevenueEvents(),
-        getAuditLogs()
+        getAuditLogs(),
+        getMerchantConfig("11111111-1111-1111-1111-111111111111"),
+        getProviderInfo()
       ])
 
       setSummary(summaryData)
@@ -95,6 +108,8 @@ function App() {
       setRecommendations(recsData)
       setEvents(eventsData)
       setAuditLogs(logsData)
+      setMerchantConfig(configData)
+      setProviderInfo(providerData)
       setLastRefreshed(new Date())
       setApiConnected(true)
     } catch (err: any) {
@@ -172,8 +187,11 @@ function App() {
     if (!selectedCaseId) return
     setProposing(true)
     setDetailError(null)
+    setDetailSuccess(null)
     try {
       await proposeRecoveryAction(selectedCaseId, proposedActionType)
+      setDetailSuccess(`Action proposed successfully and evaluated against guardrails.`)
+      setTimeout(() => setDetailSuccess(null), 5000)
       await Promise.all([
         fetchCaseDetailData(selectedCaseId),
         fetchDashboardData()
@@ -191,8 +209,11 @@ function App() {
     if (!selectedCaseId) return
     setExecutingActionId(actionId)
     setDetailError(null)
+    setDetailSuccess(null)
     try {
-      await executeRecoveryAction(selectedCaseId, actionId, simulateFailure)
+      const res = await executeRecoveryAction(selectedCaseId, actionId, simulateFailure)
+      setDetailSuccess(`Execution succeeded! Outcome: ${res.status || 'EXECUTED'}. Reference ID: ${res.transaction_id || 'N/A'}`)
+      setTimeout(() => setDetailSuccess(null), 6000)
       await Promise.all([
         fetchCaseDetailData(selectedCaseId),
         fetchDashboardData()
@@ -203,6 +224,19 @@ function App() {
       setDetailError(err.message || 'Execution failed under guardrail check.')
     } finally {
       setExecutingActionId(null)
+    }
+  }
+
+  // Save merchant config settings
+  const handleSaveConfig = async (updatedConfig: any) => {
+    setError(null)
+    try {
+      const saved = await updateMerchantConfig("11111111-1111-1111-1111-111111111111", updatedConfig)
+      setMerchantConfig(saved)
+      await fetchDashboardData()
+    } catch (err: any) {
+      console.error(err)
+      throw err
     }
   }
 
@@ -265,6 +299,7 @@ function App() {
           caseRecommendation={caseRecommendation}
           auditHistory={auditHistory}
           detailError={detailError}
+          detailSuccess={detailSuccess}
           proposing={proposing}
           proposedActionType={proposedActionType}
           setProposedActionType={setProposedActionType}
@@ -294,10 +329,26 @@ function App() {
           recommendations={recommendations}
           onSelectCase={handleInspectCase}
         />
-      ) : (
+      ) : activeTab === 'events' ? (
         <ActivityEventsPage
           events={events}
           auditLogs={auditLogs}
+        />
+      ) : activeTab === 'webhooks' ? (
+        <WebhooksPage
+          events={events}
+        />
+      ) : activeTab === 'guardrails' ? (
+        <GuardrailsPage
+          merchantConfig={merchantConfig}
+          auditLogs={auditLogs}
+          onSelectCase={handleInspectCase}
+        />
+      ) : (
+        <ConfigurationPage
+          merchantConfig={merchantConfig}
+          providerInfo={providerInfo}
+          onSaveConfig={handleSaveConfig}
         />
       )}
     </AppShell>

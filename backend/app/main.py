@@ -12,6 +12,11 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
+@app.on_event("startup")
+async def startup_event():
+    from app.store import seed_store
+    seed_store()
+
 # Setup CORS for development
 app.add_middleware(
     CORSMiddleware,

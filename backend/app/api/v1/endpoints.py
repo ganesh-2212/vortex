@@ -5,7 +5,7 @@ from decimal import Decimal
 from fastapi import APIRouter, HTTPException, Path, Body
 
 from app.models.domain import (
-    Merchant, MerchantCreate,
+    Merchant, MerchantCreate, MerchantConfigUpdate,
     Customer, CustomerCreate,
     RevenueEvent, RevenueEventCreate,
     RecoveryCase, RecoveryCaseDetailResponse,
@@ -340,3 +340,86 @@ async def execute_case_action(
         raise HTTPException(status_code=400, detail=str(e))
     except PermissionError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/merchants/{merchant_id}/config", response_model=Merchant)
+async def get_merchant_config(merchant_id: uuid.UUID = Path(...)):
+    """
+    Returns the merchant configuration settings.
+    """
+    if merchant_id not in store.merchants:
+        if merchant_id == uuid.UUID("11111111-1111-1111-1111-111111111111"):
+            store.merchants[merchant_id] = Merchant(
+                id=merchant_id,
+                name="Acme Corp",
+                email="acme@corp.com",
+                created_at=datetime.now(timezone.utc)
+            )
+        else:
+            raise HTTPException(status_code=404, detail="Merchant not found")
+    return store.merchants[merchant_id]
+
+
+@router.put("/merchants/{merchant_id}/config", response_model=Merchant)
+async def update_merchant_config(
+    merchant_id: uuid.UUID = Path(...),
+    config_in: MerchantConfigUpdate = Body(...)
+):
+    """
+    Updates the merchant configuration settings under strict validations.
+    """
+    if merchant_id not in store.merchants:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+
+    # Validation constraints
+    if config_in.max_retry_attempts < 0 or config_in.max_retry_attempts > 10:
+        raise HTTPException(status_code=400, detail="max_retry_attempts must be between 0 and 10")
+
+    if config_in.retry_cooldown_hours < 0 or config_in.retry_cooldown_hours > 720:
+        raise HTTPException(status_code=400, detail="retry_cooldown_hours must be between 0 and 720")
+
+    # Valid recovery action check
+    valid_actions = {"RETRY_PAYMENT", "ESCALATE_TO_HUMAN", "STOP_RECOVERY", "SEND_REMINDER"}
+    for act in config_in.supported_recovery_actions:
+        if act not in valid_actions:
+            raise HTTPException(status_code=400, detail=f"Invalid supported recovery action: {act}")
+
+    merchant = store.merchants[merchant_id]
+
+    # Update config properties
+    merchant.recovery_enabled = config_in.recovery_enabled
+    merchant.max_retry_attempts = config_in.max_retry_attempts
+    merchant.retry_cooldown_hours = config_in.retry_cooldown_hours
+    merchant.supported_recovery_actions = config_in.supported_recovery_actions
+    merchant.escalation_behavior = config_in.escalation_behavior
+    merchant.webhook_status = config_in.webhook_status
+
+    # Log audit event
+    log_audit_event(
+        recovery_case_id=None,
+        actor_type="MERCHANT",
+        action="CONFIG_UPDATED",
+        details={
+            "recovery_enabled": config_in.recovery_enabled,
+            "max_retry_attempts": config_in.max_retry_attempts,
+            "retry_cooldown_hours": config_in.retry_cooldown_hours,
+            "supported_recovery_actions": config_in.supported_recovery_actions,
+            "escalation_behavior": config_in.escalation_behavior,
+            "webhook_status": config_in.webhook_status
+        }
+    )
+
+    return merchant
+
+
+@router.get("/provider-info")
+async def get_provider_info():
+    """
+    Returns the configured provider mode and environment status.
+    """
+    from app.config import settings
+    return {
+        "mode": settings.PAYMENT_PROVIDER_MODE,
+        "key_id": settings.RAZORPAY_KEY_ID,
+        "configured": bool(settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET)
+    }

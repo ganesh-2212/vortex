@@ -87,12 +87,54 @@ def execute_recovery_action(
     # 4. Dispatch and Execute by Action Type
     if action.action_type == RecoveryActionType.RETRY_PAYMENT:
         # Provider Abstraction
-        provider = MockPaymentProvider()
-        provider_result = provider.execute_retry(
-            amount=case.amount_at_risk,
-            currency="INR",
-            payload=payload
-        )
+        from app.config import settings
+        from app.services.providers import MockPaymentProvider, RazorpayPaymentProvider
+
+        if settings.PAYMENT_PROVIDER_MODE == "razorpay":
+            provider = RazorpayPaymentProvider()
+        else:
+            provider = MockPaymentProvider()
+
+        try:
+            provider_result = provider.execute_retry(
+                amount=case.amount_at_risk,
+                currency="INR",
+                payload=payload
+            )
+        except ValueError as val_err:
+            action.status = RecoveryActionStatus.FAILED
+            action.reason = str(val_err)
+            action.executed_at = current_time
+            action.result = {
+                "success": False,
+                "error_code": "CONFIG_ERROR",
+                "provider_response": {"error": str(val_err)}
+            }
+
+            # Log failure to audit log
+            log_audit_event(
+                recovery_case_id=case.id,
+                actor_type="SYSTEM",
+                action="ACTION_FAILED",
+                details={
+                    "reason": str(val_err),
+                    "action_type": action.action_type.value,
+                    "action_id": str(action.id)
+                }
+            )
+
+            # Save changes to the store
+            store.recovery_actions[action.id] = action
+            store.recovery_cases[case.id] = case
+
+            return ActionExecutionResponse(
+                action_id=action.id,
+                action_type=action.action_type,
+                status=action.status,
+                executed_at=action.executed_at,
+                result=action.result,
+                updated_case_status=case.status
+            )
         
         action.executed_at = current_time
         

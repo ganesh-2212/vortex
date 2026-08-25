@@ -53,6 +53,14 @@ class Merchant(BaseModel):
     email: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+    # Recovery config fields
+    recovery_enabled: bool = True
+    max_retry_attempts: int = 3
+    retry_cooldown_hours: int = 24
+    supported_recovery_actions: List[str] = Field(default_factory=lambda: ["RETRY_PAYMENT", "SEND_REMINDER", "OFFER_ALTERNATIVE_METHOD", "ESCALATE_TO_HUMAN", "STOP_RECOVERY"])
+    escalation_behavior: str = "MANUAL"
+    webhook_status: str = "CONFIGURED"
+
 class Customer(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     merchant_id: uuid.UUID
@@ -113,6 +121,20 @@ class AuditLog(BaseModel):
 class MerchantCreate(BaseModel):
     name: str
     email: Optional[str] = None
+    recovery_enabled: Optional[bool] = None
+    max_retry_attempts: Optional[int] = None
+    retry_cooldown_hours: Optional[int] = None
+    supported_recovery_actions: Optional[List[str]] = None
+    escalation_behavior: Optional[str] = None
+    webhook_status: Optional[str] = None
+
+class MerchantConfigUpdate(BaseModel):
+    recovery_enabled: bool
+    max_retry_attempts: int
+    retry_cooldown_hours: int
+    supported_recovery_actions: List[str]
+    escalation_behavior: str
+    webhook_status: str
 
 class CustomerCreate(BaseModel):
     merchant_id: uuid.UUID

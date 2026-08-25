@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import {
   ArrowLeft,
   Clock,
   Check,
   XCircle,
   AlertTriangle,
-  FileText
+  FileText,
+  ShieldCheck,
+  ChevronRight
 } from 'lucide-react'
 import { RiskBadge, StatusBadge, LoadingState } from '../common/LoaderAndStates'
 
@@ -19,6 +22,7 @@ interface CaseDetailExperienceProps {
   caseRecommendation: any
   auditHistory?: any[] // from RecoveryCaseDetailResponse
   detailError: string | null
+  detailSuccess: string | null
   proposing: boolean
   proposedActionType: string
   setProposedActionType: (action: string) => void
@@ -41,6 +45,7 @@ export default function CaseDetailExperience({
   caseRecommendation,
   auditHistory = [],
   detailError,
+  detailSuccess,
   proposing,
   proposedActionType,
   setProposedActionType,
@@ -51,6 +56,8 @@ export default function CaseDetailExperience({
   handleExecuteAction,
   onBack
 }: CaseDetailExperienceProps) {
+  const [confirmingAction, setConfirmingAction] = useState<any | null>(null)
+
   const formatCurrency = (val: string | number) => {
     return `₹${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
@@ -62,6 +69,20 @@ export default function CaseDetailExperience({
       </div>
     )
   }
+
+  // Determine horizontal timeline stages progress
+  const hasProposed = caseActions.length > 0
+  const hasExecuted = caseAttempts.length > 0
+  const isTerminal = caseStatus === 'RECOVERED' || caseStatus === 'STOPPED' || caseStatus === 'ESCALATED'
+
+  const stages = [
+    { label: 'Event Ingest', active: true },
+    { label: 'Case Created', active: true },
+    { label: 'Recommended', active: !!caseRecommendation || isTerminal },
+    { label: 'Action Proposed', active: hasProposed || isTerminal },
+    { label: 'Executed', active: hasExecuted || isTerminal },
+    { label: 'Outcome Resolved', active: isTerminal }
+  ]
 
   return (
     <div className="space-y-6 text-left">
@@ -78,81 +99,117 @@ export default function CaseDetailExperience({
         <span className="text-[10px] text-gray-500 font-mono">Case Details Console</span>
       </div>
 
+      {/* Horizontal Lifecycle Steps Timeline */}
+      <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Flow Timeline</span>
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 flex-1 justify-end">
+          {stages.map((stg, index) => (
+            <div key={stg.label} className="flex items-center gap-1.5">
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+                stg.active
+                  ? 'bg-purple-950/40 text-purple-300 border border-purple-500/20'
+                  : 'bg-[#1b1e28]/20 text-gray-500 border border-[#2e3445]'
+              }`}>
+                {stg.label}
+              </span>
+              {index < stages.length - 1 && (
+                <ChevronRight className="w-3.5 h-3.5 text-gray-600 hidden xs:inline" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Feedback banners */}
+      {detailError && (
+        <div className="bg-rose-950/20 border border-rose-500/20 text-rose-400 p-3.5 rounded-xl text-xs flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+          <span>{detailError}</span>
+        </div>
+      )}
+
+      {detailSuccess && (
+        <div className="bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 p-3.5 rounded-xl text-xs flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{detailSuccess}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {/* Left Column (2/3 width) - Detail & timeline */}
+        {/* Left Column (2/3 width) - Situation, Outcome, Timelines */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Summary Card */}
+          {/* Situation Section */}
           <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6 space-y-4">
             <div className="flex justify-between items-start border-b border-[#202430] pb-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-200">Investigation Details</h3>
-                <span className="text-[10px] text-gray-500 font-mono">ID: {caseId}</span>
+                <h3 className="text-sm font-semibold text-gray-200">Situation</h3>
+                <span className="text-[10px] text-gray-500 font-mono">Case Reference UUID: {caseId}</span>
               </div>
               <StatusBadge status={caseStatus || 'ACTIVE'} />
             </div>
 
-            {detailError && (
-              <div className="bg-rose-950/20 border border-rose-500/20 text-rose-400 p-3 rounded-lg text-xs">
-                {detailError}
-              </div>
-            )}
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
-                <span className="text-[10px] text-gray-500 block uppercase font-medium">Risk Exposure</span>
+                <span className="text-[10px] text-gray-500 block uppercase font-medium">Risk Amount</span>
                 <span className="text-sm font-bold text-gray-200 font-mono mt-1 block">
                   {formatCurrency(selectedCaseDetail.amount_at_risk)}
                 </span>
               </div>
               <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
-                <span className="text-[10px] text-gray-500 block uppercase font-medium">Risk Level</span>
+                <span className="text-[10px] text-gray-500 block uppercase font-medium">Risk Priority</span>
                 <div className="mt-1">
                   <RiskBadge level={selectedCaseDetail.risk_level} />
                 </div>
               </div>
-              <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3 border-emerald-500/10">
-                <span className="text-[10px] text-emerald-400 block font-semibold uppercase">Actual Recovered</span>
-                <span className="text-sm font-bold text-emerald-400 font-mono mt-1 block">
-                  {formatCurrency(caseLifecycle ? caseLifecycle.actual_recovered_amount : '0.00')}
-                </span>
-              </div>
               <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
-                <span className="text-[10px] text-gray-500 block uppercase font-medium">Age Status</span>
+                <span className="text-[10px] text-gray-500 block uppercase font-medium">Age Category</span>
                 <span className="text-xs font-semibold text-gray-300 mt-1.5 block uppercase">
                   {selectedCaseDetail.time_sensitivity?.category || 'N/A'}
                 </span>
               </div>
-            </div>
-
-            {/* Metrics note */}
-            <div className="bg-[#0d0e12] border border-[#202430] rounded-lg p-3.5 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="font-semibold text-emerald-400">Actual Recovered:</span>
-                <span className="font-mono text-emerald-400 font-bold">
-                  {formatCurrency(caseLifecycle ? caseLifecycle.actual_recovered_amount : '0.00')}
+              <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
+                <span className="text-[10px] text-gray-500 block uppercase font-medium">Merchant ID</span>
+                <span className="text-[10px] font-mono text-gray-400 mt-1.5 block truncate">
+                  {selectedCaseDetail.merchant_id || 'Acme Corp'}
                 </span>
               </div>
-              <p className="text-[9px] text-gray-500">
-                Confirmed revenue recovered through successful retry action executions.
-              </p>
-              <div className="h-px bg-[#202430] my-1.5"></div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-purple-400">Heuristic Estimated Recoverable:</span>
-                <span className="font-mono text-purple-400 font-bold">
-                  {formatCurrency(selectedCaseDetail.estimated_recoverable)}
-                </span>
-              </div>
-              <p className="text-[9px] text-gray-500">
-                *Heuristic Estimate Notice: Calculated based on risk severity, failure history, and time categories. Not actual money recovered.
-              </p>
             </div>
           </div>
 
-          {/* Timeline of Attempts */}
+          {/* Outcome Details Section */}
+          {isTerminal && (
+            <div className="bg-emerald-950/10 border border-emerald-500/20 rounded-xl p-6 space-y-4">
+              <div className="flex items-center gap-2 border-b border-emerald-500/10 pb-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-sm font-semibold text-emerald-400">Outcome Status</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Final Outcome State</span>
+                  <span className="text-sm font-bold text-gray-200 block mt-0.5">{caseStatus}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Actual Recovered Revenue</span>
+                  <span className="text-sm font-bold text-emerald-400 font-mono block mt-0.5">
+                    {formatCurrency(caseLifecycle ? caseLifecycle.actual_recovered_amount : '0.00')}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Timeline Recovery Event</span>
+                  <span className="text-[10px] text-gray-400 font-mono block mt-1 truncate">
+                    {caseLifecycle?.recovered_at ? new Date(caseLifecycle.recovered_at).toLocaleString() : 'N/A'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Attempt timeline history */}
           <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-gray-200 mb-5">Execution Attempt Timeline</h3>
+            <h3 className="text-sm font-semibold text-gray-200 mb-5">Execution Attempt Logs</h3>
             <div className="space-y-4">
               {caseAttempts.map((attempt, index) => {
                 const isSuccess = attempt.status === 'EXECUTED'
@@ -160,26 +217,25 @@ export default function CaseDetailExperience({
                 const isBlocked = attempt.status === 'BLOCKED'
 
                 let colorClass = 'text-gray-400 border-gray-600 bg-gray-950/20'
-                let Icon = Clock
+                let IconType = Clock
                 if (isSuccess) {
                   colorClass = 'text-emerald-400 border-emerald-500/30 bg-emerald-950/20'
-                  Icon = Check
+                  IconType = Check
                 } else if (isFailed) {
                   colorClass = 'text-rose-400 border-rose-500/30 bg-rose-950/30'
-                  Icon = XCircle
+                  IconType = XCircle
                 } else if (isBlocked) {
                   colorClass = 'text-yellow-400 border-yellow-500/20 bg-yellow-950/20'
-                  Icon = AlertTriangle
+                  IconType = AlertTriangle
                 }
 
                 return (
                   <div key={attempt.action_id} className="relative pl-7 pb-1">
-                    {/* timeline vertical line */}
                     {index < caseAttempts.length - 1 && (
                       <span className="absolute left-[9px] top-[18px] bottom-[-22px] w-0.5 bg-[#202430]"></span>
                     )}
                     <span className={`absolute left-0 top-[2px] w-5 h-5 rounded-full border flex items-center justify-center ${colorClass}`}>
-                      <Icon className="w-3 h-3" />
+                      <IconType className="w-3 h-3" />
                     </span>
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
@@ -197,7 +253,7 @@ export default function CaseDetailExperience({
                       </p>
                       {attempt.provider_transaction_id && (
                         <p className="text-[10px] text-emerald-500 font-mono font-semibold">
-                          Txn ID: {attempt.provider_transaction_id}
+                          Txn Reference ID: {attempt.provider_transaction_id}
                         </p>
                       )}
                       {attempt.failure_reason && (
@@ -215,7 +271,7 @@ export default function CaseDetailExperience({
             </div>
           </div>
 
-          {/* Audit Logs associated with this case (F07 audit logs) */}
+          {/* Audit trail */}
           <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4 border-b border-[#202430] pb-3">
               <FileText className="w-4 h-4 text-purple-400" />
@@ -243,52 +299,33 @@ export default function CaseDetailExperience({
           </div>
         </div>
 
-        {/* Right Column (1/3 width) - Risk Explainers, Recommendations, Actions */}
+        {/* Right Column (1/3 width) - Intelligence, Recommendation, Actions */}
         <div className="space-y-6">
           
-          {/* Priority Drivers */}
+          {/* Intelligence Section */}
           <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-200 border-b border-[#202430] pb-2">Priority Drivers</h3>
+            <h3 className="text-sm font-semibold text-gray-200 border-b border-[#202430] pb-2">Intelligence</h3>
+
             <div className="space-y-3 text-xs text-gray-400">
               <div>
                 <div className="flex justify-between mb-1">
-                  <span>Risk Severity Score (35%)</span>
-                  <span className="font-mono text-gray-300">{selectedCaseDetail.priority_breakdown.risk_severity_score.toFixed(0)}</span>
+                  <span>Priority Rank Score</span>
+                  <span className="font-mono text-purple-300 font-bold">
+                    {selectedCaseDetail.priority_score.toFixed(0)}/100
+                  </span>
                 </div>
-                <div className="h-1 bg-[#202430] rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-500" style={{ width: `${selectedCaseDetail.priority_breakdown.risk_severity_score}%` }}></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span>Amount Score (30%)</span>
-                  <span className="font-mono text-gray-300">{selectedCaseDetail.priority_breakdown.amount_score.toFixed(0)}</span>
-                </div>
-                <div className="h-1 bg-[#202430] rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-500" style={{ width: `${selectedCaseDetail.priority_breakdown.amount_score}%` }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span>Age/Time Sensitivity (15%)</span>
-                  <span className="font-mono text-gray-300">{selectedCaseDetail.priority_breakdown.age_score.toFixed(0)}</span>
-                </div>
-                <div className="h-1 bg-[#202430] rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-500" style={{ width: `${selectedCaseDetail.priority_breakdown.age_score}%` }}></div>
+                <div className="h-1.5 bg-[#202430] rounded-full overflow-hidden">
+                  <div className="h-full bg-purple-500" style={{ width: `${selectedCaseDetail.priority_score}%` }}></div>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2 pt-2 border-t border-[#202430]">
-              <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider block">Explainability Reasons</span>
+              <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider block">Explainability Factors</span>
               <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                 {selectedCaseDetail.reasons.map((r: any, idx: number) => (
                   <div key={idx} className="bg-[#1b1e28]/30 border border-[#202430] rounded p-2 text-[10px] leading-relaxed text-gray-300 flex items-start gap-1.5">
-                    <span className={`w-1 h-1 rounded-full shrink-0 mt-1.5 ${
-                      r.type === 'risk' ? 'bg-rose-400' : r.type === 'priority' ? 'bg-purple-400' : 'bg-blue-400'
-                    }`}></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0 mt-1.5"></span>
                     <span>{r.message}</span>
                   </div>
                 ))}
@@ -296,11 +333,11 @@ export default function CaseDetailExperience({
             </div>
           </div>
 
-          {/* Recommendation Support Card */}
+          {/* Recommendation Section */}
           {caseRecommendation && (
             <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-4 border-purple-500/20">
               <div className="flex justify-between items-center border-b border-[#202430] pb-2">
-                <span className="text-xs font-semibold text-purple-300">Automated Recommendation</span>
+                <span className="text-xs font-semibold text-purple-300">Recommendation</span>
                 <span className="bg-[#1b1e28] text-purple-300 font-bold border border-[#2e3445] px-2 py-0.5 rounded font-mono text-[9px]">
                   {caseRecommendation.confidence}% Confidence
                 </span>
@@ -308,46 +345,34 @@ export default function CaseDetailExperience({
 
               <div className="space-y-3">
                 <div>
-                  <span className="text-[9px] text-gray-500 uppercase block">Recommended Path</span>
-                  <span className="text-sm font-bold text-gray-200 block mt-0.5">
+                  <span className="text-[9px] text-gray-500 uppercase block font-semibold">Recommended Action</span>
+                  <span className="text-sm font-bold text-purple-300 block mt-0.5">
                     {caseRecommendation.recommended_action.replace(/_/g, ' ')}
                   </span>
                 </div>
 
-                <div className="h-1.5 bg-[#202430] rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-500" style={{ width: `${caseRecommendation.confidence}%` }}></div>
-                </div>
-
-                {/* Reasons */}
                 <div className="space-y-1.5">
-                  <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Explainability Factors</span>
-                  <div className="space-y-1">
-                    {caseRecommendation.reasons.map((r: any, idx: number) => (
-                      <div key={idx} className="text-[10px] text-gray-400 leading-normal flex items-start gap-1.5">
-                        <span className={`w-1 h-1 rounded-full shrink-0 mt-1.5 ${
-                          r.impact === 'positive' ? 'bg-emerald-400' : r.impact === 'negative' ? 'bg-rose-400' : 'bg-gray-400'
-                        }`}></span>
-                        <span>{r.message}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Guardrails Check</span>
+                  <span className="text-xs font-bold text-gray-200 block">
+                    {caseRecommendation.guardrail_status}
+                  </span>
                 </div>
 
-                <div className="bg-purple-950/20 border border-purple-500/20 text-purple-300 p-2.5 rounded text-[9px] text-center uppercase tracking-wider font-semibold">
+                <div className="bg-purple-950/20 border border-purple-500/25 text-purple-300 p-2.5 rounded text-[10px] text-center font-semibold">
                   Recommendation only — no action has been executed.
                 </div>
               </div>
             </div>
           )}
 
-          {/* Action Execution controls */}
+          {/* Actions / Execution Center Section */}
           <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-200 border-b border-[#202430] pb-2">Execution Center</h3>
+            <h3 className="text-sm font-semibold text-gray-200 border-b border-[#202430] pb-2">Action / Execution Center</h3>
             
             {caseStatus !== 'RECOVERED' && caseStatus !== 'STOPPED' ? (
               <div className="space-y-4">
                 
-                {/* Propose controls */}
+                {/* Proposal controls */}
                 <div className="flex gap-2">
                   <select
                     value={proposedActionType}
@@ -368,7 +393,44 @@ export default function CaseDetailExperience({
                   </button>
                 </div>
 
-                {/* Actions listing with execution run buttons */}
+                {/* Inline Confirmation Card */}
+                {confirmingAction && (
+                  <div className="bg-purple-950/20 border border-purple-500/30 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-1.5 text-purple-300 font-bold text-xs uppercase tracking-wide">
+                      <AlertTriangle className="w-4 h-4 text-purple-400" />
+                      Verify Recovery Execution
+                    </div>
+                    <div className="text-[11px] text-gray-300 space-y-1.5 leading-relaxed">
+                      <p>
+                        Are you sure you want to execute <strong className="text-purple-300">{confirmingAction.action_type}</strong> for amount {formatCurrency(selectedCaseDetail.amount_at_risk)}?
+                      </p>
+                      <div className="bg-[#1b1e28]/40 border border-[#202430] p-2 rounded text-[10px] space-y-1 font-mono text-gray-400">
+                        <div>Action: {confirmingAction.action_type}</div>
+                        <div>Current Retries: {caseAttempts.length}</div>
+                        <div>Guardrail: {confirmingAction.status}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => setConfirmingAction(null)}
+                        className="flex-1 bg-[#1b1e28] hover:bg-[#252a39] border border-[#2e3445] text-gray-300 text-xs py-1.5 rounded font-semibold transition cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleExecuteAction(confirmingAction.id)
+                          setConfirmingAction(null)
+                        }}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-1.5 rounded font-bold transition cursor-pointer"
+                      >
+                        Confirm Action
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Allowed actions queue */}
                 <div className="space-y-2">
                   {caseActions.map((act) => {
                     const isAllowed = act.status === 'ALLOWED'
@@ -394,7 +456,7 @@ export default function CaseDetailExperience({
                           <p className="text-[10px] text-gray-400 leading-normal">{act.reason}</p>
                         )}
                         
-                        {isAllowed && (
+                        {isAllowed && !confirmingAction && (
                           <div className="pt-1.5 flex flex-col gap-1.5">
                             {act.action_type === 'RETRY_PAYMENT' && (
                               <label className="flex items-center gap-1.5 text-[10px] text-gray-500 cursor-pointer select-none">
@@ -408,11 +470,11 @@ export default function CaseDetailExperience({
                               </label>
                             )}
                             <button
-                              onClick={() => handleExecuteAction(act.id)}
+                              onClick={() => setConfirmingAction(act)}
                               disabled={isExecuting || executingActionId !== null}
                               className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800/40 text-white text-xs py-1.5 rounded font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
                             >
-                              {isExecuting ? 'Executing...' : 'Run Execution'}
+                              Run Execution
                             </button>
                           </div>
                         )}

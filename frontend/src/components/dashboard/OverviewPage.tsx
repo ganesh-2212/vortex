@@ -1,4 +1,4 @@
-import { Sparkles, Activity, AlertTriangle, ChevronRight, Layers, ArrowUpRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { RiskBadge } from '../common/LoaderAndStates'
 
 interface OverviewPageProps {
@@ -34,87 +34,71 @@ export default function OverviewPage({
   return (
     <div className="space-y-6">
       
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Metrics Groups */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* Metric: Revenue at Risk */}
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex flex-col justify-between hover:border-[#2e3445] transition duration-150">
-          <div className="flex justify-between items-center text-xs font-semibold text-gray-400">
-            <span>Revenue at Risk</span>
-            <AlertTriangle className="w-4 h-4 text-rose-400 font-bold" />
+        {/* Section 1: Revenue Exposure */}
+        <div className="bg-[#13151c]/60 border border-[#202430] rounded-xl p-4.5 space-y-4">
+          <h4 className="text-[10px] text-gray-400 font-bold uppercase tracking-wider border-b border-[#202430] pb-2">
+            Revenue Exposure
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-[#13151c] border border-[#202430] rounded-lg p-3">
+              <span className="text-[10px] text-gray-500 font-bold block uppercase tracking-wide">Revenue at Risk</span>
+              <span className="text-base font-bold text-gray-100 font-mono mt-1.5 block">
+                {formatCurrency(summary?.revenue_at_risk || '0')}
+              </span>
+            </div>
+            <div className="bg-[#13151c] border border-[#202430] rounded-lg p-3">
+              <span className="text-[10px] text-gray-500 font-bold block uppercase tracking-wide">Open Cases</span>
+              <span className="text-base font-bold text-gray-100 font-mono mt-1.5 block">
+                {summary?.open_case_count || 0}
+              </span>
+            </div>
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl md:text-2xl font-bold text-gray-100 font-mono">
-              {formatCurrency(summary?.revenue_at_risk || '0')}
-            </h3>
-            <p className="text-[9px] text-rose-400 mt-1 uppercase font-semibold tracking-wider font-mono">
-              Exposed in open cases
-            </p>
-          </div>
+          <span className="text-[9px] text-gray-500 block leading-relaxed">
+            Direct financial exposure tracked across active unresolved cases.
+          </span>
         </div>
 
-        {/* Metric: Heuristic Estimated Recoverable */}
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex flex-col justify-between hover:border-[#2e3445] transition duration-150">
-          <div className="flex justify-between items-center text-xs font-semibold text-purple-300">
-            <span>Estimated Recoverable</span>
-            <Sparkles className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="mt-3">
-            <h3 className="text-xl md:text-2xl font-bold text-purple-300 font-mono">
+        {/* Section 2: Recovery Potential */}
+        <div className="bg-[#13151c]/60 border border-purple-500/10 rounded-xl p-4.5 space-y-4">
+          <h4 className="text-[10px] text-purple-400 font-bold uppercase tracking-wider border-b border-[#202430] pb-2">
+            Recovery Potential
+          </h4>
+          <div className="bg-[#13151c] border border-[#202430] rounded-lg p-3">
+            <span className="text-[10px] text-purple-300 font-bold block uppercase tracking-wide">Estimated Recoverable</span>
+            <span className="text-base font-bold text-purple-300 font-mono mt-1.5 block">
               {formatCurrency(summary?.estimated_recoverable || '0')}
-            </h3>
-            <p className="text-[8px] text-gray-400 mt-1 leading-tight">
-              *Heuristic Estimate — not money actually recovered
-            </p>
+            </span>
           </div>
+          <span className="text-[9px] text-purple-300/80 block leading-relaxed font-medium">
+            Heuristic estimate — not money actually recovered.
+          </span>
         </div>
 
-        {/* Metric: Confirmed Recovered Revenue */}
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex flex-col justify-between hover:border-[#2e3445] border-emerald-500/10 transition duration-150">
-          <div className="flex justify-between items-center text-xs font-semibold text-emerald-400">
-            <span>Actual Recovered</span>
-            <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+        {/* Section 3: Confirmed Recovery */}
+        <div className="bg-[#13151c]/60 border border-emerald-500/10 rounded-xl p-4.5 space-y-4">
+          <h4 className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider border-b border-[#202430] pb-2">
+            Confirmed Recovery
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-[#13151c] border border-[#202430] rounded-lg p-3">
+              <span className="text-[10px] text-emerald-400 font-bold block uppercase tracking-wide">Actual Recovered</span>
+              <span className="text-base font-bold text-emerald-400 font-mono mt-1.5 block">
+                {formatCurrency(stats?.actual_recovered_revenue || '0')}
+              </span>
+            </div>
+            <div className="bg-[#13151c] border border-[#202430] rounded-lg p-3">
+              <span className="text-[10px] text-emerald-400 font-bold block uppercase tracking-wide">Recovery Rate</span>
+              <span className="text-base font-bold text-emerald-400 font-mono mt-1.5 block">
+                {(stats?.recovery_rate || 0).toFixed(1)}%
+              </span>
+            </div>
           </div>
-          <div className="mt-3">
-            <h3 className="text-xl md:text-2xl font-bold text-emerald-400 font-mono">
-              {formatCurrency(stats?.actual_recovered_revenue || '0')}
-            </h3>
-            <p className="text-[8px] text-emerald-500/80 mt-1 leading-tight font-semibold uppercase tracking-wider font-mono">
-              Confirmed from successful execution
-            </p>
-          </div>
-        </div>
-
-        {/* Metric: Actual Recovery Rate */}
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex flex-col justify-between hover:border-[#2e3445] border-purple-500/10 transition duration-150">
-          <div className="flex justify-between items-center text-xs font-semibold text-purple-300">
-            <span>Recovery Rate</span>
-            <Activity className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="mt-3">
-            <h3 className="text-xl md:text-2xl font-bold text-purple-300 font-mono">
-              {(stats?.recovery_rate || 0).toFixed(1)}%
-            </h3>
-            <p className="text-[8px] text-gray-400 mt-1 leading-tight">
-              Resolved recovery cases ratio
-            </p>
-          </div>
-        </div>
-
-        {/* Metric: Open Cases */}
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex flex-col justify-between hover:border-[#2e3445] transition duration-150">
-          <div className="flex justify-between items-center text-xs font-semibold text-gray-400">
-            <span>Open Cases</span>
-            <Layers className="w-4 h-4 text-yellow-400" />
-          </div>
-          <div className="mt-3">
-            <h3 className="text-xl md:text-2xl font-bold text-gray-100 font-mono">
-              {summary?.open_case_count || 0}
-            </h3>
-            <p className="text-[9px] text-yellow-400/80 mt-1 uppercase font-semibold font-mono">
-              Interventions active
-            </p>
-          </div>
+          <span className="text-[9px] text-emerald-400/95 block leading-relaxed font-bold tracking-wide">
+            Confirmed revenue from successful recovery execution.
+          </span>
         </div>
       </div>
 

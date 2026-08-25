@@ -8,10 +8,11 @@ import {
   Cpu,
   RefreshCw,
   Menu,
-  X
+  X,
+  Globe
 } from 'lucide-react'
 
-export type Tab = 'overview' | 'cases' | 'recommendations' | 'events'
+export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration'
 
 interface AppShellProps {
   activeTab: Tab
@@ -38,7 +39,10 @@ export default function AppShell({
     { id: 'overview' as Tab, label: 'Overview', icon: DollarSign, desc: 'Executive dashboard' },
     { id: 'cases' as Tab, label: 'Recovery Cases', icon: Layers, desc: 'Operational queues' },
     { id: 'recommendations' as Tab, label: 'Recommendations', icon: Zap, desc: 'Automation decisions' },
-    { id: 'events' as Tab, label: 'Activity & Events', icon: Activity, desc: 'Realtime events log' }
+    { id: 'events' as Tab, label: 'Activity Feed', icon: Activity, desc: 'Realtime events log' },
+    { id: 'webhooks' as Tab, label: 'Webhooks Ingestion', icon: Globe, desc: 'Signature verify status' },
+    { id: 'guardrails' as Tab, label: 'Guardrails Rules', icon: Shield, desc: 'Safety enforcement' },
+    { id: 'configuration' as Tab, label: 'Configuration', icon: Cpu, desc: 'Merchant policies' }
   ]
 
   const formatTime = (date: Date | null) => {
@@ -99,7 +103,7 @@ export default function AppShell({
               <p className="text-xs font-medium text-gray-300">Sandbox Merchant</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
-                <span className="text-[9px] text-gray-500 font-mono">F09 Console Mode</span>
+                <span className="text-[9px] text-gray-500 font-mono">F10 Console Mode</span>
               </div>
             </div>
           </div>
@@ -151,7 +155,7 @@ export default function AppShell({
             
             <div className="p-3 border-t border-[#202430] bg-[#0f1015] rounded-lg">
               <div className="text-xs font-semibold text-gray-300">Sandbox Merchant</div>
-              <div className="text-[9px] text-gray-500 mt-0.5 font-mono">F09 Active shell</div>
+              <div className="text-[9px] text-gray-500 mt-0.5 font-mono">F10 Active shell</div>
             </div>
           </aside>
         </div>
