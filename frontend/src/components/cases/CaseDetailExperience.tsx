@@ -20,6 +20,7 @@ interface CaseDetailExperienceProps {
   caseLifecycle: any
   caseAttempts: any[]
   caseRecommendation: any
+  caseStrategy?: any
   auditHistory?: any[] // from RecoveryCaseDetailResponse
   detailError: string | null
   detailSuccess: string | null
@@ -43,6 +44,7 @@ export default function CaseDetailExperience({
   caseLifecycle,
   caseAttempts,
   caseRecommendation,
+  caseStrategy,
   auditHistory = [],
   detailError,
   detailSuccess,
@@ -203,6 +205,113 @@ export default function CaseDetailExperience({
                     {caseLifecycle?.recovered_at ? new Date(caseLifecycle.recovered_at).toLocaleString() : 'N/A'}
                   </span>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Strategy Optimization Panel (F11) */}
+          {caseStrategy && (
+            <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6 space-y-4">
+              <div className="flex justify-between items-center border-b border-[#202430] pb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-200">Recovery Strategy Optimization (Advisory)</h3>
+                  <span className="text-[10px] text-gray-500">Deterministic net recovery value algorithm</span>
+                </div>
+                <span className="text-[9px] font-bold text-purple-400 bg-purple-950/20 border border-purple-500/20 px-2 py-0.5 rounded uppercase">
+                  F11 Optimizer
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Recommended Strategy</span>
+                  <span className="text-xs font-bold text-purple-300 mt-1 block uppercase">
+                    {caseStrategy.recommended_strategy.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Probability</span>
+                  <span className="text-xs font-bold text-gray-200 font-mono mt-1 block">
+                    {caseStrategy.recovery_probability}%
+                  </span>
+                </div>
+                <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Expected Recovery</span>
+                  <span className="text-xs font-bold text-emerald-400 font-mono mt-1 block">
+                    {formatCurrency(caseStrategy.expected_recovery_amount)}
+                  </span>
+                </div>
+                <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Expected Net Recovery</span>
+                  <span className="text-xs font-bold text-purple-400 font-mono mt-1 block">
+                    {formatCurrency(caseStrategy.expected_net_recovery)}
+                  </span>
+                </div>
+                <div className="bg-[#1b1e28]/30 border border-[#202430] rounded-lg p-3">
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Confidence Score</span>
+                  <span className="text-xs font-bold text-gray-200 font-mono mt-1 block">
+                    {caseStrategy.confidence}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-purple-950/10 border border-purple-500/10 p-3 rounded-lg space-y-2">
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Optimizer Rationale</span>
+                <ul className="text-xs text-gray-300 list-disc list-inside space-y-1 pl-1">
+                  {caseStrategy.reasons.map((r: string, idx: number) => (
+                    <li key={idx}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Strategy Comparison Sub-section */}
+              <div className="space-y-2 pt-2">
+                <span className="text-xs font-bold text-gray-400 block uppercase tracking-wider">Candidate Strategies Comparison</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#202430] text-gray-500 font-medium text-[10px]">
+                        <th className="py-2 pl-2">Strategy Name</th>
+                        <th className="py-2">Eligibility</th>
+                        <th className="py-2 text-right">Probability</th>
+                        <th className="py-2 text-right">Cost</th>
+                        <th className="py-2 text-right">Net Recovery</th>
+                        <th className="py-2 text-right pr-2">Confidence</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#202430]/50 font-mono text-[11px]">
+                      {caseStrategy.strategies.map((strat: any) => {
+                        const isRec = strat.strategy_name === caseStrategy.recommended_strategy
+                        return (
+                          <tr key={strat.strategy_name} className={`hover:bg-[#1a1c24]/30 ${isRec ? 'bg-purple-950/10 border-l-2 border-purple-500' : ''}`}>
+                            <td className="py-2 pl-2 font-semibold text-gray-300">
+                              {strat.strategy_name.replace(/_/g, ' ')}
+                              {isRec && <span className="text-[9px] text-purple-400 ml-1.5 font-bold uppercase">(Rec)</span>}
+                              {!strat.executable && <span className="text-[8px] text-gray-500 ml-1.5 italic">(Advisory-only)</span>}
+                            </td>
+                            <td className="py-2">
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
+                                strat.guardrail_status === 'ALLOWED'
+                                  ? 'text-emerald-400 bg-emerald-950/20 border-emerald-500/20'
+                                  : 'text-rose-400 bg-rose-950/20 border-rose-500/20'
+                              }`}>
+                                {strat.guardrail_status}
+                              </span>
+                            </td>
+                            <td className="py-2 text-right text-gray-200">{strat.recovery_probability}%</td>
+                            <td className="py-2 text-right text-gray-400">{formatCurrency(strat.intervention_cost)}</td>
+                            <td className="py-2 text-right text-emerald-400 font-bold">{formatCurrency(strat.expected_net_recovery)}</td>
+                            <td className="py-2 text-right pr-2 text-gray-200">{strat.confidence}%</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="bg-[#1b1e28]/20 border border-[#2e3445]/40 text-gray-500 p-2.5 rounded-lg text-[10px] text-center font-semibold italic">
+                Strategy optimization is advisory. No payment action is executed by the optimizer.
               </div>
             </div>
           )}

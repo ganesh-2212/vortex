@@ -340,3 +340,37 @@ class WebhookSimulateResponse(BaseModel):
     event_id: Optional[str] = None
     case_id: Optional[str] = None
     message: Optional[str] = None
+
+
+# --- F11 Strategy Optimization Models ---
+
+class StrategyOption(BaseModel):
+    strategy_name: str  # "IMMEDIATE_RETRY", "DELAYED_RETRY", "ALTERNATE_PAYMENT", "ESCALATE_TO_HUMAN", "NO_INTERVENTION"
+    eligible: bool
+    guardrail_status: str  # ALLOWED or BLOCKED
+    recovery_probability: int
+    expected_recovery_amount: Decimal
+    intervention_cost: Decimal
+    expected_net_recovery: Decimal
+    confidence: int
+    reasons: List[str]
+    executable: bool
+
+class StrategyOptimizationResponse(BaseModel):
+    case_id: uuid.UUID
+    amount_at_risk: Decimal
+    recommended_strategy: str
+    recovery_probability: int
+    expected_recovery_amount: Decimal
+    expected_net_recovery: Decimal
+    confidence: int
+    guardrail_status: str
+    reasons: List[str]
+    strategies: List[StrategyOption]
+    generated_at: datetime
+
+class StrategyStatistics(BaseModel):
+    cases_optimized: int
+    total_expected_recovery: Decimal
+    strategy_counts: Dict[str, int]
+    average_confidence: float

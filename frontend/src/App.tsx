@@ -28,7 +28,8 @@ import {
   executeRecoveryAction,
   getMerchantConfig,
   updateMerchantConfig,
-  getProviderInfo
+  getProviderInfo,
+  getCaseStrategy
 } from './api'
 
 function App() {
@@ -63,6 +64,7 @@ function App() {
   const [caseLifecycle, setCaseLifecycle] = useState<any>(null)
   const [caseAttempts, setCaseAttempts] = useState<any[]>([])
   const [caseRecommendation, setCaseRecommendation] = useState<any>(null)
+  const [caseStrategy, setCaseStrategy] = useState<any>(null)
   const [auditHistory, setAuditHistory] = useState<any[]>([])
 
   // Action proposing / executing states
@@ -147,6 +149,14 @@ function App() {
         // Suppress errors for resolved cases since they don't have recommendations
       }
 
+      // Load optimized strategy (F11)
+      let strategyData = null
+      try {
+        strategyData = await getCaseStrategy(caseId)
+      } catch (e) {
+        // Suppress errors for resolved cases
+      }
+
       setSelectedCaseDetail(intelData.case ? {
         case_id: intelData.case.id,
         amount_at_risk: intelData.case.amount_at_risk,
@@ -172,6 +182,7 @@ function App() {
       setCaseLifecycle(lifecycleData)
       setCaseAttempts(attemptsData || [])
       setCaseRecommendation(recData)
+      setCaseStrategy(strategyData)
       setAuditHistory(detailRes.audit_history || [])
       setApiConnected(true)
     } catch (err: any) {
@@ -260,6 +271,7 @@ function App() {
       setCaseLifecycle(null)
       setCaseAttempts([])
       setCaseRecommendation(null)
+      setCaseStrategy(null)
       setAuditHistory([])
     }
   }, [selectedCaseId, fetchCaseDetailData])
@@ -297,6 +309,7 @@ function App() {
           caseLifecycle={caseLifecycle}
           caseAttempts={caseAttempts}
           caseRecommendation={caseRecommendation}
+          caseStrategy={caseStrategy}
           auditHistory={auditHistory}
           detailError={detailError}
           detailSuccess={detailSuccess}

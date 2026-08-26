@@ -158,3 +158,21 @@ export async function simulatePaymentEvent(payload: SimulatePaymentEventRequest)
   }
   return res.json() as Promise<SimulatePaymentEventResponse>
 }
+
+export async function getCaseStrategy(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/strategy`)
+  if (!res.ok) throw new Error('Failed to fetch case recovery strategy')
+  return res.json()
+}
+
+export async function getStrategyOptimization() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-optimization`)
+  if (!res.ok) throw new Error('Failed to fetch strategy optimizations')
+  return res.json()
+}
+
+export async function getStrategyStatistics() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-statistics`)
+  if (!res.ok) throw new Error('Failed to fetch strategy statistics')
+  return res.json()
+}
