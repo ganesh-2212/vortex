@@ -176,3 +176,26 @@ export async function getStrategyStatistics() {
   if (!res.ok) throw new Error('Failed to fetch strategy statistics')
   return res.json()
 }
+
+export async function runRecoverySimulation(payload: { case_ids: string[] }) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-simulation/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error('Failed to run recovery simulation')
+  return res.json()
+}
+
+export async function getLatestSimulation() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-simulation/latest`)
+  if (!res.ok) throw new Error('Failed to fetch latest simulation')
+  return res.json()
+}
+
+export async function getSimulationStatistics() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-simulation/statistics`)
+  if (!res.ok) throw new Error('Failed to fetch simulation statistics')
+  return res.json()
+}
+

@@ -9,6 +9,7 @@ import ActivityEventsPage from './components/events/ActivityEventsPage'
 import WebhooksPage from './components/webhooks/WebhooksPage'
 import GuardrailsPage from './components/guardrails/GuardrailsPage'
 import ConfigurationPage from './components/config/ConfigurationPage'
+import SimulationPage from './components/simulation/SimulationPage'
 import { LoadingState, ErrorState } from './components/common/LoaderAndStates'
 
 import {
@@ -358,6 +359,10 @@ function App() {
           merchantConfig={merchantConfig}
           auditLogs={auditLogs}
           onSelectCase={handleInspectCase}
+        />
+      ) : activeTab === 'simulation' ? (
+        <SimulationPage
+          cases={cases}
         />
       ) : (
         <ConfigurationPage

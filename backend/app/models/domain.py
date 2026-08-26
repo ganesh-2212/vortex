@@ -374,3 +374,52 @@ class StrategyStatistics(BaseModel):
     total_expected_recovery: Decimal
     strategy_counts: Dict[str, int]
     average_confidence: float
+
+
+# --- F12 Recovery Simulation Models ---
+
+class SimulatedCaseDetail(BaseModel):
+    case_id: uuid.UUID
+    amount_at_risk: Decimal
+    risk_level: str
+    no_intervention_recovered: Decimal
+    basic_retry_strategy: str
+    basic_retry_recovered: Decimal
+    basic_retry_cost: Decimal
+    sentinel_strategy: str
+    sentinel_probability: int
+    sentinel_recovered: Decimal
+    sentinel_cost: Decimal
+    sentinel_net_recovered: Decimal
+    incremental_vs_no_intervention: Decimal
+    incremental_vs_basic_retry: Decimal
+    final_outcome: str
+
+class SimulationRunRequest(BaseModel):
+    case_ids: List[uuid.UUID] = Field(default_factory=list)
+
+class SimulationRunResponse(BaseModel):
+    simulation_id: uuid.UUID
+    total_revenue_at_risk: Decimal
+    no_intervention_recovered_amount: Decimal
+    basic_retry_recovered_amount: Decimal
+    sentinel_recovered_amount: Decimal
+    sentinel_recovery_rate: float
+    incremental_recovery_vs_no_intervention: Decimal
+    incremental_recovery_vs_basic_retry: Decimal
+    additional_recovery_percentage: float
+    total_intervention_cost: Decimal
+    sentinel_net_recovery: Decimal
+    number_of_simulated_cases: int
+    number_of_simulated_successful_recoveries: int
+    cases: List[SimulatedCaseDetail]
+    run_at: datetime
+
+
+class SimulationStatistics(BaseModel):
+    simulations_run: int
+    total_cases_simulated: int
+    average_sentinel_recovery_rate: float
+    total_incremental_recovered_vs_basic: Decimal
+
+
