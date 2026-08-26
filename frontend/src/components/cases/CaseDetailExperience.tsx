@@ -23,6 +23,7 @@ interface CaseDetailExperienceProps {
   caseStrategy?: any
   orchestrationState?: any
   historicalEvidence?: any
+  decisionExplanation?: any
   auditHistory?: any[] // from RecoveryCaseDetailResponse
   detailError: string | null
   detailSuccess: string | null
@@ -49,6 +50,7 @@ export default function CaseDetailExperience({
   caseStrategy,
   orchestrationState,
   historicalEvidence,
+  decisionExplanation,
   auditHistory = [],
   detailError,
   detailSuccess,
@@ -209,6 +211,94 @@ export default function CaseDetailExperience({
                   <span className="text-[10px] text-gray-400 font-mono block mt-1 truncate">
                     {caseLifecycle?.recovered_at ? new Date(caseLifecycle.recovered_at).toLocaleString() : 'N/A'}
                   </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* F15 Decision Explanation Section */}
+          {decisionExplanation && (
+            <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6 space-y-4">
+              <div className="flex justify-between items-center border-b border-[#202430] pb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-200">WHY REVENUE SENTINEL MADE THIS DECISION</h3>
+                  <span className="text-[10px] text-gray-500">Deterministic Explainability Layer (F15)</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b border-[#202430]">
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Risk</span>
+                  <span className="text-sm font-bold text-gray-200 mt-1 block uppercase">{decisionExplanation.risk_level}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Strategy</span>
+                  <span className="text-sm font-bold text-purple-300 mt-1 block uppercase">{decisionExplanation.strategy_selected.replace(/_/g, ' ')}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Decision</span>
+                  <span className="text-sm font-bold text-emerald-400 mt-1 block uppercase">{decisionExplanation.orchestration_decision.replace(/_/g, ' ')}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Expected Value</span>
+                  <span className="text-sm font-bold text-gray-200 mt-1 block">{formatCurrency(decisionExplanation.expected_vs_actual.expected_recovery)}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider mb-2">WHY?</span>
+                  <p className="text-xs text-gray-300 bg-[#1b1e28]/40 border border-[#202430] p-3 rounded">
+                    {decisionExplanation.orchestration_reason}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider mb-2">SAFETY CHECKS (F10 Guardrails)</span>
+                  <div className="space-y-2">
+                    {decisionExplanation.guardrail_checks.map((g: any, i: number) => (
+                      <div key={i} className="text-xs text-gray-300 bg-[#1b1e28]/40 border border-[#202430] p-3 rounded flex items-start gap-2">
+                        {g.status === 'ALLOWED' ? (
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                        )}
+                        <div>
+                          <span className="font-semibold block">{g.guardrail}</span>
+                          <span className="text-[10px] text-gray-400">{g.explanation}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {decisionExplanation.historical_evidence && (
+                  <div>
+                    <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider mb-2">HISTORICAL EVIDENCE</span>
+                    <p className="text-xs text-gray-300 bg-[#1b1e28]/40 border border-[#202430] p-3 rounded">
+                      {decisionExplanation.historical_evidence.explanation}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider mb-2">EXPECTED VS ACTUAL</span>
+                  <div className="grid grid-cols-3 gap-2 text-xs text-gray-300 bg-[#1b1e28]/40 border border-[#202430] p-3 rounded">
+                    <div>
+                      <span className="text-[10px] text-gray-500 block">Expected</span>
+                      <span className="font-semibold">{formatCurrency(decisionExplanation.expected_vs_actual.expected_recovery)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-gray-500 block">Actual</span>
+                      <span className="font-semibold">{formatCurrency(decisionExplanation.expected_vs_actual.actual_recovery)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-gray-500 block">Variance</span>
+                      <span className={`font-semibold ${decisionExplanation.expected_vs_actual.variance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {decisionExplanation.expected_vs_actual.variance >= 0 ? '+' : ''}{formatCurrency(decisionExplanation.expected_vs_actual.variance)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

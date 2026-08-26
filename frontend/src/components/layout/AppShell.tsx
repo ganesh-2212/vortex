@@ -11,10 +11,12 @@ import {
   X,
   Globe,
   BarChart,
-  TestTube
+  TestTube,
+  FileText,
+  Settings
 } from 'lucide-react'
 
-export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance'
+export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation'
 
 interface AppShellProps {
   activeTab: Tab
@@ -41,8 +43,10 @@ export default function AppShell({
     { id: 'overview' as Tab, label: 'Overview', icon: DollarSign, desc: 'Executive dashboard' },
     { id: 'cases' as Tab, label: 'Recovery Cases', icon: Layers, desc: 'Operational queues' },
     { id: 'recommendations' as Tab, label: 'Recommendations', icon: Zap, desc: 'Automation decisions' },
-    { id: 'simulation' as Tab, label: 'Recovery Simulation', icon: TestTube, desc: 'Incremental value proof' },
-    { id: 'performance' as Tab, label: 'Strategy Performance', icon: BarChart, desc: 'Impact metrics' },
+    { id: 'config' as Tab, label: 'Merchant Settings', icon: Settings, desc: 'Account configuration' },
+    { id: 'simulation' as Tab, label: 'F12 Simulation', icon: TestTube, desc: 'Incremental value proof' },
+    { id: 'performance' as Tab, label: 'F14 Strategy Perf', icon: BarChart, desc: 'Impact metrics' },
+    { id: 'explanation' as Tab, label: 'Decision Intelligence', icon: FileText, desc: 'Logic transparency' },
     { id: 'events' as Tab, label: 'Activity Feed', icon: Activity, desc: 'Realtime events log' },
     { id: 'webhooks' as Tab, label: 'Webhooks Ingestion', icon: Globe, desc: 'Signature verify status' },
     { id: 'guardrails' as Tab, label: 'Guardrails Rules', icon: Shield, desc: 'Safety enforcement' },

@@ -236,3 +236,21 @@ export async function getStrategyPerformanceRecommendation(caseId: string) {
   if (!res.ok) throw new Error('Failed to fetch historical strategy recommendation')
   return res.json()
 }
+
+export async function getDecisionExplanation(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/explanation`)
+  if (!res.ok) throw new Error('Failed to fetch decision explanation')
+  return res.json()
+}
+
+export async function getDecisionTimeline(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/explanation/timeline`)
+  if (!res.ok) throw new Error('Failed to fetch decision timeline')
+  return res.json()
+}
+
+export async function getDecisionGuardrails(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/explanation/guardrails`)
+  if (!res.ok) throw new Error('Failed to fetch decision guardrails')
+  return res.json()
+}

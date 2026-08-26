@@ -503,3 +503,51 @@ class StrategyPerformanceRecommendation(BaseModel):
     explanation: str
     fallback_reason: Optional[str] = None
 
+# F15 Decision Explainability Models
+class ExplanationEvidence(BaseModel):
+    source_type: str
+    source_id: Optional[str] = None
+    label: str
+    value: str
+    explanation: str
+
+class GuardrailExplanation(BaseModel):
+    guardrail: str
+    status: str
+    actual_value: Optional[str] = None
+    configured_limit: Optional[str] = None
+    explanation: str
+
+class DecisionTimelineEvent(BaseModel):
+    timestamp: datetime
+    event_type: str
+    title: str
+    description: str
+    status: str
+    source_id: Optional[str] = None
+
+class ExpectedVsActualOutcome(BaseModel):
+    expected_recovery: Decimal
+    actual_recovery: Decimal
+    variance: Decimal
+    outcome_status: str
+
+class DecisionExplanation(BaseModel):
+    case_id: uuid.UUID
+    generated_at: datetime
+    case_status: RecoveryCaseStatus
+    payment_event_type: RevenueEventType
+    payment_amount: Decimal
+    risk_level: RiskLevel
+    risk_reasons: List[str]
+    strategy_selected: str
+    strategy_reason: str
+    alternative_strategies: List[Dict[str, Any]]
+    orchestration_decision: str
+    orchestration_reason: str
+    guardrail_status: str
+    guardrail_checks: List[GuardrailExplanation]
+    historical_evidence: Optional[Dict[str, Any]] = None
+    expected_vs_actual: ExpectedVsActualOutcome
+    timeline: List[DecisionTimelineEvent]
+    evidence_references: List[ExplanationEvidence]

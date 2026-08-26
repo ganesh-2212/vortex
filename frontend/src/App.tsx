@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import AppShell from './components/layout/AppShell'
-import type { Tab } from './components/layout/AppShell'
 import OverviewPage from './components/dashboard/OverviewPage'
 import RecoveryCasesPage from './components/cases/RecoveryCasesPage'
 import CaseDetailExperience from './components/cases/CaseDetailExperience'
@@ -11,6 +10,7 @@ import GuardrailsPage from './components/guardrails/GuardrailsPage'
 import ConfigurationPage from './components/config/ConfigurationPage'
 import SimulationPage from './components/simulation/SimulationPage'
 import StrategyPerformancePage from './components/performance/StrategyPerformancePage'
+import DecisionExplanationPage from './components/explanation/DecisionExplanationPage'
 import { LoadingState, ErrorState } from './components/common/LoaderAndStates'
 
 import {
@@ -35,11 +35,12 @@ import {
   getOrchestrationState,
   getStrategyPerformance,
   getStrategyPerformanceByEventType,
-  getStrategyPerformanceRecommendation
+  getStrategyPerformanceRecommendation,
+  getDecisionExplanation
 } from './api'
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation'>('overview')
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
 
   // Global Sync States
@@ -75,6 +76,7 @@ function App() {
   const [caseStrategy, setCaseStrategy] = useState<any>(null)
   const [orchestrationState, setOrchestrationState] = useState<any>(null)
   const [historicalEvidence, setHistoricalEvidence] = useState<any>(null)
+  const [decisionExplanation, setDecisionExplanation] = useState<any>(null)
   const [auditHistory, setAuditHistory] = useState<any[]>([])
 
   // Action proposing / executing states
@@ -189,6 +191,14 @@ function App() {
         // Suppress errors
       }
 
+      // Load decision explanation (F15)
+      let explData = null
+      try {
+        explData = await getDecisionExplanation(caseId)
+      } catch (e) {
+        // Suppress errors
+      }
+
       setSelectedCaseDetail(intelData.case ? {
         case_id: intelData.case.id,
         amount_at_risk: intelData.case.amount_at_risk,
@@ -217,6 +227,7 @@ function App() {
       setCaseStrategy(strategyData)
       setOrchestrationState(orchestrationData)
       setHistoricalEvidence(histData)
+      setDecisionExplanation(explData)
       setAuditHistory(detailRes.audit_history || [])
       setApiConnected(true)
     } catch (err: any) {
@@ -308,6 +319,7 @@ function App() {
       setCaseStrategy(null)
       setOrchestrationState(null)
       setHistoricalEvidence(null)
+      setDecisionExplanation(null)
       setAuditHistory([])
     }
   }, [selectedCaseId, fetchCaseDetailData])
@@ -348,6 +360,7 @@ function App() {
           caseStrategy={caseStrategy}
           orchestrationState={orchestrationState}
           historicalEvidence={historicalEvidence}
+          decisionExplanation={decisionExplanation}
           auditHistory={auditHistory}
           detailError={detailError}
           detailSuccess={detailSuccess}
@@ -405,6 +418,10 @@ function App() {
         <StrategyPerformancePage
           performance={performance}
           eventPerformance={eventPerformance}
+        />
+      ) : activeTab === 'explanation' ? (
+        <DecisionExplanationPage
+          cases={cases}
         />
       ) : (
         <ConfigurationPage
