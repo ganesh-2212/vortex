@@ -337,6 +337,8 @@ function App() {
       ) : activeTab === 'webhooks' ? (
         <WebhooksPage
           events={events}
+          providerInfo={providerInfo}
+          onRefresh={fetchDashboardData}
         />
       ) : activeTab === 'guardrails' ? (
         <GuardrailsPage

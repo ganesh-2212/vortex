@@ -124,3 +124,37 @@ export async function getProviderInfo() {
   if (!res.ok) throw new Error('Failed to fetch payment provider details')
   return res.json()
 }
+
+export interface SimulatePaymentEventRequest {
+  event: 'payment.failed' | 'payment.captured'
+  amount: number
+  currency?: string
+  payment_id: string
+  email?: string
+  contact?: string
+}
+
+export interface SimulatePaymentEventResponse {
+  webhook_accepted: boolean
+  event: string
+  payment_id: string
+  amount: number
+  currency: string
+  result_status: string
+  event_id?: string
+  case_id?: string
+  message?: string
+}
+
+export async function simulatePaymentEvent(payload: SimulatePaymentEventRequest) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/webhooks/simulate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}))
+    throw new Error(errData.detail || 'Failed to simulate payment webhook event')
+  }
+  return res.json() as Promise<SimulatePaymentEventResponse>
+}

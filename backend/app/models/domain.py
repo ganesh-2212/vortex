@@ -319,3 +319,24 @@ class AutomationSummary(BaseModel):
     escalation_recommended: int
     stop_recommended: int
     blocked_retry_count: int
+
+# --- F10 Webhook Simulator Models ---
+
+class WebhookSimulateRequest(BaseModel):
+    event: str
+    amount: Decimal = Decimal("5000")
+    currency: str = "INR"
+    payment_id: str
+    email: str = "demo@merchant.test"
+    contact: str = "9876543210"
+
+class WebhookSimulateResponse(BaseModel):
+    webhook_accepted: bool
+    event: str
+    payment_id: str
+    amount: Decimal
+    currency: str
+    result_status: str
+    event_id: Optional[str] = None
+    case_id: Optional[str] = None
+    message: Optional[str] = None
