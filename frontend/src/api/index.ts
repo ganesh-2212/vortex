@@ -199,3 +199,16 @@ export async function getSimulationStatistics() {
   return res.json()
 }
 
+export async function evaluateOrchestration(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/orchestration/evaluate`, {
+    method: 'POST'
+  })
+  if (!res.ok) throw new Error('Failed to evaluate recovery orchestration')
+  return res.json()
+}
+
+export async function getOrchestrationState(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/orchestration`)
+  if (!res.ok) throw new Error('Failed to fetch orchestration state')
+  return res.json()
+}

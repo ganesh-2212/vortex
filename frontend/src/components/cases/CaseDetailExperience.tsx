@@ -21,6 +21,7 @@ interface CaseDetailExperienceProps {
   caseAttempts: any[]
   caseRecommendation: any
   caseStrategy?: any
+  orchestrationState?: any
   auditHistory?: any[] // from RecoveryCaseDetailResponse
   detailError: string | null
   detailSuccess: string | null
@@ -45,6 +46,7 @@ export default function CaseDetailExperience({
   caseAttempts,
   caseRecommendation,
   caseStrategy,
+  orchestrationState,
   auditHistory = [],
   detailError,
   detailSuccess,
@@ -86,6 +88,17 @@ export default function CaseDetailExperience({
     { label: 'Outcome Resolved', active: isTerminal }
   ]
 
+  // F13 Orchestration Timeline
+  const orchStages = [
+    { label: 'PAYMENT FAILED', active: true },
+    { label: 'RISK ASSESSED', active: !!selectedCaseDetail?.risk_level },
+    { label: 'STRATEGY SELECTED', active: !!caseStrategy },
+    { label: 'RETRY EXECUTED', active: hasExecuted },
+    { label: 'COOLDOWN', active: orchestrationState?.cooldown_active },
+    { label: 'RE-EVALUATED', active: orchestrationState?.attempt_number > 1 },
+    { label: caseStatus === 'RECOVERED' ? 'RECOVERED' : caseStatus === 'STOPPED' ? 'STOPPED' : caseStatus === 'ESCALATED' ? 'ESCALATED' : 'RECOVERED / ESCALATED / STOPPED', active: isTerminal }
+  ]
+
   return (
     <div className="space-y-6 text-left">
       
@@ -105,17 +118,17 @@ export default function CaseDetailExperience({
       <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Flow Timeline</span>
         <div className="flex flex-wrap items-center gap-2 md:gap-3 flex-1 justify-end">
-          {stages.map((stg, index) => (
+          {orchStages.map((stg, index) => (
             <div key={stg.label} className="flex items-center gap-1.5">
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${
                 stg.active
                   ? 'bg-purple-950/40 text-purple-300 border border-purple-500/20'
                   : 'bg-[#1b1e28]/20 text-gray-500 border border-[#2e3445]'
               }`}>
                 {stg.label}
               </span>
-              {index < stages.length - 1 && (
-                <ChevronRight className="w-3.5 h-3.5 text-gray-600 hidden xs:inline" />
+              {index < orchStages.length - 1 && (
+                <ChevronRight className="w-3.5 h-3.5 text-gray-600 hidden md:inline" />
               )}
             </div>
           ))}
@@ -441,6 +454,74 @@ export default function CaseDetailExperience({
               </div>
             </div>
           </div>
+
+          {/* Recovery Orchestration Section (F13) */}
+          {orchestrationState && (
+            <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-4">
+              <div className="flex justify-between items-center border-b border-[#202430] pb-2">
+                <span className="text-sm font-semibold text-gray-200">Recovery Orchestration</span>
+                <span className="bg-purple-950/20 text-purple-400 font-bold border border-purple-500/20 px-2 py-0.5 rounded font-mono text-[9px] uppercase">
+                  Adaptive Scheduler
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                <div>
+                  <span className="text-[9px] text-gray-500 uppercase block font-semibold">Current State</span>
+                  <span className={`text-sm font-bold block mt-0.5 ${isTerminal ? 'text-emerald-400' : orchestrationState.decision === 'WAIT_COOLDOWN' ? 'text-amber-400' : 'text-gray-200'}`}>
+                    {isTerminal ? caseStatus : orchestrationState.decision.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-gray-500 uppercase block font-semibold">Current Strategy</span>
+                  <span className="text-sm font-bold text-purple-300 block mt-0.5">
+                    {orchestrationState.selected_strategy.replace(/_/g, ' ')}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[9px] text-gray-500 uppercase block font-semibold">Next Decision</span>
+                  <span className="text-xs font-bold text-gray-300 block mt-0.5">
+                    {orchestrationState.decision.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-gray-500 uppercase block font-semibold">Attempt</span>
+                  <span className="text-xs font-bold text-gray-300 block mt-0.5">
+                    {orchestrationState.attempt_number}
+                  </span>
+                </div>
+
+                <div className="col-span-2">
+                  <span className="text-[9px] text-gray-500 uppercase block font-semibold">Cooldown</span>
+                  <span className={`text-xs font-bold block mt-0.5 ${orchestrationState.cooldown_active ? 'text-amber-400' : 'text-gray-300'}`}>
+                    {orchestrationState.cooldown_active ? 'Active' : 'Not Active'}
+                  </span>
+                </div>
+
+                {orchestrationState.scheduled_time && (
+                  <div className="col-span-2">
+                    <span className="text-[9px] text-gray-500 uppercase block font-semibold">Next Evaluation / Retry Available In</span>
+                    <span className="text-xs font-bold text-emerald-400 block mt-0.5">
+                      {new Date(orchestrationState.scheduled_time).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-[#1b1e28]/30 border border-[#202430] p-3 rounded-lg mt-2">
+                <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Reason</span>
+                <p className="text-[11px] text-gray-300 leading-relaxed">
+                  {orchestrationState.reason}
+                </p>
+                {isTerminal && (
+                  <p className="text-[11px] text-emerald-400 font-semibold mt-1">
+                    Further recovery actions automatically stopped.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Recommendation Section */}
           {caseRecommendation && (

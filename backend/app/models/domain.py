@@ -422,4 +422,26 @@ class SimulationStatistics(BaseModel):
     average_sentinel_recovery_rate: float
     total_incremental_recovered_vs_basic: Decimal
 
+# --- F13 Orchestration Models ---
 
+class OrchestrationDecisionType(str, Enum):
+    EXECUTE_NOW = "EXECUTE_NOW"
+    WAIT_COOLDOWN = "WAIT_COOLDOWN"
+    SCHEDULE_RETRY = "SCHEDULE_RETRY"
+    REEVALUATE = "REEVALUATE"
+    ESCALATE_TO_HUMAN = "ESCALATE_TO_HUMAN"
+    STOP_RECOVERY = "STOP_RECOVERY"
+    CASE_EXPIRED = "CASE_EXPIRED"
+    ALREADY_RECOVERED = "ALREADY_RECOVERED"
+
+class OrchestrationState(BaseModel):
+    case_id: uuid.UUID
+    decision: OrchestrationDecisionType
+    selected_strategy: str
+    next_action: Optional[RecoveryActionType] = None
+    scheduled_time: Optional[datetime] = None
+    attempt_number: int
+    cooldown_active: bool
+    reason: str
+    human_escalation_required: bool
+    evaluated_at: datetime

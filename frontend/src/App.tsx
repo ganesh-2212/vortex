@@ -30,7 +30,8 @@ import {
   getMerchantConfig,
   updateMerchantConfig,
   getProviderInfo,
-  getCaseStrategy
+  getCaseStrategy,
+  getOrchestrationState
 } from './api'
 
 function App() {
@@ -66,6 +67,7 @@ function App() {
   const [caseAttempts, setCaseAttempts] = useState<any[]>([])
   const [caseRecommendation, setCaseRecommendation] = useState<any>(null)
   const [caseStrategy, setCaseStrategy] = useState<any>(null)
+  const [orchestrationState, setOrchestrationState] = useState<any>(null)
   const [auditHistory, setAuditHistory] = useState<any[]>([])
 
   // Action proposing / executing states
@@ -158,6 +160,14 @@ function App() {
         // Suppress errors for resolved cases
       }
 
+      // Load orchestration state (F13)
+      let orchestrationData = null
+      try {
+        orchestrationData = await getOrchestrationState(caseId)
+      } catch (e) {
+        // Suppress errors
+      }
+
       setSelectedCaseDetail(intelData.case ? {
         case_id: intelData.case.id,
         amount_at_risk: intelData.case.amount_at_risk,
@@ -184,6 +194,7 @@ function App() {
       setCaseAttempts(attemptsData || [])
       setCaseRecommendation(recData)
       setCaseStrategy(strategyData)
+      setOrchestrationState(orchestrationData)
       setAuditHistory(detailRes.audit_history || [])
       setApiConnected(true)
     } catch (err: any) {
@@ -273,6 +284,7 @@ function App() {
       setCaseAttempts([])
       setCaseRecommendation(null)
       setCaseStrategy(null)
+      setOrchestrationState(null)
       setAuditHistory([])
     }
   }, [selectedCaseId, fetchCaseDetailData])
@@ -311,6 +323,7 @@ function App() {
           caseAttempts={caseAttempts}
           caseRecommendation={caseRecommendation}
           caseStrategy={caseStrategy}
+          orchestrationState={orchestrationState}
           auditHistory={auditHistory}
           detailError={detailError}
           detailSuccess={detailSuccess}
