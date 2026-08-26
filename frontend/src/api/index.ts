@@ -212,3 +212,27 @@ export async function getOrchestrationState(caseId: string) {
   if (!res.ok) throw new Error('Failed to fetch orchestration state')
   return res.json()
 }
+
+export async function getStrategyPerformance() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-performance`)
+  if (!res.ok) throw new Error('Failed to fetch strategy performance')
+  return res.json()
+}
+
+export async function getStrategyPerformanceByType(strategyType: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-performance/${strategyType}`)
+  if (!res.ok) throw new Error('Failed to fetch detailed strategy performance')
+  return res.json()
+}
+
+export async function getStrategyPerformanceByEventType() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-performance/by-event-type`)
+  if (!res.ok) throw new Error('Failed to fetch strategy performance by event type')
+  return res.json()
+}
+
+export async function getStrategyPerformanceRecommendation(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-performance/recommendation/${caseId}`)
+  if (!res.ok) throw new Error('Failed to fetch historical strategy recommendation')
+  return res.json()
+}

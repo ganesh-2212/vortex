@@ -445,3 +445,61 @@ class OrchestrationState(BaseModel):
     reason: str
     human_escalation_required: bool
     evaluated_at: datetime
+
+
+# --- F14 Strategy Performance Models ---
+
+class StrategyOutcomeStatistics(BaseModel):
+    strategy_type: str
+    total_attempts: int
+    successful_attempts: int
+    failed_attempts: int
+    success_rate: float
+    total_recovered: Decimal
+    average_recovered: Decimal
+    total_cost: Decimal
+    net_recovery: Decimal
+    average_attempts_to_recovery: float
+    expected_recovery: Decimal
+    actual_recovery: Decimal
+    recovery_variance: Decimal
+
+class StrategyPerformance(BaseModel):
+    strategy_type: str
+    performance_score: float
+    success_rate: float
+    net_recovery: Decimal
+    confidence: int
+    sample_size: int
+    trend: str
+    recommended_usage: str
+
+class StrategyPerformanceResponse(BaseModel):
+    generated_at: datetime
+    total_cases_analyzed: int
+    total_revenue_at_risk: Decimal
+    total_revenue_recovered: Decimal
+    overall_recovery_rate: float
+    strategy_statistics: List[StrategyOutcomeStatistics]
+    best_strategy: str
+    strongest_strategy_by_revenue: str
+    strongest_strategy_by_success_rate: str
+
+class EventStrategyPerformance(BaseModel):
+    event_type: str
+    total_cases: int
+    best_strategy: str
+    best_strategy_success_rate: float
+    best_strategy_net_recovery: Decimal
+    strategy_breakdown: List[StrategyOutcomeStatistics]
+
+class StrategyPerformanceRecommendation(BaseModel):
+    case_id: uuid.UUID
+    f11_baseline_strategy: str
+    historical_best_strategy: str
+    combined_advisory_strategy: str
+    confidence: int
+    sample_size: int
+    explanation: str
+    fallback_reason: Optional[str] = None
+

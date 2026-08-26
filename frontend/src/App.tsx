@@ -10,6 +10,7 @@ import WebhooksPage from './components/webhooks/WebhooksPage'
 import GuardrailsPage from './components/guardrails/GuardrailsPage'
 import ConfigurationPage from './components/config/ConfigurationPage'
 import SimulationPage from './components/simulation/SimulationPage'
+import StrategyPerformancePage from './components/performance/StrategyPerformancePage'
 import { LoadingState, ErrorState } from './components/common/LoaderAndStates'
 
 import {
@@ -31,7 +32,10 @@ import {
   updateMerchantConfig,
   getProviderInfo,
   getCaseStrategy,
-  getOrchestrationState
+  getOrchestrationState,
+  getStrategyPerformance,
+  getStrategyPerformanceByEventType,
+  getStrategyPerformanceRecommendation
 } from './api'
 
 function App() {
@@ -55,6 +59,8 @@ function App() {
   const [auditLogs, setAuditLogs] = useState<any[]>([])
   const [merchantConfig, setMerchantConfig] = useState<any>(null)
   const [providerInfo, setProviderInfo] = useState<any>(null)
+  const [performance, setPerformance] = useState<any>(null)
+  const [eventPerformance, setEventPerformance] = useState<any[]>([])
 
   // Selected Case Telemetry Detail States
   const [detailLoading, setDetailLoading] = useState(false)
@@ -68,6 +74,7 @@ function App() {
   const [caseRecommendation, setCaseRecommendation] = useState<any>(null)
   const [caseStrategy, setCaseStrategy] = useState<any>(null)
   const [orchestrationState, setOrchestrationState] = useState<any>(null)
+  const [historicalEvidence, setHistoricalEvidence] = useState<any>(null)
   const [auditHistory, setAuditHistory] = useState<any[]>([])
 
   // Action proposing / executing states
@@ -91,7 +98,9 @@ function App() {
         eventsData,
         logsData,
         configData,
-        providerData
+        providerData,
+        perfData,
+        eventPerfData
       ] = await Promise.all([
         getIntelligenceSummary(),
         getLeakage(),
@@ -102,7 +111,9 @@ function App() {
         getRevenueEvents(),
         getAuditLogs(),
         getMerchantConfig("11111111-1111-1111-1111-111111111111"),
-        getProviderInfo()
+        getProviderInfo(),
+        getStrategyPerformance(),
+        getStrategyPerformanceByEventType()
       ])
 
       setSummary(summaryData)
@@ -115,6 +126,8 @@ function App() {
       setAuditLogs(logsData)
       setMerchantConfig(configData)
       setProviderInfo(providerData)
+      setPerformance(perfData)
+      setEventPerformance(eventPerfData)
       setLastRefreshed(new Date())
       setApiConnected(true)
     } catch (err: any) {
@@ -168,6 +181,14 @@ function App() {
         // Suppress errors
       }
 
+      // Load historical strategy evidence (F14)
+      let histData = null
+      try {
+        histData = await getStrategyPerformanceRecommendation(caseId)
+      } catch (e) {
+        // Suppress errors
+      }
+
       setSelectedCaseDetail(intelData.case ? {
         case_id: intelData.case.id,
         amount_at_risk: intelData.case.amount_at_risk,
@@ -195,6 +216,7 @@ function App() {
       setCaseRecommendation(recData)
       setCaseStrategy(strategyData)
       setOrchestrationState(orchestrationData)
+      setHistoricalEvidence(histData)
       setAuditHistory(detailRes.audit_history || [])
       setApiConnected(true)
     } catch (err: any) {
@@ -285,6 +307,7 @@ function App() {
       setCaseRecommendation(null)
       setCaseStrategy(null)
       setOrchestrationState(null)
+      setHistoricalEvidence(null)
       setAuditHistory([])
     }
   }, [selectedCaseId, fetchCaseDetailData])
@@ -324,6 +347,7 @@ function App() {
           caseRecommendation={caseRecommendation}
           caseStrategy={caseStrategy}
           orchestrationState={orchestrationState}
+          historicalEvidence={historicalEvidence}
           auditHistory={auditHistory}
           detailError={detailError}
           detailSuccess={detailSuccess}
@@ -376,6 +400,11 @@ function App() {
       ) : activeTab === 'simulation' ? (
         <SimulationPage
           cases={cases}
+        />
+      ) : activeTab === 'performance' ? (
+        <StrategyPerformancePage
+          performance={performance}
+          eventPerformance={eventPerformance}
         />
       ) : (
         <ConfigurationPage

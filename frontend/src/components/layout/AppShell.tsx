@@ -10,10 +10,11 @@ import {
   Menu,
   X,
   Globe,
-  TrendingUp
+  BarChart,
+  TestTube
 } from 'lucide-react'
 
-export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation'
+export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance'
 
 interface AppShellProps {
   activeTab: Tab
@@ -40,7 +41,8 @@ export default function AppShell({
     { id: 'overview' as Tab, label: 'Overview', icon: DollarSign, desc: 'Executive dashboard' },
     { id: 'cases' as Tab, label: 'Recovery Cases', icon: Layers, desc: 'Operational queues' },
     { id: 'recommendations' as Tab, label: 'Recommendations', icon: Zap, desc: 'Automation decisions' },
-    { id: 'simulation' as Tab, label: 'Recovery Simulation', icon: TrendingUp, desc: 'Incremental value proof' },
+    { id: 'simulation' as Tab, label: 'Recovery Simulation', icon: TestTube, desc: 'Incremental value proof' },
+    { id: 'performance' as Tab, label: 'Strategy Performance', icon: BarChart, desc: 'Impact metrics' },
     { id: 'events' as Tab, label: 'Activity Feed', icon: Activity, desc: 'Realtime events log' },
     { id: 'webhooks' as Tab, label: 'Webhooks Ingestion', icon: Globe, desc: 'Signature verify status' },
     { id: 'guardrails' as Tab, label: 'Guardrails Rules', icon: Shield, desc: 'Safety enforcement' },

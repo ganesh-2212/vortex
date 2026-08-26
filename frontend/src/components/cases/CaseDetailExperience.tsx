@@ -22,6 +22,7 @@ interface CaseDetailExperienceProps {
   caseRecommendation: any
   caseStrategy?: any
   orchestrationState?: any
+  historicalEvidence?: any
   auditHistory?: any[] // from RecoveryCaseDetailResponse
   detailError: string | null
   detailSuccess: string | null
@@ -47,6 +48,7 @@ export default function CaseDetailExperience({
   caseRecommendation,
   caseStrategy,
   orchestrationState,
+  historicalEvidence,
   auditHistory = [],
   detailError,
   detailSuccess,
@@ -75,18 +77,8 @@ export default function CaseDetailExperience({
   }
 
   // Determine horizontal timeline stages progress
-  const hasProposed = caseActions.length > 0
   const hasExecuted = caseAttempts.length > 0
   const isTerminal = caseStatus === 'RECOVERED' || caseStatus === 'STOPPED' || caseStatus === 'ESCALATED'
-
-  const stages = [
-    { label: 'Event Ingest', active: true },
-    { label: 'Case Created', active: true },
-    { label: 'Recommended', active: !!caseRecommendation || isTerminal },
-    { label: 'Action Proposed', active: hasProposed || isTerminal },
-    { label: 'Executed', active: hasExecuted || isTerminal },
-    { label: 'Outcome Resolved', active: isTerminal }
-  ]
 
   // F13 Orchestration Timeline
   const orchStages = [
@@ -325,6 +317,47 @@ export default function CaseDetailExperience({
 
               <div className="bg-[#1b1e28]/20 border border-[#2e3445]/40 text-gray-500 p-2.5 rounded-lg text-[10px] text-center font-semibold italic">
                 Strategy optimization is advisory. No payment action is executed by the optimizer.
+              </div>
+            </div>
+          )}
+
+          {/* Historical Strategy Evidence Section (F14) */}
+          {historicalEvidence && (
+            <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-4">
+              <div className="flex justify-between items-center border-b border-[#202430] pb-2">
+                <div>
+                  <span className="text-sm font-semibold text-gray-200 block">Historical Strategy Evidence</span>
+                  <span className="text-[10px] text-gray-500">Based on past performance and variance</span>
+                </div>
+                <span className="bg-purple-950/20 text-purple-400 font-bold border border-purple-500/20 px-2 py-0.5 rounded font-mono text-[9px] uppercase">
+                  F14 Advisor
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                <div>
+                  <span className="text-[9px] text-gray-500 uppercase block font-semibold">F11 Baseline</span>
+                  <span className="text-xs font-bold text-gray-300 block mt-0.5">{historicalEvidence.f11_baseline_strategy.replace(/_/g, ' ')}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-gray-500 uppercase block font-semibold">Historical Best</span>
+                  <span className={`text-xs font-bold block mt-0.5 ${historicalEvidence.historical_best_strategy !== 'N/A' ? 'text-emerald-400' : 'text-gray-400'}`}>
+                    {historicalEvidence.historical_best_strategy.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div className="col-span-2 bg-[#1b1e28]/30 border border-[#202430] p-2 rounded">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[9px] text-purple-300 uppercase font-bold tracking-wider">Combined Advisory Signal</span>
+                    <div className="flex gap-2">
+                      <span className="text-[9px] text-gray-500">N={historicalEvidence.sample_size}</span>
+                      <span className="text-[9px] text-gray-500">Conf: {historicalEvidence.confidence}%</span>
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold text-purple-400 block">{historicalEvidence.combined_advisory_strategy.replace(/_/g, ' ')}</span>
+                  <p className="text-[10px] text-gray-400 mt-1 leading-relaxed font-sans">
+                    {historicalEvidence.explanation}
+                  </p>
+                </div>
               </div>
             </div>
           )}

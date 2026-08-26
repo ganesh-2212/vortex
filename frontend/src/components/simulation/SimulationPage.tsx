@@ -3,11 +3,9 @@ import {
   TrendingUp,
   AlertTriangle,
   Play,
-  CheckCircle,
   FileText,
   BarChart2,
   ChevronRight,
-  HelpCircle,
   ArrowRight
 } from 'lucide-react'
 import { runRecoverySimulation, getLatestSimulation } from '../../api'
