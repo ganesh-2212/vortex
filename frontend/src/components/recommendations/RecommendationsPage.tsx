@@ -1,91 +1,81 @@
-import { AlertTriangle, AlertCircle } from 'lucide-react'
-import { RiskBadge } from '../common/LoaderAndStates'
+import React from 'react';
+import { RiskBadge, PageHeader, DataTable, Alert } from '../common/UI';
 
 interface RecommendationsPageProps {
-  recommendations: any[]
-  onSelectCase: (caseId: string) => void
+  recommendations: any[];
+  onSelectCase: (caseId: string) => void;
 }
 
 export default function RecommendationsPage({
   recommendations,
   onSelectCase
 }: RecommendationsPageProps) {
-  const isBlocked = (status: string) => status === 'BLOCKED'
+  const isBlocked = (status: string) => status === 'BLOCKED';
+
+  const columns = [
+    {
+      header: 'Case ID',
+      accessor: (row: any) => <span className="font-mono text-brand font-medium">{row.case_id.substring(0, 8)}...</span>
+    },
+    {
+      header: 'Risk Level',
+      accessor: (row: any) => <RiskBadge level={row.recommendation.risk_level} />
+    },
+    {
+      header: 'Priority Score',
+      accessor: (row: any) => <span className="font-bold text-text-primary font-mono">{row.recommendation.priority_score.toFixed(0)}</span>,
+      align: 'center' as const
+    },
+    {
+      header: 'Recommended Action',
+      accessor: (row: any) => <span className="font-semibold text-text-primary capitalize">{row.recommendation.recommended_action.replace(/_/g, ' ')}</span>
+    },
+    {
+      header: 'Confidence Rating',
+      accessor: (row: any) => (
+        <span className="bg-surface text-brand font-bold border border-border px-2.5 py-0.5 rounded font-mono">
+          {row.recommendation.confidence}%
+        </span>
+      ),
+      align: 'center' as const
+    },
+    {
+      header: 'Guardrails Check',
+      accessor: (row: any) => (
+        <span className={`text-[10px] font-bold tracking-wide uppercase ${
+          isBlocked(row.recommendation.guardrail_status) ? 'text-danger' : 'text-success'
+        }`}>
+          {row.recommendation.guardrail_status}
+        </span>
+      ),
+      align: 'right' as const
+    }
+  ];
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-6 pb-12">
       
+      <PageHeader 
+        title="Recommendations Queue" 
+        subtitle="AI-driven recovery action proposals awaiting manual review."
+      />
+
       {/* Safety Notice block */}
-      <div className="bg-purple-950/20 border border-purple-500/20 text-purple-300 p-4 rounded-xl flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
-        <div>
-          <h4 className="text-sm font-semibold uppercase tracking-wider font-mono">Advisory Decision Support Notice</h4>
-          <p className="text-xs text-purple-300/80 mt-1 leading-relaxed">
-            Recommendations are advisory only. No recovery actions are executed automatically by the Revenue Sentinel engine.
-            Action executions must be manually triggered through the Case detail diagnostics control console and pass F06 guardrails.
-          </p>
-        </div>
-      </div>
+      <Alert type="info" title="Advisory Decision Support Notice">
+        Recommendations are advisory only. No recovery actions are executed automatically by the Revenue Sentinel engine.
+        Action executions must be manually triggered through the Case detail diagnostics control console and pass F10 guardrails.
+      </Alert>
 
       {/* Recommendations Queue table */}
-      <div className="bg-[#13151c] border border-[#202430] rounded-xl overflow-hidden">
-        {recommendations.length === 0 ? (
-          <div className="py-20 text-center text-gray-500 space-y-2">
-            <AlertCircle className="w-8 h-8 mx-auto text-gray-600" />
-            <h4 className="text-sm font-semibold text-gray-400">No Active Recommendations</h4>
-            <p className="text-xs max-w-xs mx-auto">There are currently no active open cases requiring recovery recommendations.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-[#202430] text-gray-400 font-medium">
-                  <th className="py-3.5 pl-4">Case ID</th>
-                  <th className="py-3.5">Risk Level</th>
-                  <th className="py-3.5 text-center">Priority Score</th>
-                  <th className="py-3.5">Recommended Action</th>
-                  <th className="py-3.5 text-center">Confidence Rating</th>
-                  <th className="py-3.5 pr-4 text-right">Guardrails Check</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#202430]">
-                {recommendations.map((item) => (
-                  <tr
-                    key={item.case_id}
-                    onClick={() => onSelectCase(item.case_id)}
-                    className="hover:bg-[#1a1c24]/50 cursor-pointer transition duration-150"
-                  >
-                    <td className="py-3.5 pl-4 font-mono text-purple-300 font-medium">
-                      {item.case_id.substring(0, 8)}...
-                    </td>
-                    <td className="py-3.5">
-                      <RiskBadge level={item.recommendation.risk_level} />
-                    </td>
-                    <td className="py-3.5 text-center font-bold text-gray-300 font-mono">
-                      {item.recommendation.priority_score.toFixed(0)}
-                    </td>
-                    <td className="py-3.5 font-semibold text-gray-200">
-                      {item.recommendation.recommended_action.replace(/_/g, ' ')}
-                    </td>
-                    <td className="py-3.5 text-center">
-                      <span className="bg-[#1b1e28] text-purple-300 font-bold border border-[#2e3445] px-2.5 py-0.5 rounded font-mono">
-                        {item.recommendation.confidence}%
-                      </span>
-                    </td>
-                    <td className="py-3.5 pr-4 text-right">
-                      <span className={`text-[10px] font-bold tracking-wide uppercase ${
-                        isBlocked(item.recommendation.guardrail_status) ? 'text-rose-400' : 'text-emerald-400'
-                      }`}>
-                        {item.recommendation.guardrail_status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="space-y-4">
+        <DataTable 
+          columns={columns}
+          data={recommendations}
+          keyExtractor={(row) => row.case_id}
+          onRowClick={(row) => onSelectCase(row.case_id)}
+          emptyMessage="No active recommendations. There are currently no active open cases requiring recovery recommendations."
+        />
       </div>
     </div>
-  )
+  );
 }

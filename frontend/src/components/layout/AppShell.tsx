@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import {
   Shield,
   DollarSign,
@@ -14,18 +14,18 @@ import {
   TestTube,
   FileText,
   Settings
-} from 'lucide-react'
+} from 'lucide-react';
 
-export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center' | 'what-if'
+export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'what-if';
 
 interface AppShellProps {
-  activeTab: Tab
-  setActiveTab: (tab: Tab) => void
-  loading: boolean
-  onRefresh: () => void
-  lastRefreshed: Date | null
-  apiConnected: boolean
-  children: React.ReactNode
+  activeTab: Tab;
+  setActiveTab: (tab: Tab) => void;
+  loading: boolean;
+  onRefresh: () => void;
+  lastRefreshed: Date | null;
+  apiConnected: boolean;
+  children: React.ReactNode;
 }
 
 export default function AppShell({
@@ -37,181 +37,179 @@ export default function AppShell({
   apiConnected,
   children
 }: AppShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const navItems = [
-    { id: 'command-center' as Tab, label: 'Command Center', icon: Activity, desc: 'Central hub' },
-    { id: 'overview' as Tab, label: 'Overview', icon: DollarSign, desc: 'Executive dashboard' },
-    { id: 'cases' as Tab, label: 'Recovery Cases', icon: Layers, desc: 'Operational queues' },
-    { id: 'recommendations' as Tab, label: 'Recommendations', icon: Zap, desc: 'Automation decisions' },
-    { id: 'config' as Tab, label: 'Merchant Settings', icon: Settings, desc: 'Account configuration' },
-    { id: 'simulation' as Tab, label: 'F12 Simulation', icon: TestTube, desc: 'Incremental value proof' },
-    { id: 'performance' as Tab, label: 'F14 Strategy Perf', icon: BarChart, desc: 'Impact metrics' },
-    { id: 'explanation' as Tab, label: 'Decision Intelligence', icon: FileText, desc: 'Logic transparency' },
-    { id: 'what-if' as Tab, label: 'What-If Lab', icon: TestTube, desc: 'Policy sandbox' },
-    { id: 'events' as Tab, label: 'Activity Feed', icon: Activity, desc: 'Realtime events log' },
-    { id: 'webhooks' as Tab, label: 'Webhooks Ingestion', icon: Globe, desc: 'Signature verify status' },
-    { id: 'guardrails' as Tab, label: 'Guardrails Rules', icon: Shield, desc: 'Safety enforcement' },
-    { id: 'configuration' as Tab, label: 'Configuration', icon: Cpu, desc: 'Merchant policies' }
-  ]
+  const navGroups = [
+    {
+      label: 'Command Center',
+      items: [
+        { id: 'overview' as Tab, label: 'Overview', icon: Activity }
+      ]
+    },
+    {
+      label: 'Recovery',
+      items: [
+        { id: 'cases' as Tab, label: 'Cases', icon: Layers },
+        { id: 'recommendations' as Tab, label: 'Recommendations', icon: Zap },
+        { id: 'performance' as Tab, label: 'Strategy performance', icon: BarChart }
+      ]
+    },
+    {
+      label: 'Intelligence',
+      items: [
+        { id: 'explanation' as Tab, label: 'Decision intelligence', icon: FileText },
+        { id: 'what-if' as Tab, label: 'What-if lab', icon: TestTube }
+      ]
+    },
+    {
+      label: 'Operations',
+      items: [
+        { id: 'events' as Tab, label: 'Activity', icon: Activity },
+        { id: 'webhooks' as Tab, label: 'Webhooks', icon: Globe },
+        { id: 'guardrails' as Tab, label: 'Guardrails', icon: Shield }
+      ]
+    },
+    {
+      label: 'Configuration',
+      items: [
+        { id: 'configuration' as Tab, label: 'Merchant settings', icon: Settings }
+      ]
+    }
+  ];
 
   const formatTime = (date: Date | null) => {
-    if (!date) return 'Never'
-    return date.toLocaleTimeString()
-  }
+    if (!date) return 'Never';
+    return date.toLocaleTimeString();
+  };
+
+  const NavContent = () => (
+    <div className="flex flex-col h-full overflow-y-auto">
+      {/* Logo */}
+      <div className="pt-8 pb-4 px-6 shrink-0">
+        <div className="flex items-center gap-3 mb-1.5">
+          <div className="bg-text-primary text-surface p-1.5 rounded-md">
+            <Shield className="w-4 h-4" />
+          </div>
+          <h1 className="text-lg font-bold tracking-tight text-text-primary">Revenue Sentinel</h1>
+        </div>
+        <div className="px-1 text-[10px] font-medium text-text-muted uppercase tracking-[0.2em]">
+          REVENUE OPERATIONS
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-4 py-4 space-y-6">
+        {navGroups.map((group) => (
+          <div key={group.label}>
+            <div className="px-4 mb-2 text-[10px] font-semibold text-text-muted/60 uppercase tracking-widest">
+              {group.label}
+            </div>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-2 rounded-md text-[13px] transition-all text-left relative ${
+                      isActive
+                        ? 'text-brand font-medium bg-brand/5'
+                        : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                    }`}
+                  >
+                    {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-brand rounded-r-full"></span>}
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-brand' : 'text-text-muted'}`} />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 mt-auto">
+        <div className="flex items-center gap-3 p-3 bg-surface rounded-lg border border-border">
+          <div className="w-8 h-8 rounded-md bg-background border border-border flex items-center justify-center shrink-0">
+            <span className="text-xs font-semibold text-text-secondary">RS</span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-text-primary truncate">Sandbox Merchant</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
+              <span className="text-[10px] text-text-secondary">Connected</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="flex h-screen w-screen bg-[#0d0e12] text-gray-100 font-sans overflow-hidden">
+    <div className="flex h-screen w-screen bg-background text-text-primary font-sans overflow-hidden">
       
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex w-64 bg-[#13151c] border-r border-[#202430] flex-col justify-between shrink-0">
-        <div>
-          {/* Logo */}
-          <div className="h-16 flex items-center px-6 gap-3 border-b border-[#202430]">
-            <div className="bg-purple-600/20 p-2 rounded-lg border border-purple-500/30">
-              <Shield className="w-5 h-5 text-purple-400" />
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold tracking-wider uppercase text-purple-400">Revenue Sentinel</h1>
-              <span className="text-[10px] text-gray-500 font-mono">Operations Console</span>
-            </div>
-          </div>
-
-          {/* Nav */}
-          <nav className="p-4 space-y-1.5">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = activeTab === item.id
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-left group ${
-                    isActive
-                      ? 'bg-purple-600/20 text-purple-300 border-l-2 border-purple-500 pl-2.5'
-                      : 'text-gray-400 hover:bg-[#1a1d26] hover:text-gray-200'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-purple-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
-                  <div>
-                    <div>{item.label}</div>
-                    <div className="text-[9px] text-gray-500 font-normal leading-none mt-0.5">{item.desc}</div>
-                  </div>
-                </button>
-              )
-            })}
-          </nav>
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-[#202430] bg-[#0f1015]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-purple-900/40 border border-purple-700/30 flex items-center justify-center">
-              <span className="text-xs font-semibold text-purple-300">RS</span>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-300">Sandbox Merchant</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
-                <span className="text-[9px] text-gray-500 font-mono">F10 Console Mode</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <aside className="sidebar hidden md:block w-64 bg-surface border-r border-border shrink-0 overflow-y-auto">
+        <NavContent />
       </aside>
 
       {/* Sidebar - Mobile drawer */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 flex md:hidden">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)}></div>
-          <aside className="relative flex flex-col w-64 max-w-xs bg-[#13151c] border-r border-[#202430] h-full p-4 justify-between z-50 animate-in slide-in-from-left duration-200">
-            <div>
-              <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#202430]">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-purple-400" />
-                  <span className="text-xs font-bold tracking-wider uppercase text-purple-400">Sentinel Menu</span>
-                </div>
-                <button onClick={() => setSidebarOpen(false)} className="p-1 rounded text-gray-400 hover:bg-[#202430]">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <nav className="space-y-1.5">
-                {navItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = activeTab === item.id
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setActiveTab(item.id)
-                        setSidebarOpen(false)
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-left ${
-                        isActive
-                          ? 'bg-purple-600/20 text-purple-300 border-l-2 border-purple-500 pl-2.5'
-                          : 'text-gray-400 hover:bg-[#1a1d26] hover:text-gray-200'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 text-purple-400" />
-                      <div>
-                        <div>{item.label}</div>
-                        <div className="text-[9px] text-gray-500 leading-none mt-0.5">{item.desc}</div>
-                      </div>
-                    </button>
-                  )
-                })}
-              </nav>
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)}></div>
+          <aside className="sidebar relative flex flex-col w-64 max-w-xs bg-surface border-r border-border h-full z-50 animate-in slide-in-from-left duration-200 overflow-y-auto">
+            <div className="absolute top-4 right-4 z-50">
+              <button onClick={() => setSidebarOpen(false)} className="p-1 rounded text-text-secondary hover:bg-surface-hover">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            
-            <div className="p-3 border-t border-[#202430] bg-[#0f1015] rounded-lg">
-              <div className="text-xs font-semibold text-gray-300">Sandbox Merchant</div>
-              <div className="text-[9px] text-gray-500 mt-0.5 font-mono">F10 Active shell</div>
-            </div>
+            <NavContent />
           </aside>
         </div>
       )}
 
       {/* Main Panel Content container */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        
-        {/* Header */}
-        <header className="h-16 border-b border-[#202430] bg-[#13151c]/50 backdrop-blur-md px-6 md:px-8 flex items-center justify-between sticky top-0 z-10 shrink-0">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="md:hidden p-1.5 rounded bg-[#1b1e28] border border-[#2e3445] text-gray-300">
-              <Menu className="w-4.5 h-4.5" />
+      <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative">
+        <header className="h-16 bg-surface border-b border-border flex items-center justify-between px-6 lg:px-8 shrink-0 z-10">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-1.5 -ml-1.5 rounded-md text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
+            >
+              <Menu className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-base md:text-lg font-semibold text-gray-100 capitalize">{activeTab.replace(/-/g, ' ')}</h2>
-              <span className="hidden sm:inline text-[10px] text-gray-400">
-                Last synced: <span className="font-mono text-purple-300">{formatTime(lastRefreshed)}</span>
-              </span>
+              <h2 className="text-xl font-bold tracking-tight text-text-primary capitalize">
+                {activeTab.replace(/-/g, ' ')}
+              </h2>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onRefresh}
-              disabled={loading}
-              className="flex items-center gap-1.5 bg-[#1b1e28] hover:bg-[#232734] text-gray-300 hover:text-white px-3 py-1.5 rounded-lg border border-[#2e3445] text-xs transition duration-150 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-purple-400 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden xs:inline">Sync Console</span>
-            </button>
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-text-muted" />
+              <span className="text-xs font-medium text-text-secondary">Synced just now</span>
+            </div>
             
-            <div className="flex items-center gap-1.5 bg-[#1b1e28] px-2.5 py-1.5 rounded-full border border-[#2e3445] text-[10px] md:text-xs">
-              <Cpu className={`w-3.5 h-3.5 ${apiConnected ? 'text-purple-400' : 'text-rose-400 animate-pulse'}`} />
-              <span className="font-mono font-medium text-gray-300">
-                {apiConnected ? 'Local Connected' : 'Disconnected'}
-              </span>
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${apiConnected ? 'bg-success' : 'bg-danger'}`}></span>
+              <span className="text-[12px] font-semibold text-text-primary">{apiConnected ? 'API Active' : 'Offline'}</span>
             </div>
           </div>
         </header>
 
         {/* Dashboard Pages wrapper */}
-        <div className="flex-grow p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
-          {children}
+        <div className="flex-1 p-6 md:p-8 overflow-y-auto w-full">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {children}
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

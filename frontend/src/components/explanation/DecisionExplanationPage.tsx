@@ -1,92 +1,84 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   FileText,
   Search,
   Check,
   XCircle,
   AlertTriangle,
-  Clock
-} from 'lucide-react'
-import { getDecisionExplanation } from '../../api'
-import { LoadingState, ErrorState } from '../common/LoaderAndStates'
+  Clock,
+  ChevronDown
+} from 'lucide-react';
+import { getDecisionExplanation } from '../../api';
+import { LoadingState, ErrorState } from '../common/LoaderAndStates';
+import { PageHeader, SectionHeader, MoneyValue } from '../common/UI';
 
 interface DecisionExplanationPageProps {
-  cases: any[]
+  cases: any[];
 }
 
 export default function DecisionExplanationPage({ cases }: DecisionExplanationPageProps) {
-  const [selectedCaseId, setSelectedCaseId] = useState<string>('')
-  const [explanation, setExplanation] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [selectedCaseId, setSelectedCaseId] = useState<string>('');
+  const [explanation, setExplanation] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedCaseId) {
-      loadExplanation(selectedCaseId)
+      loadExplanation(selectedCaseId);
     } else {
-      setExplanation(null)
+      setExplanation(null);
     }
-  }, [selectedCaseId])
+  }, [selectedCaseId]);
 
   const loadExplanation = async (caseId: string) => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const expl = await getDecisionExplanation(caseId)
-      setExplanation(expl)
+      const expl = await getDecisionExplanation(caseId);
+      setExplanation(expl);
     } catch (err: any) {
-      setError(err.message || 'Failed to load explanation.')
+      setError(err.message || 'Failed to load explanation.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
-  const formatCurrency = (val: string | number) => {
-    return `₹${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  }
+  };
 
   return (
-    <div className="space-y-6 text-left">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold text-gray-100 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-purple-400" />
-            Decision Intelligence (F15)
-          </h2>
-          <p className="text-xs text-gray-400 mt-1">
-            Trace the exact chronological and deterministic reasoning behind system decisions.
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6 pb-12">
+      <PageHeader 
+        title="Decision intelligence" 
+        subtitle="Audit trace and explainability for Sentinel's recovery strategy engine."
+      />
 
       {/* Case Selector */}
-      <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6">
-        <label className="text-xs font-semibold text-gray-300 block mb-2">Select a case to inspect</label>
-        <div className="relative">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+      <div className="bg-surface border border-border rounded-lg p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <label className="text-sm font-semibold text-text-primary whitespace-nowrap">Select a case to inspect:</label>
+        <div className="relative flex-1 max-w-xl">
+          <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <select
             value={selectedCaseId}
             onChange={(e) => setSelectedCaseId(e.target.value)}
-            className="w-full bg-[#1b1e28] text-sm text-gray-200 border border-[#202430] rounded-lg pl-9 pr-4 py-2.5 outline-none focus:border-purple-500/50 appearance-none"
+            className="w-full bg-background text-sm text-text-primary border border-border rounded-md pl-10 pr-10 py-2.5 outline-none focus:border-text-secondary focus:ring-1 focus:ring-text-secondary appearance-none transition-all cursor-pointer font-mono"
           >
-            <option value="">-- Choose a Recovery Case --</option>
+            <option value="" className="font-sans">-- Choose a Recovery Case --</option>
             {cases.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.id} (Risk: {c.risk_level}, Amount: {formatCurrency(c.amount_at_risk)})
+                {c.id.substring(0, 8)}... (Risk: {c.risk_level})
               </option>
             ))}
           </select>
+          <ChevronDown className="w-4 h-4 text-text-muted absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
       </div>
 
       {loading && (
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-8">
+        <div className="bg-surface border border-border rounded-lg p-12">
           <LoadingState message="Reconstructing deterministic explanation evidence..." />
         </div>
       )}
 
       {error && !loading && (
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-8">
+        <div className="bg-surface border border-border rounded-lg p-12">
           <ErrorState message={error} onRetry={() => loadExplanation(selectedCaseId)} />
         </div>
       )}
@@ -96,82 +88,85 @@ export default function DecisionExplanationPage({ cases }: DecisionExplanationPa
           
           {/* Main Explanations (2/3 width) */}
           <div className="lg:col-span-2 space-y-6">
+            <SectionHeader 
+              title="Decision audit trace" 
+              subtitle="Deterministic breakdown of the strategy evaluation."
+            />
             
-            <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6 space-y-5">
-              <h3 className="text-sm font-semibold text-gray-200 border-b border-[#202430] pb-2">Why Revenue Sentinel Made This Decision</h3>
+            <div className="bg-surface border border-border rounded-lg p-6 space-y-6">
               
               {/* Risk & Strategy */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#1b1e28]/30 border border-[#202430] p-3 rounded-lg">
-                  <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider mb-1">Risk Assessed</span>
-                  <span className="text-sm font-bold text-gray-200 block uppercase">{explanation.risk_level}</span>
-                  <p className="text-[11px] text-gray-400 mt-1">{explanation.risk_reasons.join(', ')}</p>
+                <div className="bg-background border border-border p-4 rounded-md">
+                  <span className="text-[10px] text-text-muted block uppercase font-bold tracking-wider mb-1.5">Risk assessed</span>
+                  <span className="text-base font-bold text-text-primary block uppercase tracking-wide">{explanation.risk_level}</span>
+                  <p className="text-xs text-text-secondary mt-2 leading-relaxed">{explanation.risk_reasons.join(', ')}</p>
                 </div>
-                <div className="bg-[#1b1e28]/30 border border-[#202430] p-3 rounded-lg">
-                  <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider mb-1">Recommended Strategy</span>
-                  <span className="text-sm font-bold text-purple-300 block uppercase">{explanation.strategy_selected.replace(/_/g, ' ')}</span>
-                  <p className="text-[11px] text-gray-400 mt-1">{explanation.strategy_reason}</p>
+                <div className="bg-brand/5 border border-brand/20 p-4 rounded-md">
+                  <span className="text-[10px] text-brand block uppercase font-bold tracking-wider mb-1.5">Recommended strategy</span>
+                  <span className="text-base font-bold text-brand block uppercase tracking-wide">{explanation.strategy_selected.replace(/_/g, ' ')}</span>
+                  <p className="text-xs text-brand/80 mt-2 leading-relaxed">{explanation.strategy_reason}</p>
                 </div>
               </div>
 
               {/* Orchestration */}
-              <div className="bg-[#1b1e28]/30 border border-[#202430] p-3 rounded-lg">
-                <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider mb-1">Orchestration Decision</span>
-                <span className={`text-sm font-bold block uppercase ${explanation.orchestration_decision === 'WAIT_COOLDOWN' ? 'text-amber-400' : 'text-emerald-400'}`}>
+              <div className="bg-background border border-border p-4 rounded-md">
+                <span className="text-[10px] text-text-muted block uppercase font-bold tracking-wider mb-1.5">Orchestration decision</span>
+                <span className={`text-sm font-bold block uppercase tracking-wide ${explanation.orchestration_decision === 'WAIT_COOLDOWN' ? 'text-warning' : 'text-success'}`}>
                   {explanation.orchestration_decision.replace(/_/g, ' ')}
                 </span>
-                <p className="text-[11px] text-gray-400 mt-1">{explanation.orchestration_reason}</p>
+                <p className="text-xs text-text-secondary mt-2 leading-relaxed">{explanation.orchestration_reason}</p>
               </div>
 
-              {/* Guardrails (F10) */}
-              <div className="bg-[#1b1e28]/30 border border-[#202430] p-4 rounded-lg space-y-3">
-                <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider">Safety Checks (F10 Guardrails)</span>
+              {/* Guardrails */}
+              <div className="bg-background border border-border p-4 rounded-md space-y-4">
+                <span className="text-[10px] text-text-muted block uppercase font-bold tracking-wider">Safety checks (guardrails)</span>
                 
                 {explanation.guardrail_checks.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {explanation.guardrail_checks.map((g: any, i: number) => (
-                      <div key={i} className="flex items-start gap-2 bg-[#13151c] p-2 rounded border border-[#202430]">
+                      <div key={i} className="flex items-start gap-3 bg-surface p-3 rounded-md border border-border">
                         {g.status === 'ALLOWED' ? (
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <Check className="w-5 h-5 text-success shrink-0" />
                         ) : (
-                          <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                          <XCircle className="w-5 h-5 text-danger shrink-0" />
                         )}
                         <div>
-                          <span className="text-[11px] font-semibold text-gray-200 block">{g.guardrail}</span>
-                          <span className="text-[10px] text-gray-400">{g.explanation}</span>
+                          <span className="text-xs font-semibold text-text-primary block mb-1">{g.guardrail}</span>
+                          <span className="text-[11px] text-text-secondary leading-relaxed">{g.explanation}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[11px] text-gray-400 italic">Evidence unavailable.</p>
+                  <p className="text-[11px] text-text-muted italic">Evidence unavailable.</p>
                 )}
               </div>
               
               {/* Historical Evidence */}
-              <div className="bg-[#1b1e28]/30 border border-[#202430] p-3 rounded-lg">
-                <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider mb-1">Historical Evidence (F14)</span>
+              <div className="bg-background border border-border p-4 rounded-md">
+                <span className="text-[10px] text-text-muted block uppercase font-bold tracking-wider mb-2">Historical evidence</span>
                 {explanation.historical_evidence ? (
-                  <p className="text-[11px] text-gray-400">{explanation.historical_evidence.explanation}</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">{explanation.historical_evidence.explanation}</p>
                 ) : (
-                  <p className="text-[11px] text-gray-400 italic">Evidence unavailable.</p>
+                  <p className="text-xs text-text-muted italic">Evidence unavailable.</p>
                 )}
               </div>
               
             </div>
             
-            {/* Strategy Alternatives (Why not X?) */}
-            <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6">
-              <h3 className="text-sm font-semibold text-gray-200 border-b border-[#202430] pb-2 mb-4">Why Not Other Strategies?</h3>
+            {/* Strategy Alternatives */}
+            <div className="bg-surface border border-border rounded-lg p-6 space-y-4">
+              <SectionHeader title="Why not other strategies?" />
               <div className="space-y-3">
                 {explanation.alternative_strategies.filter((s: any) => s.strategy_name !== explanation.strategy_selected).map((alt: any) => (
-                  <div key={alt.strategy_name} className="bg-[#1b1e28]/20 border border-[#202430] p-3 rounded-lg text-xs">
-                    <span className="font-semibold text-gray-300 block mb-1">Why not {alt.strategy_name.replace(/_/g, ' ')}?</span>
+                  <div key={alt.strategy_name} className="bg-background border border-border p-4 rounded-md text-sm">
+                    <span className="font-semibold text-text-primary block mb-2">Why not <span className="capitalize">{alt.strategy_name.replace(/_/g, ' ')}</span>?</span>
                     {alt.guardrail_status === 'BLOCKED' ? (
-                      <span className="text-rose-400">Blocked by guardrails.</span>
+                      <span className="text-danger font-medium text-xs">Blocked by guardrails.</span>
                     ) : (
-                      <span className="text-gray-400">
-                        Expected net recovery ({formatCurrency(alt.expected_net_recovery)}) was lower than the selected strategy.
+                      <span className="text-text-secondary text-xs leading-relaxed">
+                        Expected net recovery (<MoneyValue amount={alt.expected_net_recovery} />) was lower than the selected strategy.
                       </span>
                     )}
                   </div>
@@ -184,75 +179,66 @@ export default function DecisionExplanationPage({ cases }: DecisionExplanationPa
           {/* Sidebar (1/3 width) - Outcomes & Timeline */}
           <div className="space-y-6">
             
-            {/* Expected vs Actual */}
-            <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6 space-y-4">
-              <h3 className="text-sm font-semibold text-gray-200 border-b border-[#202430] pb-2">Financial Outcome</h3>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400">Expected Recovery</span>
-                  <span className="text-xs font-mono text-gray-200">{formatCurrency(explanation.expected_vs_actual.expected_recovery)}</span>
+            {/* Financial Outcome */}
+            <div className="bg-surface border border-border rounded-lg p-6 space-y-5">
+              <SectionHeader title="Financial outcome" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-text-secondary">Expected recovery</span>
+                  <span className="font-mono text-text-primary"><MoneyValue amount={explanation.expected_vs_actual.expected_recovery} /></span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400">Actual Recovery</span>
-                  <span className="text-xs font-mono font-bold text-emerald-400">{formatCurrency(explanation.expected_vs_actual.actual_recovery)}</span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-text-secondary">Actual recovery</span>
+                  <span className="font-mono font-bold text-success"><MoneyValue amount={explanation.expected_vs_actual.actual_recovery} /></span>
                 </div>
-                <div className="pt-2 border-t border-[#202430] flex justify-between items-center">
-                  <span className="text-xs text-gray-400">Variance</span>
-                  <span className={`text-xs font-mono font-bold ${explanation.expected_vs_actual.variance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {explanation.expected_vs_actual.variance >= 0 ? '+' : ''}{formatCurrency(explanation.expected_vs_actual.variance)}
-                  </span>
-                </div>
-                <div className="text-center mt-2">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold px-2 py-1 bg-[#1b1e28] rounded border border-[#2e3445]">
-                    Status: {explanation.expected_vs_actual.outcome_status}
+                <div className="pt-3 border-t border-border flex justify-between items-center text-sm">
+                  <span className="text-text-secondary font-bold">Variance</span>
+                  <span className={`font-mono font-bold ${explanation.expected_vs_actual.variance >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {explanation.expected_vs_actual.variance >= 0 ? '+' : ''}<MoneyValue amount={explanation.expected_vs_actual.variance} />
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Evidence Timeline */}
-            <div className="bg-[#13151c] border border-[#202430] rounded-xl p-6">
-              <h3 className="text-sm font-semibold text-gray-200 border-b border-[#202430] pb-2 mb-4">Chronological Evidence Timeline</h3>
+            <div className="bg-surface border border-border rounded-lg p-6 space-y-5">
+              <SectionHeader title="Chronological evidence timeline" />
               
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {explanation.timeline.map((evt: any, idx: number) => {
-                  let colorClass = 'text-gray-400 border-gray-600 bg-gray-950/20'
-                  let IconType = Clock
+                  let colorClass = 'text-text-muted border-border bg-background';
+                  let IconType = Clock;
                   
                   if (evt.status === 'COMPLETED' || evt.status === 'EXECUTED') {
-                    colorClass = 'text-purple-400 border-purple-500/30 bg-purple-950/20'
-                    IconType = Check
+                    colorClass = 'text-brand border-brand/30 bg-brand/10';
+                    IconType = Check;
                   } else if (evt.status === 'FAILED') {
-                    colorClass = 'text-rose-400 border-rose-500/30 bg-rose-950/30'
-                    IconType = XCircle
+                    colorClass = 'text-danger border-danger/30 bg-danger/10';
+                    IconType = XCircle;
                   } else if (evt.status === 'BLOCKED') {
-                    colorClass = 'text-amber-400 border-amber-500/30 bg-amber-950/20'
-                    IconType = AlertTriangle
+                    colorClass = 'text-warning border-warning/30 bg-warning/10';
+                    IconType = AlertTriangle;
                   }
 
                   return (
-                    <div key={idx} className="relative pl-7 pb-1">
+                    <div key={idx} className="relative pl-8 pb-1">
                       {idx < explanation.timeline.length - 1 && (
-                        <span className="absolute left-[9px] top-[18px] bottom-[-22px] w-0.5 bg-[#202430]"></span>
+                        <span className="absolute left-[11px] top-[24px] bottom-[-24px] w-[2px] bg-border"></span>
                       )}
-                      <span className={`absolute left-0 top-[2px] w-5 h-5 rounded-full border flex items-center justify-center ${colorClass}`}>
-                        <IconType className="w-3 h-3" />
+                      <span className={`absolute left-0 top-[2px] w-6 h-6 rounded-full border flex items-center justify-center z-10 ${colorClass}`}>
+                        <IconType className="w-3.5 h-3.5" />
                       </span>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gray-200">{evt.title}</span>
-                          <span className="text-[9px] text-gray-500 font-mono">
+                      <div className="space-y-1.5">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                          <span className="text-xs font-bold text-text-primary tracking-wide">{evt.title}</span>
+                          <span className="text-[10px] text-text-muted font-mono bg-background px-1.5 py-0.5 rounded border border-border">
                             {new Date(evt.timestamp).toLocaleString()}
                           </span>
                         </div>
-                        <p className="text-[10px] text-gray-400">{evt.description}</p>
-                        {evt.source_id && (
-                          <p className="text-[8px] text-gray-500 font-mono">Source ID: {evt.source_id}</p>
-                        )}
+                        <p className="text-[11px] text-text-secondary leading-relaxed">{evt.description}</p>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -262,17 +248,17 @@ export default function DecisionExplanationPage({ cases }: DecisionExplanationPa
       )}
 
       {!loading && !error && !explanation && (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#1b1e28] flex items-center justify-center mb-4 border border-[#2e3445]">
-            <Search className="w-8 h-8 text-gray-500" />
+        <div className="flex flex-col items-center justify-center py-32 text-center bg-surface border border-border rounded-lg border-dashed">
+          <div className="w-16 h-16 rounded-full bg-background flex items-center justify-center mb-5 border border-border shadow-sm">
+            <Search className="w-6 h-6 text-text-muted" />
           </div>
-          <h3 className="text-gray-300 font-medium text-lg">No Case Selected</h3>
-          <p className="text-gray-500 text-sm mt-1 max-w-sm">
+          <h3 className="text-text-primary font-semibold text-lg mb-2">No Case Selected</h3>
+          <p className="text-text-secondary text-sm max-w-sm leading-relaxed">
             Select a case from the dropdown above to view its complete deterministic reasoning and evidence chain.
           </p>
         </div>
       )}
 
     </div>
-  )
+  );
 }

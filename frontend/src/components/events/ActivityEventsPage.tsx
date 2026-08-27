@@ -1,25 +1,21 @@
-import { useState } from 'react'
-import { Activity, AlertCircle } from 'lucide-react'
+import React, { useState } from 'react';
+import { PageHeader, DataTable, MoneyValue } from '../common/UI';
 
 interface ActivityEventsPageProps {
-  events: any[]
-  auditLogs: any[]
+  events: any[];
+  auditLogs: any[];
 }
 
-type FeedFilter = 'ALL' | 'REVENUE' | 'AUDIT'
+type FeedFilter = 'ALL' | 'REVENUE' | 'AUDIT';
 
 export default function ActivityEventsPage({
   events,
   auditLogs
 }: ActivityEventsPageProps) {
-  const [filterType, setFilterType] = useState<FeedFilter>('ALL')
-
-  const formatCurrency = (val: string | number) => {
-    return `₹${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  }
+  const [filterType, setFilterType] = useState<FeedFilter>('ALL');
 
   // Combine lists into a unified feed sorted chronologically descending
-  const feedItems: any[] = []
+  const feedItems: any[] = [];
 
   if (filterType === 'ALL' || filterType === 'REVENUE') {
     events.forEach((ev) => {
@@ -28,18 +24,22 @@ export default function ActivityEventsPage({
         timestamp: new Date(ev.occurred_at),
         type: 'REVENUE',
         label: ev.event_type.replace(/_/g, ' '),
-        description: `Customer ${ev.customer_id.substring(0, 8)}... triggered event with value ${formatCurrency(ev.amount)}`,
+        description: (
+          <span>
+            Customer <span className="font-mono">{ev.customer_id.substring(0, 8)}</span> triggered event with value <MoneyValue amount={ev.amount} />
+          </span>
+        ),
         actor: 'WEBHOOK',
         status: ev.status
-      })
-    })
+      });
+    });
   }
 
   if (filterType === 'ALL' || filterType === 'AUDIT') {
     auditLogs.forEach((log) => {
-      let desc = ''
+      let desc = '';
       if (log.details) {
-        desc = typeof log.details === 'string' ? log.details : JSON.stringify(log.details)
+        desc = typeof log.details === 'string' ? log.details : JSON.stringify(log.details);
       }
       feedItems.push({
         id: log.id,
@@ -49,94 +49,75 @@ export default function ActivityEventsPage({
         description: desc || `Audit event recorded for case ${log.recovery_case_id?.substring(0, 8)}...`,
         actor: log.actor_type,
         status: log.details?.status || 'LOGGED'
-      })
-    })
+      });
+    });
   }
 
-  feedItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+  feedItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  const columns = [
+    {
+      header: 'Timestamp',
+      accessor: (row: any) => <span className="font-mono text-xs text-text-secondary">{row.timestamp.toLocaleString()}</span>,
+    },
+    {
+      header: 'Feed Category',
+      accessor: (row: any) => (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
+          row.type === 'REVENUE'
+            ? 'text-brand bg-brand/10 border-brand/20'
+            : 'text-info bg-info/10 border-info/20'
+        }`}>
+          {row.type === 'REVENUE' ? 'Webhook Event' : 'System Audit'}
+        </span>
+      )
+    },
+    {
+      header: 'Action / Event',
+      accessor: (row: any) => <span className="font-semibold text-text-primary">{row.label}</span>,
+    },
+    {
+      header: 'Activity Details',
+      accessor: (row: any) => <span className="text-text-secondary max-w-md block truncate" title={typeof row.description === 'string' ? row.description : ''}>{row.description}</span>,
+    },
+    {
+      header: 'Origin Actor',
+      accessor: (row: any) => <span className="font-mono text-text-secondary">{row.actor}</span>,
+      align: 'right' as const,
+    }
+  ];
+
+  const actions = (
+    <div className="flex gap-2">
+      {['ALL', 'REVENUE', 'AUDIT'].map((t) => (
+        <button
+          key={t}
+          onClick={() => setFilterType(t as FeedFilter)}
+          className={`text-xs px-3 py-1.5 rounded-md border font-medium transition-colors cursor-pointer ${
+            filterType === t
+              ? 'bg-brand/10 text-brand border-brand/30'
+              : 'bg-surface text-text-secondary border-border hover:text-text-primary hover:bg-surface-hover'
+          }`}
+        >
+          {t === 'ALL' ? 'All Operations' : t === 'REVENUE' ? 'Revenue Webhooks' : 'System Audit Logs'}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="space-y-6 text-left">
-      
-      {/* Filters */}
-      <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-purple-400" />
-          <h3 className="text-sm font-semibold text-gray-200">Real-Time Operations Feed</h3>
-        </div>
-
-        {/* Filter buttons */}
-        <div className="flex gap-2">
-          {['ALL', 'REVENUE', 'AUDIT'].map((t) => (
-            <button
-              key={t}
-              onClick={() => setFilterType(t as FeedFilter)}
-              className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition cursor-pointer ${
-                filterType === t
-                  ? 'bg-purple-600/20 text-purple-300 border-purple-500/30'
-                  : 'bg-[#1b1e28] text-gray-400 border-[#2e3445] hover:text-gray-200'
-              }`}
-            >
-              {t === 'ALL' ? 'All Operations' : t === 'REVENUE' ? 'Revenue Webhooks' : 'System Audit Logs'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Feed Table */}
-      <div className="bg-[#13151c] border border-[#202430] rounded-xl overflow-hidden">
-        {feedItems.length === 0 ? (
-          <div className="py-20 text-center text-gray-500 space-y-2">
-            <AlertCircle className="w-8 h-8 mx-auto text-gray-600" />
-            <h4 className="text-sm font-semibold text-gray-400">No events matched</h4>
-            <p className="text-xs max-w-xs mx-auto">There are currently no events registered in the sandbox logs.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-[#202430] text-gray-400 font-medium">
-                  <th className="py-3.5 pl-4">Timestamp</th>
-                  <th className="py-3.5">Feed Category</th>
-                  <th className="py-3.5">Action / Event</th>
-                  <th className="py-3.5">Activity Details</th>
-                  <th className="py-3.5 pr-4 text-right">Origin Actor</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#202430]">
-                {feedItems.map((item, idx) => {
-                  const isRev = item.type === 'REVENUE'
-                  return (
-                    <tr key={idx} className="hover:bg-[#1a1c24]/50 transition duration-150">
-                      <td className="py-3.5 pl-4 font-mono text-gray-400">
-                        {item.timestamp.toLocaleString()}
-                      </td>
-                      <td className="py-3.5">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase border ${
-                          isRev
-                            ? 'text-purple-400 bg-purple-950/20 border-purple-500/20'
-                            : 'text-blue-400 bg-blue-950/20 border-blue-500/20'
-                        }`}>
-                          {isRev ? 'Webhook Event' : 'System Audit'}
-                        </span>
-                      </td>
-                      <td className="py-3.5 font-semibold text-gray-200">
-                        {item.label}
-                      </td>
-                      <td className="py-3.5 text-gray-300 leading-relaxed max-w-md truncate">
-                        {item.description}
-                      </td>
-                      <td className="py-3.5 pr-4 text-right font-mono text-gray-400">
-                        {item.actor}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+    <div className="space-y-6">
+      <PageHeader 
+        title="Activity Log" 
+        subtitle="Real-time operational feed and system audit history."
+        actions={actions}
+      />
+      <DataTable 
+        columns={columns} 
+        data={feedItems} 
+        keyExtractor={(row) => row.id} 
+        emptyMessage="There are currently no events registered in the operational logs."
+      />
     </div>
-  )
+  );
 }

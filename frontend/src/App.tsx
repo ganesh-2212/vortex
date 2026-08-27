@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import AppShell from './components/layout/AppShell'
-import OverviewPage from './components/dashboard/OverviewPage'
 import RecoveryCasesPage from './components/cases/RecoveryCasesPage'
 import CaseDetailExperience from './components/cases/CaseDetailExperience'
 import RecommendationsPage from './components/recommendations/RecommendationsPage'
@@ -42,7 +41,7 @@ import {
 } from './api'
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center' | 'what-if'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'what-if'>('overview')
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
 
   // Global Sync States
@@ -376,21 +375,15 @@ function App() {
           handleExecuteAction={handleExecuteAction}
           onBack={() => setSelectedCaseId(null)}
         />
-      ) : activeTab === 'command-center' ? (
+      ) : activeTab === 'overview' ? (
         <MerchantCommandCenterPage
           onViewCase={(id) => {
             setSelectedCaseId(id)
             setActiveTab('cases')
           }}
           onNavigate={(tab) => setActiveTab(tab as any)}
-        />
-      ) : activeTab === 'overview' ? (
-        <OverviewPage
           summary={summary}
           leakage={leakage}
-          priorities={priorities}
-          stats={stats}
-          onSelectCase={handleInspectCase}
         />
       ) : activeTab === 'cases' ? (
         <RecoveryCasesPage
