@@ -12,6 +12,7 @@ import SimulationPage from './components/simulation/SimulationPage'
 import StrategyPerformancePage from './components/performance/StrategyPerformancePage'
 import DecisionExplanationPage from './components/explanation/DecisionExplanationPage'
 import { MerchantCommandCenterPage } from './components/command-center/MerchantCommandCenterPage'
+import { PolicyWhatIfPage } from './components/whatif/PolicyWhatIfPage'
 import { LoadingState, ErrorState } from './components/common/LoaderAndStates'
 
 import {
@@ -41,7 +42,7 @@ import {
 } from './api'
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center' | 'what-if'>('overview')
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
 
   // Global Sync States
@@ -432,6 +433,8 @@ function App() {
         <DecisionExplanationPage
           cases={cases}
         />
+      ) : activeTab === 'what-if' ? (
+        <PolicyWhatIfPage />
       ) : (
         <ConfigurationPage
           merchantConfig={merchantConfig}

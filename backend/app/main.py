@@ -12,6 +12,7 @@ from app.api.v1.recovery_simulation import router as recovery_simulation_router
 from app.api.v1.recovery_orchestration import router as recovery_orchestration_router
 from app.api.v1.decision_explanation import router as decision_explanation_router
 from app.api.v1.merchant_command_center import router as merchant_command_center_router
+from app.api.v1.policy_what_if import router as policy_what_if_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -43,6 +44,7 @@ app.include_router(recovery_simulation_router, prefix=f"{settings.API_V1_STR}/re
 app.include_router(recovery_orchestration_router, prefix=settings.API_V1_STR)
 app.include_router(decision_explanation_router, prefix="/api/v1", tags=["Decision Explanation"])
 app.include_router(merchant_command_center_router, prefix="/api/v1", tags=["Command Center"])
+app.include_router(policy_what_if_router, prefix="/api/v1")
 
 @app.get(f"{settings.API_V1_STR}/health")
 async def health_check():

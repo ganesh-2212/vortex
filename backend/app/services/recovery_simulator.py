@@ -23,14 +23,14 @@ if not hasattr(store, "latest_simulation"):
     store.latest_simulation = None
 
 
-def run_simulation(
+def calculate_simulation(
     store_inst: MemoryStore = store,
     case_ids: Optional[List[uuid.UUID]] = None,
     current_time: Optional[datetime] = None
 ) -> SimulationRunResponse:
     """
-    Runs a deterministic recovery simulation comparing No Intervention,
-    Basic Retry, and Revenue Sentinel policies for a batch of cases.
+    Deterministic calculation for recovery simulation.
+    Does NOT mutate the store state.
     """
     if current_time is None:
         current_time = datetime.now(timezone.utc)
@@ -187,11 +187,11 @@ def run_simulation(
         )
 
     # 3. Calculate Batch Metrics
-    total_revenue_at_risk = sum(c.amount_at_risk for c in simulated_cases)
-    no_intervention_recovered_amount = sum(c.no_intervention_recovered for c in simulated_cases)
-    basic_retry_recovered_amount = sum(c.basic_retry_recovered for c in simulated_cases)
-    sentinel_recovered_amount = sum(c.sentinel_recovered for c in simulated_cases)
-    total_intervention_cost = sum(c.sentinel_cost for c in simulated_cases)
+    total_revenue_at_risk = sum((c.amount_at_risk for c in simulated_cases), Decimal("0.00"))
+    no_intervention_recovered_amount = sum((c.no_intervention_recovered for c in simulated_cases), Decimal("0.00"))
+    basic_retry_recovered_amount = sum((c.basic_retry_recovered for c in simulated_cases), Decimal("0.00"))
+    sentinel_recovered_amount = sum((c.sentinel_recovered for c in simulated_cases), Decimal("0.00"))
+    total_intervention_cost = sum((c.sentinel_cost for c in simulated_cases), Decimal("0.00"))
     sentinel_net_recovery = sentinel_recovered_amount - total_intervention_cost
 
     sentinel_recovery_rate = float(
@@ -227,9 +227,21 @@ def run_simulation(
         cases=simulated_cases,
         run_at=current_time
     )
+    return response
 
-    # 4. Save to MemoryStore history
-    store_inst.simulations[sim_id] = response
+def run_simulation(
+    store_inst: MemoryStore = store,
+    case_ids: Optional[List[uuid.UUID]] = None,
+    current_time: Optional[datetime] = None
+) -> SimulationRunResponse:
+    """
+    Runs a deterministic recovery simulation comparing No Intervention,
+    Basic Retry, and Revenue Sentinel policies for a batch of cases.
+    Persists the result to the store's simulation history.
+    """
+    response = calculate_simulation(store_inst, case_ids, current_time)
+    
+    store_inst.simulations[response.simulation_id] = response
     store_inst.latest_simulation = response
 
     return response

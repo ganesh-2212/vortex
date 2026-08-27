@@ -16,7 +16,7 @@ import {
   Settings
 } from 'lucide-react'
 
-export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center'
+export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center' | 'what-if'
 
 interface AppShellProps {
   activeTab: Tab
@@ -48,6 +48,7 @@ export default function AppShell({
     { id: 'simulation' as Tab, label: 'F12 Simulation', icon: TestTube, desc: 'Incremental value proof' },
     { id: 'performance' as Tab, label: 'F14 Strategy Perf', icon: BarChart, desc: 'Impact metrics' },
     { id: 'explanation' as Tab, label: 'Decision Intelligence', icon: FileText, desc: 'Logic transparency' },
+    { id: 'what-if' as Tab, label: 'What-If Lab', icon: TestTube, desc: 'Policy sandbox' },
     { id: 'events' as Tab, label: 'Activity Feed', icon: Activity, desc: 'Realtime events log' },
     { id: 'webhooks' as Tab, label: 'Webhooks Ingestion', icon: Globe, desc: 'Signature verify status' },
     { id: 'guardrails' as Tab, label: 'Guardrails Rules', icon: Shield, desc: 'Safety enforcement' },

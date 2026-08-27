@@ -646,3 +646,26 @@ class MerchantCommandCenterResponse(BaseModel):
     
     # Simulation availability flag
     simulation_available: bool
+
+class WhatIfPolicy(BaseModel):
+    current_max_retries: int
+    proposed_max_retries: int
+
+class WhatIfResult(BaseModel):
+    cases_evaluated: int
+    total_revenue_at_risk: Decimal
+    projected_recovery: Decimal
+    intervention_count: int
+    intervention_cost: Decimal
+    net_recovery: Decimal
+    recovery_rate: float
+
+class WhatIfComparison(BaseModel):
+    current_result: WhatIfResult
+    proposed_result: WhatIfResult
+    revenue_impact: Decimal
+    cost_impact: Decimal
+    net_recovery_impact: Decimal
+    recovery_rate_impact: float
+    assessment: str
+    explanation: str

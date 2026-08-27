@@ -260,3 +260,27 @@ export async function getMerchantCommandCenter(merchantId: string) {
   if (!res.ok) throw new Error('Failed to fetch merchant command center data')
   return res.json()
 }
+
+export async function getPolicyWhatIfCurrent(merchantId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/policy-what-if/current?merchant_id=${merchantId}`)
+  if (!res.ok) throw new Error('Failed to fetch current policy')
+  return res.json()
+}
+
+export async function runPolicyWhatIf(merchantId: string, proposedMaxRetries: number) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/policy-what-if/run`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      merchant_id: merchantId,
+      proposed_max_retries: proposedMaxRetries
+    })
+  })
+  if (!res.ok) {
+    const errorData = await res.json()
+    throw new Error(errorData.detail || 'Failed to run policy what-if')
+  }
+  return res.json()
+}
