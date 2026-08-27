@@ -254,3 +254,9 @@ export async function getDecisionGuardrails(caseId: string) {
   if (!res.ok) throw new Error('Failed to fetch decision guardrails')
   return res.json()
 }
+
+export async function getMerchantCommandCenter(merchantId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/merchant-command-center?merchant_id=${merchantId}`)
+  if (!res.ok) throw new Error('Failed to fetch merchant command center data')
+  return res.json()
+}

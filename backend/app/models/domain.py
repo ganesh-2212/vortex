@@ -551,3 +551,98 @@ class DecisionExplanation(BaseModel):
     expected_vs_actual: ExpectedVsActualOutcome
     timeline: List[DecisionTimelineEvent]
     evidence_references: List[ExplanationEvidence]
+
+# --- F16 Merchant Command Center Models ---
+
+class CommandCenterMetrics(BaseModel):
+    # Revenue
+    total_revenue_at_risk: Decimal
+    total_recoverable_revenue: Decimal
+    total_confirmed_recovered: Decimal
+    total_incremental_revenue: Decimal
+    recovery_rate: float
+    
+    # Cases
+    total_cases: int
+    active_cases: int
+    recovered_cases: int
+    stopped_cases: int
+    expired_cases: int
+    human_attention_cases: int
+    
+    # Recovery Operations
+    total_recovery_actions: int
+    successful_actions: int
+    failed_actions: int
+    blocked_actions: int
+    scheduled_actions: int
+    
+    # Strategy & Decision
+    best_performing_strategy: Optional[str] = None
+    average_expected_recovery: Decimal
+    average_actual_recovery: Decimal
+    average_recovery_variance: Decimal
+    
+class RevenueComparisonMetrics(BaseModel):
+    # Differentiating actual vs simulated clearly in names
+    scenario_type: str  # "NO_INTERVENTION", "BASIC_RETRY", "SENTINEL_OPTIMIZED"
+    is_simulated: bool
+    simulated_projected_recovery: Decimal
+    actual_recovered_value: Decimal
+    intervention_cost: Decimal
+    net_recovery: Decimal
+    recovery_rate_percentage: float
+    projected_incremental_revenue: Decimal
+
+class RecoveryQueueItem(BaseModel):
+    case_id: uuid.UUID
+    customer_id: Optional[uuid.UUID] = None
+    amount: Decimal
+    risk_level: RiskLevel
+    case_status: str
+    current_strategy: str
+    orchestration_decision: str
+    attempt_number: int
+    next_evaluation_or_action: Optional[datetime] = None
+    human_attention_required: bool
+    created_at: datetime
+    updated_at: datetime
+    priority_score: int  # For queue sorting
+
+class RecoveryQueueSummary(BaseModel):
+    items: List[RecoveryQueueItem]
+    total_queue_value: Decimal
+
+class HumanAttentionSummary(BaseModel):
+    case_id: uuid.UUID
+    amount: Decimal
+    reason: str
+    current_state: str
+    case_age_hours: float
+
+class RevenueTrendPoint(BaseModel):
+    timestamp: datetime
+    actual_revenue_at_risk: Decimal
+    actual_recovered_revenue: Decimal
+    actual_incremental_revenue: Decimal
+
+class StrategyPerformanceSummary(BaseModel):
+    strategy_name: str
+    attempts: int
+    success_rate: float
+    net_recovery: Decimal
+    avg_recovery: Decimal
+
+class MerchantCommandCenterResponse(BaseModel):
+    generated_at: datetime
+    merchant_id: uuid.UUID
+    
+    metrics: CommandCenterMetrics
+    revenue_comparison: List[RevenueComparisonMetrics]
+    recovery_queue: RecoveryQueueSummary
+    human_attention_cases: List[HumanAttentionSummary]
+    strategy_performance: List[StrategyPerformanceSummary]
+    revenue_trend: List[RevenueTrendPoint]
+    
+    # Simulation availability flag
+    simulation_available: bool

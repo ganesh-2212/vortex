@@ -16,7 +16,7 @@ import {
   Settings
 } from 'lucide-react'
 
-export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation'
+export type Tab = 'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center'
 
 interface AppShellProps {
   activeTab: Tab
@@ -40,6 +40,7 @@ export default function AppShell({
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const navItems = [
+    { id: 'command-center' as Tab, label: 'Command Center', icon: Activity, desc: 'Central hub' },
     { id: 'overview' as Tab, label: 'Overview', icon: DollarSign, desc: 'Executive dashboard' },
     { id: 'cases' as Tab, label: 'Recovery Cases', icon: Layers, desc: 'Operational queues' },
     { id: 'recommendations' as Tab, label: 'Recommendations', icon: Zap, desc: 'Automation decisions' },
