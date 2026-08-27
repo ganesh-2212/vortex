@@ -157,7 +157,7 @@ def test_command_center_aggregates_actuals_correctly(clean_store):
     data = response.json()
     
     metrics = data["metrics"]
-    assert Decimal(str(metrics["total_revenue_at_risk"])) == Decimal("1500.00")
+    assert Decimal(str(metrics["total_revenue_at_risk"])) == Decimal("1000.00")
     assert Decimal(str(metrics["total_confirmed_recovered"])) == Decimal("500.00")
     assert metrics["total_cases"] == 2
     assert metrics["active_cases"] == 1

@@ -56,6 +56,9 @@ def seed_store(store_instance: MemoryStore = store, with_killer_scenario: bool =
         supported_recovery_actions=["RETRY_PAYMENT", "ESCALATE_TO_HUMAN", "STOP_RECOVERY", "SEND_REMINDER"]
     )
 
+    if not with_killer_scenario:
+        return
+
     now = datetime.now(timezone.utc)
     base_time = now - timedelta(days=2)
 
@@ -71,8 +74,6 @@ def seed_store(store_instance: MemoryStore = store, with_killer_scenario: bool =
     c1 = _create_customer("22222222-2222-2222-2222-222222222221", "Alice Smith", "alice@example.com")
     c2 = _create_customer("22222222-2222-2222-2222-222222222222", "Bob Jones", "bob@example.com")
 
-    if not with_killer_scenario:
-        return
     c3 = _create_customer("22222222-2222-2222-2222-222222222223", "Charlie Brown", "charlie@example.com")
     c4 = _create_customer("22222222-2222-2222-2222-222222222224", "Diana Prince", "diana@example.com")
     c5 = _create_customer("22222222-2222-2222-2222-222222222225", "Evan Wright", "evan@example.com")

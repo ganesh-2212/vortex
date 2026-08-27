@@ -49,18 +49,16 @@ def build_command_center(store: MemoryStore, merchant_id: uuid.UUID) -> Merchant
     total_cases = len(merchant_cases)
     
     for case in merchant_cases:
-        total_revenue_at_risk += case.amount_at_risk
-        
         # Case Status Counts
         if case.status in (RecoveryCaseStatus.OPEN, RecoveryCaseStatus.IN_PROGRESS, RecoveryCaseStatus.ESCALATED):
             active_cases += 1
+            total_revenue_at_risk += case.amount_at_risk
             total_recoverable_revenue += (case.amount_at_risk - case.recovered_amount)
         elif case.status == RecoveryCaseStatus.RECOVERED:
             recovered_cases += 1
             total_confirmed_recovered += case.recovered_amount
         elif case.status == RecoveryCaseStatus.STOPPED:
             stopped_cases += 1
-            # Could check if it was expired, for now just use stopped
             
         # Action stats for this case
         case_actions = [a for a in store.recovery_actions.values() if a.recovery_case_id == case.id]

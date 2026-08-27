@@ -22,7 +22,7 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     from app.store import seed_store
-    seed_store(with_killer_scenario=True)
+    seed_store(with_killer_scenario=False)
 
 # Setup CORS for development
 app.add_middleware(

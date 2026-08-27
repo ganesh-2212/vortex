@@ -234,8 +234,8 @@ export function MerchantCommandCenterPage({
         {data.recovery_queue.items.length === 0 ? (
           <div className="bg-[#13151c] border border-[#202430] rounded-lg p-8 text-center space-y-2">
             <Layers className="w-8 h-8 mx-auto text-gray-600" />
-            <p className="text-sm font-semibold text-gray-300">No active recovery cases</p>
-            <p className="text-xs text-gray-500">There are currently no cases requiring intervention.</p>
+            <p className="text-sm font-semibold text-gray-300">No revenue exposure detected</p>
+            <p className="text-xs text-gray-500">No active recovery cases currently require attention. Trigger a payment failure from the Test Event Simulator to begin.</p>
           </div>
         ) : (
           <div className="bg-[#13151c] border border-[#202430] rounded-xl overflow-hidden">

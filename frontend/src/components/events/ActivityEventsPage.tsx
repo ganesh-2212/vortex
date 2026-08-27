@@ -88,8 +88,8 @@ export default function ActivityEventsPage({
         {feedItems.length === 0 ? (
           <div className="py-20 text-center text-gray-500 space-y-2">
             <AlertCircle className="w-8 h-8 mx-auto text-gray-600" />
-            <h4 className="text-sm font-semibold text-gray-400">No events matched</h4>
-            <p className="text-xs max-w-xs mx-auto">There are currently no events registered in the sandbox logs.</p>
+            <h4 className="text-sm font-semibold text-gray-400">No recovery activity yet</h4>
+            <p className="text-xs max-w-xs mx-auto">Revenue Sentinel has not received any payment failure events. Trigger a test payment event from Webhooks to begin monitoring recovery activity.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
