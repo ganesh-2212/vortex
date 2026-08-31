@@ -8,7 +8,7 @@ import {
   ChevronRight,
   ArrowRight
 } from 'lucide-react'
-import { runRecoverySimulation, getLatestSimulation } from '../../api'
+import { runRecoverySimulation, getLatestSimulation, runRecoveryBenchmark } from '../../api'
 import { formatCurrency } from '../../utils/formatters'
 
 interface SimulationPageProps {
@@ -26,6 +26,12 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
   const [latestResult, setLatestResult] = useState<any>(null)
   const [simError, setSimError] = useState<string | null>(null)
   const [inspectedCaseId, setInspectedCaseId] = useState<string | null>(null)
+
+  // Benchmark State
+  const [runningBenchmark, setRunningBenchmark] = useState(false)
+  const [benchmarkResult, setBenchmarkResult] = useState<any>(null)
+  const [benchmarkCases, setBenchmarkCases] = useState<number>(500)
+  const [benchmarkError, setBenchmarkError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadLatest() {
@@ -76,6 +82,21 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
       setSimulating(false)
     }
   }
+
+  const handleRunBenchmark = async () => {
+    setRunningBenchmark(true)
+    setBenchmarkError(null)
+    try {
+      const res = await runRecoveryBenchmark(benchmarkCases, 42)
+      setBenchmarkResult(res)
+    } catch (err: any) {
+      console.error(err)
+      setBenchmarkError(err.message || 'Failed to execute recovery benchmark.')
+    } finally {
+      setRunningBenchmark(false)
+    }
+  }
+
   const getOutcomeBadge = (outcome: string) => {
     if (outcome.toUpperCase() === 'RECOVERED') {
       return 'text-emerald-700 bg-emerald-50 border-emerald-200'
@@ -441,6 +462,143 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
           </div>
         </div>
 
+      </div>
+
+      {/* RECOVERY PROOF / BATCH BENCHMARK SECTION */}
+      <div className="pt-16 mt-8 border-t border-slate-200">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-6 h-6 text-purple-600" strokeWidth={2.5} />
+              <h2 className="text-[22px] font-bold text-slate-900 tracking-tight">Recovery Proof</h2>
+            </div>
+            <p className="text-[13px] text-slate-500 font-medium">Measured recovery performance from a deterministic synthetic evaluation.</p>
+          </div>
+          <span className="text-[11px] font-bold px-3 py-1.5 rounded uppercase tracking-widest text-indigo-700 bg-indigo-50 border border-indigo-200">
+            SYNTHETIC EVALUATION
+          </span>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-8 text-left">
+          <div className="flex flex-col md:flex-row gap-6 items-end border-b border-slate-100 pb-8">
+            <div className="flex flex-col gap-2 w-full md:w-48">
+              <label className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Evaluation Cases</label>
+              <select
+                value={benchmarkCases}
+                onChange={(e) => setBenchmarkCases(parseInt(e.target.value))}
+                disabled={runningBenchmark}
+                className="w-full bg-slate-50 text-[15px] font-medium text-slate-900 rounded-lg border border-slate-200 p-3 outline-none focus:border-purple-500 focus:bg-white transition-all cursor-pointer disabled:opacity-50"
+              >
+                <option value={100}>100 Cases</option>
+                <option value={250}>250 Cases</option>
+                <option value={500}>500 Cases (Default)</option>
+                <option value={1000}>1000 Cases</option>
+              </select>
+            </div>
+            <button
+              onClick={handleRunBenchmark}
+              disabled={runningBenchmark}
+              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white text-[13px] font-bold uppercase tracking-wider px-6 py-3.5 rounded-lg transition-all flex items-center justify-center gap-3 shadow-sm h-[50px] whitespace-nowrap"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              {runningBenchmark ? 'Evaluating...' : 'Run Recovery Evaluation'}
+            </button>
+          </div>
+
+          {benchmarkError && (
+            <div className="bg-red-50 text-red-700 p-4 rounded-lg text-[13px] font-medium border border-red-200">
+              {benchmarkError}
+            </div>
+          )}
+
+          {benchmarkResult && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              
+              {/* PRIMARY METRICS */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col gap-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Revenue Recovered</span>
+                  <span className="text-[24px] font-bold text-emerald-600 tracking-tight">{formatCurrency(benchmarkResult.metrics.recovered_revenue)}</span>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col gap-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Revenue at Risk</span>
+                  <span className="text-[24px] font-bold text-slate-900 tracking-tight">{formatCurrency(benchmarkResult.metrics.total_revenue_at_risk)}</span>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col gap-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Recovery Rate</span>
+                  <span className="text-[24px] font-bold text-purple-600 tracking-tight">{benchmarkResult.metrics.recovery_rate.toFixed(1)}%</span>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col gap-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Cases Evaluated</span>
+                  <span className="text-[24px] font-bold text-slate-900 tracking-tight tabular-nums">{benchmarkResult.metrics.cases_evaluated}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* STRATEGY COMPARISON */}
+                <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-4">Strategy Comparison</h3>
+                  <div className="space-y-6">
+                    {benchmarkResult.strategy_comparisons.map((comp: any) => (
+                      <div key={comp.name} className="space-y-2">
+                        <div className="flex justify-between items-end">
+                          <span className="text-[13px] font-bold text-slate-700">{comp.name}</span>
+                          <span className="text-[13px] font-bold text-slate-900">{comp.recovery_rate.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${comp.name === 'FLOWMINT' ? 'bg-purple-600' : 'bg-slate-400'}`}
+                            style={{ width: `${comp.recovery_rate}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center text-[11px] font-medium text-slate-500">
+                          <span>{formatCurrency(comp.recovered_revenue)}</span>
+                          <span>{comp.successful_recoveries} recovered</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SAFETY PANEL */}
+                <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-4">Recovery Safety</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-1">
+                      <span className="text-[20px] font-bold text-rose-600 tabular-nums">{benchmarkResult.safety.guardrail_violations}</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Guardrail Violations</span>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-1">
+                      <span className="text-[20px] font-bold text-amber-600 tabular-nums">{benchmarkResult.safety.unsafe_actions_blocked}</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Unsafe Actions Blocked</span>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-1">
+                      <span className="text-[20px] font-bold text-indigo-600 tabular-nums">{benchmarkResult.safety.human_escalations}</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Human Escalations</span>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-1">
+                      <span className="text-[20px] font-bold text-slate-700 tabular-nums">{benchmarkResult.safety.stopped_cases}</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Stopped Cases</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* REPRODUCIBILITY */}
+              <div className="flex items-center gap-6 pt-6 border-t border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <span className="flex items-center gap-2">
+                  <span className="text-slate-300">ID:</span> {benchmarkResult.evaluation_id}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-slate-300">SEED:</span> {benchmarkResult.seed}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-slate-300">EVALUATED:</span> {new Date(benchmarkResult.evaluated_at).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

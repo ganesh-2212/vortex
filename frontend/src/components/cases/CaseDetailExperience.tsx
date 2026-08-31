@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { FinancialValue } from '../common/FinancialValue'
 import { formatCurrency } from '../../utils/formatters'
-import { createPaymentOrder, verifyPayment } from '../../api'
+import { createPaymentOrder, verifyPayment, getCaseDiagnosis } from '../../api'
 
 interface CaseDetailExperienceProps {
   caseId: string
@@ -68,6 +68,28 @@ export default function CaseDetailExperience({
 }: CaseDetailExperienceProps) {
   const [paymentState, setPaymentState] = useState<'idle' | 'processing' | 'verifying' | 'success' | 'failure' | 'cancelled'>('idle')
   const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(null)
+
+  // AI Diagnosis State
+  const [diagnosis, setDiagnosis] = useState<any>(null)
+  const [loadingDiagnosis, setLoadingDiagnosis] = useState(false)
+  const [diagnosisError, setDiagnosisError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchDiagnosis() {
+      if (!caseId) return
+      setLoadingDiagnosis(true)
+      setDiagnosisError(null)
+      try {
+        const result = await getCaseDiagnosis(caseId)
+        setDiagnosis(result)
+      } catch (err: any) {
+        setDiagnosisError(err.message || 'Diagnosis unavailable')
+      } finally {
+        setLoadingDiagnosis(false)
+      }
+    }
+    fetchDiagnosis()
+  }, [caseId])
 
   // Force 'success' state if case is already recovered
   useEffect(() => {
@@ -324,6 +346,85 @@ export default function CaseDetailExperience({
               </div>
             </div>
           )}
+
+          {/* AI ROOT-CAUSE DIAGNOSIS */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <Activity className="w-4 h-4 text-purple-600" /> AI Root-Cause Diagnosis
+              </span>
+              {diagnosis && (
+                <span className="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                  {diagnosis.analysis_source || 'AI-assisted diagnosis'}
+                </span>
+              )}
+            </div>
+            
+            <div className="bg-white border border-slate-200 rounded-lg p-5">
+              {loadingDiagnosis ? (
+                <div className="flex items-center gap-3 text-slate-500 py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+                  <span className="text-[13px] font-bold uppercase tracking-widest">Analyzing payment failure...</span>
+                </div>
+              ) : diagnosisError ? (
+                <div className="text-amber-700 text-[13px] font-medium py-2">
+                  {diagnosisError}
+                </div>
+              ) : diagnosis ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Root Cause</span>
+                        <span className="text-[14px] font-bold text-slate-900 leading-snug">{diagnosis.root_cause}</span>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Evidence</span>
+                        <ul className="list-disc pl-4 text-[13px] text-slate-700 font-medium space-y-1">
+                          {diagnosis.evidence.map((ev: string, idx: number) => (
+                            <li key={idx}>{ev}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Risk Explanation</span>
+                        <span className="text-[13px] text-slate-700 font-medium leading-snug">{diagnosis.risk_explanation}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next-Best Action</span>
+                        <span className="text-[14px] font-bold text-purple-700 uppercase tracking-tight">
+                          {diagnosis.recommended_action.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Why This Action</span>
+                        <span className="text-[13px] text-slate-700 font-medium leading-snug">{diagnosis.action_reason}</span>
+                      </div>
+
+                      <div className="flex items-center gap-6 pt-2">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confidence</span>
+                          <span className="text-[16px] font-bold text-slate-900 tabular-nums">{diagnosis.confidence}%</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guardrail</span>
+                          <span className={`text-[12px] font-bold uppercase tracking-wider ${diagnosis.guardrail_status.includes('SAFE') ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {diagnosis.guardrail_status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
 
           {/* GUARDRAILS */}
           <div className="space-y-3">

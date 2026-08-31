@@ -30,6 +30,12 @@ export async function getCaseDetail(caseId: string) {
   return res.json()
 }
 
+export async function getCaseDiagnosis(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/diagnosis`)
+  if (!res.ok) throw new Error('Failed to fetch diagnosis')
+  return res.json()
+}
+
 export async function getCaseLifecycle(caseId: string) {
   const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/lifecycle`)
   if (!res.ok) throw new Error('Failed to fetch case lifecycle metrics')
@@ -283,6 +289,22 @@ export async function runPolicyWhatIf(merchantId: string, proposedMaxRetries: nu
     throw new Error(errorData.detail || 'Failed to run policy what-if')
   }
   return res.json()
+}
+
+export async function runRecoveryBenchmark(case_count: number = 500, seed: number = 42) {
+  const response = await fetch(`${API_BASE_URL}/api/v1/recovery-benchmark/run`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ case_count, seed }),
+  })
+
+  if (!response.ok) {
+    const data = await response.json()
+    throw new Error(data.detail || 'Failed to execute recovery benchmark')
+  }
+  return response.json()
 }
 
 export async function createPaymentOrder(caseId: string) {
