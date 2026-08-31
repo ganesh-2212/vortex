@@ -19,6 +19,9 @@ class MemoryStore:
         # F12 Simulation store is explicitly NOT seeded automatically to preserve ACTUAL vs SIMULATED boundary.
         self.simulations = {}
         self.latest_simulation = None
+        
+        # Razorpay Orders (order_id -> details)
+        self.razorpay_orders: Dict[str, dict] = {}
 
     def clear(self):
         self.merchants.clear()
@@ -29,6 +32,7 @@ class MemoryStore:
         self.audit_logs.clear()
         self.simulations.clear()
         self.latest_simulation = None
+        self.razorpay_orders.clear()
 
 store = MemoryStore()
 

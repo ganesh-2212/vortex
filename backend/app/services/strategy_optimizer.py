@@ -55,7 +55,10 @@ def optimize_strategy(
     merchant = store.merchants.get(case.merchant_id)
     max_retries = 3
     supported_actions = ["RETRY_PAYMENT", "SEND_REMINDER", "OFFER_ALTERNATIVE_METHOD", "ESCALATE_TO_HUMAN", "STOP_RECOVERY"]
+    supported_actions = ["RETRY_PAYMENT", "SEND_REMINDER", "OFFER_ALTERNATIVE_METHOD", "ESCALATE_TO_HUMAN", "STOP_RECOVERY"]
+    is_recovery_enabled = True
     if merchant:
+        is_recovery_enabled = getattr(merchant, "recovery_enabled", True)
         max_retries = getattr(merchant, "max_retry_attempts", 3)
         supported_actions = getattr(merchant, "supported_recovery_actions", supported_actions)
 
@@ -162,7 +165,11 @@ def optimize_strategy(
         elif strat_name == "DELAYED_RETRY":
             intervention_cost = Decimal("5.00")
             # Eligible if retry is enabled and not exhausted, even if in cooldown right now
-            if "RETRY_PAYMENT" not in supported_actions:
+            if not is_recovery_enabled:
+                eligible = False
+                guardrail_status = "BLOCKED"
+                reasons.append("Recovery processes are globally disabled.")
+            elif "RETRY_PAYMENT" not in supported_actions:
                 eligible = False
                 guardrail_status = "BLOCKED"
                 reasons.append("Retry payment is disabled in merchant configuration settings.")
@@ -201,6 +208,8 @@ def optimize_strategy(
                 base_conf = 75
                 if is_cooldown_active:
                     base_conf += 10
+                if case.risk_level == RiskLevel.CRITICAL:
+                    base_conf -= 30
                 base_conf -= retry_count * 5
                 confidence = max(0, min(100, base_conf))
             else:
@@ -210,7 +219,11 @@ def optimize_strategy(
         elif strat_name == "ALTERNATE_PAYMENT":
             intervention_cost = Decimal("15.00")
             # Offer alternative method check
-            if "OFFER_ALTERNATIVE_METHOD" not in supported_actions and "SEND_PAYMENT_LINK" not in supported_actions:
+            if not is_recovery_enabled:
+                eligible = False
+                guardrail_status = "BLOCKED"
+                reasons.append("Recovery processes are globally disabled.")
+            elif "OFFER_ALTERNATIVE_METHOD" not in supported_actions and "SEND_PAYMENT_LINK" not in supported_actions:
                 eligible = False
                 guardrail_status = "BLOCKED"
                 reasons.append("Alternative payment methods are not enabled in merchant settings.")
@@ -235,7 +248,11 @@ def optimize_strategy(
 
         elif strat_name == "ESCALATE_TO_HUMAN":
             intervention_cost = Decimal("100.00")
-            if "ESCALATE_TO_HUMAN" not in supported_actions:
+            if not is_recovery_enabled:
+                eligible = False
+                guardrail_status = "BLOCKED"
+                reasons.append("Recovery processes are globally disabled.")
+            elif "ESCALATE_TO_HUMAN" not in supported_actions:
                 eligible = False
                 guardrail_status = "BLOCKED"
                 reasons.append("Human escalation is disabled in merchant configuration settings.")
@@ -245,11 +262,17 @@ def optimize_strategy(
                 reasons.append("Human support queue escalation is allowed.")
 
             if eligible:
-                if case.risk_level == RiskLevel.CRITICAL or retry_count >= 2:
+                if retry_count >= max_retries:
+                    base_prob = 75
+                    reasons.append("Retries exhausted: human escalation yields highest recovery rates.")
+                elif retry_count >= 2:
                     base_prob = 65
-                    reasons.append("Critical risk or multiple retry failures: human touch yields high recovery rates.")
-                else:
+                    reasons.append("Multiple retry failures: human touch yields high recovery rates.")
+                elif case.risk_level == RiskLevel.CRITICAL:
                     base_prob = 40
+                    reasons.append("Critical risk permits human escalation, but automated interventions are preferred if eligible.")
+                else:
+                    base_prob = 30
 
                 if case.risk_level == RiskLevel.LOW:
                     base_prob -= 10

@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Search, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
+import { Search, ChevronDown, ChevronUp, AlertCircle, RefreshCw, Filter } from 'lucide-react'
 import { RiskBadge, StatusBadge } from '../common/LoaderAndStates'
+import { FinancialValue } from '../common/FinancialValue'
+import { formatNumber, formatCurrency } from '../../utils/formatters'
 
 interface RecoveryCasesPageProps {
   cases: any[]
@@ -21,11 +23,6 @@ export default function RecoveryCasesPage({
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [sortField, setSortField] = useState<SortField>('priority_score')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-
-  const formatCurrency = (val: string | number) => {
-    return `₹${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  }
-
   // Cross-reference cases list with priorities metadata to attach priority score & time sensitivity
   const enrichedCases = cases.map((c) => {
     const activeIntel = priorities.find((p) => p.case_id === c.id)
@@ -36,6 +33,14 @@ export default function RecoveryCasesPage({
       estimated_recoverable: activeIntel ? activeIntel.estimated_recoverable : '0.00'
     }
   })
+
+  // KPI calculations
+  const totalCases = enrichedCases.length;
+  const activeCases = enrichedCases.filter(c => !['RECOVERED', 'STOPPED'].includes(c.status)).length;
+  const revenueAtRisk = enrichedCases.filter(c => !['RECOVERED', 'STOPPED'].includes(c.status)).reduce((acc, c) => acc + Number(c.amount_at_risk), 0);
+  const potentialRecovery = enrichedCases.filter(c => !['RECOVERED', 'STOPPED'].includes(c.status)).reduce((acc, c) => acc + Number(c.estimated_recoverable || c.amount_at_risk), 0);
+  const confirmedRecovery = enrichedCases.filter(c => c.status === 'RECOVERED').reduce((acc, c) => acc + Number(c.recovered_amount || c.amount_at_risk), 0);
+  const recoveryRate = totalCases > 0 ? Math.round((enrichedCases.filter(c => c.status === 'RECOVERED').length / totalCases) * 100) : 0;
 
   // Handle client-side sorting
   const handleSort = (field: SortField) => {
@@ -76,37 +81,70 @@ export default function RecoveryCasesPage({
 
   const renderSortArrow = (field: SortField) => {
     if (sortField !== field) return null
-    return sortOrder === 'asc' ? <ChevronUp className="w-3 h-3 inline ml-1" /> : <ChevronDown className="w-3 h-3 inline ml-1" />
+    return sortOrder === 'asc' ? <ChevronUp className="w-3 h-3 inline ml-1 text-purple-600" /> : <ChevronDown className="w-3 h-3 inline ml-1 text-purple-600" />
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full space-y-4">
       
-      {/* Search & Filters Controls */}
-      <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4 flex flex-col md:flex-row gap-4 justify-between items-center">
-        
-        {/* Search */}
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+      {/* 1. Header (Compact) */}
+      <div className="flex items-center justify-between pb-2">
+        <div>
+          <h2 className="text-[19px] font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            Recovery Cases
+            <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider">{activeCases} ACTIVE</span>
+          </h2>
+          <p className="text-[13px] text-slate-500 mt-1 font-medium">Manage and monitor revenue recovery operations and orchestration paths.</p>
+        </div>
+        <button className="flex items-center gap-2 px-3 py-1.5 text-[12px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-100 rounded transition-colors border border-transparent hover:border-slate-200">
+          <RefreshCw className="w-3.5 h-3.5" /> Refresh
+        </button>
+      </div>
+
+      {/* 2. KPI Metrics Row (Horizontal) */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
+          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Revenue at Risk</span>
+          <FinancialValue value={formatCurrency(revenueAtRisk)} size="metric" className="text-rose-600" />
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
+          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Recovery Potential</span>
+          <FinancialValue value={formatCurrency(potentialRecovery)} size="metric" className="text-purple-700" />
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
+          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Confirmed Recovery</span>
+          <FinancialValue value={formatCurrency(confirmedRecovery)} size="metric" className="text-emerald-600" />
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
+          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Active Cases</span>
+          <FinancialValue value={activeCases} size="metric" className="text-slate-900" />
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
+          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Recovery Rate</span>
+          <FinancialValue value={`${recoveryRate}%`} size="metric" className="text-slate-900" />
+        </div>
+      </div>
+
+      {/* 3. Compact Toolbar (Filters) */}
+      <div className="bg-white border border-slate-200 rounded-lg p-2 flex flex-col md:flex-row gap-2 justify-between items-center shadow-sm">
+        <div className="relative w-full md:w-80 h-9">
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search Case or Customer UUID..."
+            placeholder="Search Case or Customer ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#1b1e28] text-xs text-gray-300 rounded-lg pl-9 pr-4 py-2 outline-none border border-[#2e3445] focus:border-purple-500 transition"
+            className="w-full h-full bg-slate-50 text-[13px] text-slate-900 rounded-md pl-9 pr-3 outline-none border border-transparent focus:border-purple-300 focus:bg-white transition-all font-medium placeholder:text-slate-400"
           />
         </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 w-full md:w-auto justify-end">
-          
-          {/* Risk Level Filter */}
-          <div className="flex items-center gap-1.5 bg-[#1b1e28] px-3 py-1.5 rounded-lg border border-[#2e3445]">
-            <span className="text-[10px] text-gray-400 font-bold uppercase">Risk:</span>
+        
+        <div className="flex items-center gap-2 w-full md:w-auto h-9">
+          <div className="flex items-center gap-2 h-full bg-slate-50 px-3 rounded-md border border-slate-100 hover:border-slate-200 transition-colors">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
             <select
               value={riskFilter}
               onChange={(e) => setRiskFilter(e.target.value)}
-              className="bg-transparent text-xs text-gray-200 outline-none cursor-pointer"
+              className="bg-transparent text-[12px] font-bold text-slate-600 outline-none cursor-pointer uppercase tracking-wider h-full py-2"
             >
               <option value="ALL">All Risks</option>
               <option value="CRITICAL">Critical</option>
@@ -116,13 +154,12 @@ export default function RecoveryCasesPage({
             </select>
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-1.5 bg-[#1b1e28] px-3 py-1.5 rounded-lg border border-[#2e3445]">
-            <span className="text-[10px] text-gray-400 font-bold uppercase">Status:</span>
+          <div className="flex items-center gap-2 h-full bg-slate-50 px-3 rounded-md border border-slate-100 hover:border-slate-200 transition-colors">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent text-xs text-gray-200 outline-none cursor-pointer"
+              className="bg-transparent text-[12px] font-bold text-slate-600 outline-none cursor-pointer uppercase tracking-wider h-full py-2"
             >
               <option value="ALL">All Statuses</option>
               <option value="OPEN">Open</option>
@@ -135,70 +172,70 @@ export default function RecoveryCasesPage({
         </div>
       </div>
 
-      {/* Cases Main List Table */}
-      <div className="bg-[#13151c] border border-[#202430] rounded-xl overflow-hidden">
+      {/* 4. Case Table (The Hero) */}
+      <div className="bg-white border border-slate-200 rounded-xl flex-grow overflow-hidden shadow-sm flex flex-col">
         {sortedCases.length === 0 ? (
-          <div className="py-20 text-center text-gray-500 space-y-2">
-            <AlertCircle className="w-8 h-8 mx-auto text-gray-600" />
-            <h4 className="text-sm font-semibold text-gray-400">No cases matched filters</h4>
-            <p className="text-xs max-w-xs mx-auto">Try widening your search string or toggling the status/risk dropdown filters.</p>
+          <div className="flex-grow flex flex-col items-center justify-center py-16 text-slate-500 space-y-3">
+            <AlertCircle className="w-10 h-10 text-slate-300" strokeWidth={1.5} />
+            <h4 className="text-[15px] font-bold text-slate-900 tracking-tight">No active recovery cases</h4>
+            <p className="text-[13px] max-w-sm text-center">Trigger a payment failure from Webhooks to create a recovery case.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-[#202430] text-gray-400 font-medium">
-                  <th className="py-3.5 pl-4 cursor-pointer select-none" onClick={() => handleSort('id')}>
+          <div className="overflow-x-auto flex-grow h-[400px]">
+            <table className="w-full text-left border-collapse sticky-header">
+              <thead className="bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm border-b border-slate-200">
+                <tr className="text-slate-500">
+                  <th className="py-3 pl-5 cursor-pointer select-none hover:text-slate-900 transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('id')}>
                     Case ID {renderSortArrow('id')}
                   </th>
-                  <th className="py-3.5">Risk Level</th>
-                  <th className="py-3.5 cursor-pointer select-none text-right" onClick={() => handleSort('amount_at_risk')}>
-                    Amount at Risk {renderSortArrow('amount_at_risk')}
+                  <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Risk</th>
+                  <th className="py-3 px-4 cursor-pointer select-none text-right hover:text-slate-900 transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('amount_at_risk')}>
+                    Amount {renderSortArrow('amount_at_risk')}
                   </th>
-                  <th className="py-3.5 cursor-pointer select-none text-center" onClick={() => handleSort('priority_score')}>
-                    Priority Score {renderSortArrow('priority_score')}
+                  <th className="py-3 px-4 cursor-pointer select-none text-center hover:text-slate-900 transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('priority_score')}>
+                    Score {renderSortArrow('priority_score')}
                   </th>
-                  <th className="py-3.5">Age Status</th>
-                  <th className="py-3.5 cursor-pointer select-none" onClick={() => handleSort('status')}>
+                  <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Age</th>
+                  <th className="py-3 px-4 cursor-pointer select-none hover:text-slate-900 transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('status')}>
                     Status {renderSortArrow('status')}
                   </th>
-                  <th className="py-3.5 text-right pr-4">Outcome Recovered</th>
+                  <th className="py-3 pr-5 text-right text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Recovered Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#202430]">
+              <tbody className="divide-y divide-slate-100">
                 {sortedCases.map((c) => (
                   <tr
                     key={c.id}
                     onClick={() => onSelectCase(c.id)}
-                    className="hover:bg-[#1a1c24]/50 cursor-pointer transition duration-150"
+                    className="hover:bg-slate-50/70 cursor-pointer transition-colors group"
                   >
-                    <td className="py-3.5 pl-4 font-mono text-purple-300 font-medium">
-                      {c.id.substring(0, 8)}...
+                    <td className="py-3 pl-5 text-slate-900 group-hover:text-purple-700 transition-colors">
+                      <FinancialValue value={c.id.substring(0, 8)} size="table" className="text-inherit" />
                     </td>
-                    <td className="py-3.5">
-                      <RiskBadge level={c.risk_level} />
+                    <td className="py-3 px-4">
+                      <div className="scale-90 origin-left"><RiskBadge level={c.risk_level} /></div>
                     </td>
-                    <td className="py-3.5 text-right font-bold text-gray-100 font-mono">
-                      {formatCurrency(c.amount_at_risk)}
+                    <td className="py-3 px-4 text-right">
+                      <FinancialValue value={formatCurrency(c.amount_at_risk)} size="table" className="text-slate-900" />
                     </td>
-                    <td className="py-3.5 text-center">
-                      <span className="bg-[#1b1e28] text-purple-300 font-bold border border-[#2e3445] px-2 py-0.5 rounded font-mono">
-                        {c.priority_score.toFixed(0)}
+                    <td className="py-3 px-4 text-center">
+                      <span className="bg-purple-50 border border-purple-100 text-purple-700 font-bold px-2 py-1 rounded">
+                        <FinancialValue value={formatNumber(c.priority_score)} size="table" className="text-inherit" />
                       </span>
                     </td>
-                    <td className="py-3.5 text-gray-400">
-                      {c.time_category}
+                    <td className="py-3 px-4 text-slate-500 text-[12px] font-medium capitalize">
+                      {c.time_category.replace(/_/g, ' ').toLowerCase()}
                     </td>
-                    <td className="py-3.5">
-                      <StatusBadge status={c.status} />
+                    <td className="py-3 px-4">
+                      <div className="scale-90 origin-left"><StatusBadge status={c.status} /></div>
                     </td>
-                    <td className="py-3.5 text-right pr-4 font-mono">
+                    <td className="py-3 pr-5 text-right">
                       {c.status === 'RECOVERED' ? (
-                        <span className="text-emerald-400 font-bold">
-                          {formatCurrency(c.recovered_amount || c.amount_at_risk)}
+                        <span className="text-emerald-600">
+                          <FinancialValue value={formatCurrency(c.recovered_amount || c.amount_at_risk)} size="table" className="text-inherit" />
                         </span>
                       ) : (
-                        <span className="text-gray-500 italic">Unresolved</span>
+                        <span className="text-slate-400 text-[11px] font-medium italic">Unresolved</span>
                       )}
                     </td>
                   </tr>
@@ -208,6 +245,7 @@ export default function RecoveryCasesPage({
           </div>
         )}
       </div>
+
     </div>
   )
 }

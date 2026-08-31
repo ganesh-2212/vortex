@@ -9,6 +9,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import { runRecoverySimulation, getLatestSimulation } from '../../api'
+import { formatCurrency } from '../../utils/formatters'
 
 interface SimulationPageProps {
   cases: any[]
@@ -75,16 +76,11 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
       setSimulating(false)
     }
   }
-
-  const formatCurrency = (val: number | string) => {
-    return `₹${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  }
-
   const getOutcomeBadge = (outcome: string) => {
     if (outcome.toUpperCase() === 'RECOVERED') {
-      return 'text-emerald-400 bg-emerald-950/20 border-emerald-500/20'
+      return 'text-emerald-700 bg-emerald-50 border-emerald-200'
     }
-    return 'text-gray-400 bg-gray-950/20 border-gray-500/20'
+    return 'text-slate-600 bg-gray-50 border-slate-200'
   }
 
   const inspectedCaseDetail = latestResult?.cases?.find(
@@ -92,92 +88,92 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
   )
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-8 text-left pb-12 w-full max-w-6xl mx-auto">
       
       {/* Simulation Warning Disclaimer Banner */}
-      <div className="bg-amber-950/20 border border-amber-500/20 text-amber-300 p-4 rounded-xl flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-        <div>
-          <h4 className="text-sm font-semibold uppercase tracking-wider font-mono">SIMULATION MODE ACTIVE — NO REAL TRANSACTIONS</h4>
-          <p className="text-xs text-amber-300/80 mt-1 leading-relaxed">
+      <div className="bg-amber-50 border border-amber-200 text-amber-900 p-6 rounded-xl flex items-start gap-4 shadow-sm">
+        <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" strokeWidth={2.5} />
+        <div className="flex flex-col gap-1.5">
+          <h4 className="text-[11px] font-bold uppercase tracking-widest text-amber-800">SIMULATION MODE ACTIVE — NO REAL TRANSACTIONS</h4>
+          <p className="text-[13px] font-medium text-amber-900 leading-relaxed">
             The simulator does not execute live payments, modify gateway ledgers, charge customer accounts, or transition production cases. All calculated recovery scenarios are projected for business value demonstration only.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="flex flex-col gap-8 w-full max-w-5xl mx-auto">
         
         {/* Left Column (2/3 width) - Setup Panel and Simulation Results */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-8">
           
           {/* Setup controls panel */}
-          <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-4">
-            <div className="flex justify-between items-center border-b border-[#202430] pb-3">
-              <div className="flex items-center gap-2">
-                <BarChart2 className="w-4 h-4 text-purple-400" />
-                <h3 className="text-sm font-semibold text-gray-200">Simulation Batch Config</h3>
+          <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm space-y-8">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <BarChart2 className="w-5 h-5 text-purple-600" />
+                <h3 className="text-[17px] font-bold text-slate-900 tracking-tight">Simulation Batch Config</h3>
               </div>
-              <span className="text-[10px] text-gray-500 font-mono">Active cases: {activeCases.length}</span>
+              <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Active cases: {activeCases.length}</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-gray-400 uppercase block">Simulation Limit</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Simulation Limit</label>
                 <input
                   type="number"
                   min="1"
                   value={batchSize}
                   onChange={(e) => setBatchSize(parseInt(e.target.value) || 0)}
-                  className="w-full bg-[#1b1e28] text-xs text-gray-300 rounded border border-[#2e3445] p-2 outline-none focus:border-purple-500 transition font-mono"
+                  className="w-full bg-slate-50 text-[15px] tabular-nums text-slate-900 rounded-lg border border-slate-200 p-3 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-sm"
                   disabled={simulating}
                 />
               </div>
 
-              <div className="space-y-1 flex flex-col justify-end">
+              <div className="flex flex-col justify-end">
                 <button
                   onClick={handleRunSimulation}
                   disabled={simulating || selectedCaseIds.length === 0}
-                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800/40 text-white text-xs px-4 py-2.5 rounded font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full bg-slate-900 hover:bg-black disabled:bg-slate-400 text-white text-[13px] font-bold uppercase tracking-wider px-6 py-3.5 rounded-lg transition-all flex items-center justify-center gap-3 shadow-sm"
                 >
-                  <Play className="w-3.5 h-3.5" />
+                  <Play className="w-4 h-4 fill-current" />
                   {simulating ? 'Simulating Projections...' : 'Execute Recovery Simulation'}
                 </button>
               </div>
             </div>
 
             {/* Cases checklists */}
-            <div className="space-y-2">
+            <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Select Cases ({selectedCaseIds.length} checked)</span>
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Select Cases ({selectedCaseIds.length} checked)</span>
                 <button
                   onClick={handleSelectAll}
                   disabled={simulating || activeCases.length === 0}
-                  className="text-[10px] text-purple-400 hover:text-purple-300 font-semibold transition cursor-pointer"
+                  className="text-[11px] text-purple-700 hover:text-purple-900 font-bold uppercase tracking-wider transition-colors cursor-pointer"
                 >
                   {selectedCaseIds.length === activeCases.length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
 
               {activeCases.length === 0 ? (
-                <div className="text-xs text-gray-500 italic py-4 bg-[#1b1e28]/35 border border-[#2e3445]/50 rounded text-center">
+                <div className="text-[13px] text-slate-400 font-medium italic py-8 bg-slate-50 border border-slate-200 rounded-xl text-center shadow-inner">
                   No active open recovery cases found. Trigger webhook failures first.
                 </div>
               ) : (
-                <div className="bg-[#1b1e28]/35 border border-[#2e3445]/50 rounded max-h-36 overflow-y-auto divide-y divide-[#202430]/40 p-2 space-y-1">
+                <div className="bg-white border border-slate-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1 shadow-sm">
                   {activeCases.map((c) => (
                     <label
                       key={c.id}
-                      className="flex items-center gap-3 p-1.5 hover:bg-[#202430]/35 rounded cursor-pointer select-none text-[11px] font-mono text-gray-300"
+                      className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-lg cursor-pointer select-none text-[13px] tabular-nums font-medium text-slate-600 transition-colors"
                     >
                       <input
                         type="checkbox"
                         checked={selectedCaseIds.includes(c.id)}
                         onChange={() => handleToggleCase(c.id)}
                         disabled={simulating}
-                        className="accent-purple-600"
+                        className="accent-slate-900 w-4 h-4 rounded border-slate-300"
                       />
-                      <span className="truncate flex-1">Case #{c.id.substring(0, 8)}...</span>
-                      <span className="text-gray-400 font-bold">{formatCurrency(c.amount_at_risk)}</span>
+                      <span className="truncate flex-1 min-w-0 text-slate-900">Case #{c.id.substring(0, 8)}...</span>
+                      <span className="text-slate-900 font-bold">{formatCurrency(c.amount_at_risk)}</span>
                     </label>
                   ))}
                 </div>
@@ -185,7 +181,7 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
             </div>
 
             {simError && (
-              <div className="bg-rose-950/20 border border-rose-500/20 text-rose-400 p-3 rounded-lg text-xs">
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 p-5 rounded-xl text-[13px] font-medium shadow-sm">
                 {simError}
               </div>
             )}
@@ -193,154 +189,156 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
 
           {/* Results Comparison Grid */}
           {latestResult && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               
               {/* Aggregate Indicators grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4">
-                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Total At Risk</span>
-                  <span className="text-base font-bold text-gray-200 font-mono mt-1 block">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col hover:border-slate-300 transition-colors">
+                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-2">Total At Risk</span>
+                  <span className="text-2xl font-bold text-slate-900 proportional-nums tracking-tight">
                     {formatCurrency(latestResult.total_revenue_at_risk)}
                   </span>
                 </div>
-                <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4">
-                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Sentinel Recovery Rate</span>
-                  <span className="text-base font-bold text-purple-400 font-mono mt-1 block">
+                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col hover:border-slate-300 transition-colors">
+                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-2">Sentinel Recovery Rate</span>
+                  <span className="text-2xl font-bold text-purple-700 proportional-nums tracking-tight">
                     {latestResult.sentinel_recovery_rate}%
                   </span>
                 </div>
-                <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4">
-                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Intervention Cost</span>
-                  <span className="text-base font-bold text-gray-400 font-mono mt-1 block">
+                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col hover:border-slate-300 transition-colors">
+                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-2">Intervention Cost</span>
+                  <span className="text-2xl font-bold text-slate-600 proportional-nums tracking-tight">
                     {formatCurrency(latestResult.total_intervention_cost)}
                   </span>
                 </div>
-                <div className="bg-[#13151c] border border-[#202430] rounded-xl p-4">
-                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Cases Simulated</span>
-                  <span className="text-base font-bold text-gray-200 font-mono mt-1 block">
-                    {latestResult.number_of_simulated_cases} ({latestResult.number_of_simulated_successful_recoveries} recovered)
+                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col hover:border-slate-300 transition-colors">
+                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-2">Cases Simulated</span>
+                  <span className="text-2xl font-bold text-slate-900 proportional-nums tracking-tight">
+                    {latestResult.number_of_simulated_cases} <span className="text-[15px] font-medium text-slate-500">({latestResult.number_of_simulated_successful_recoveries} rec)</span>
                   </span>
                 </div>
               </div>
 
               {/* Incremental gains card */}
-              <div className="bg-purple-950/15 border border-purple-500/20 rounded-xl p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-purple-300">Incremental Revenue Proof</h3>
+              <div className="bg-purple-50/50 rounded-xl p-8 space-y-8 border border-purple-200 shadow-sm">
+                <h3 className="text-[17px] font-bold text-purple-900 tracking-tight">Incremental Revenue Proof</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-[#13151c]/70 border border-[#202430] p-4 rounded-lg flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-gray-500 uppercase block font-medium">vs No Intervention Baseline</span>
-                      <span className="text-lg font-extrabold text-emerald-400 mt-1 block font-mono">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-purple-100">
+                  <div className="bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between shadow-sm">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider">vs No Intervention Baseline</span>
+                      <span className="text-3xl font-bold text-emerald-600 proportional-nums tracking-tight">
                         +{formatCurrency(latestResult.incremental_recovery_vs_no_intervention)}
                       </span>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-emerald-500" />
+                    <ArrowRight className="w-8 h-8 text-emerald-500" strokeWidth={2} />
                   </div>
 
-                  <div className="bg-[#13151c]/70 border border-[#202430] p-4 rounded-lg flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-gray-500 uppercase block font-medium">vs Basic Retry Baseline</span>
-                      <span className="text-lg font-extrabold text-purple-400 mt-1 block font-mono">
+                  <div className="bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between shadow-sm">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider">vs Basic Retry Baseline</span>
+                      <span className="text-3xl font-bold text-purple-700 proportional-nums tracking-tight">
                         +{formatCurrency(latestResult.incremental_recovery_vs_basic_retry)}
                       </span>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-purple-500" />
+                    <ArrowRight className="w-8 h-8 text-purple-500" strokeWidth={2} />
                   </div>
                 </div>
 
-                <div className="text-[10px] text-gray-400 leading-relaxed font-mono">
-                  Additional Recovery Lift over basic strategy: <strong className="text-purple-300">+{latestResult.additional_recovery_percentage}%</strong>. Total Net Recovery Value: {formatCurrency(latestResult.sentinel_net_recovery)}.
+                <div className="text-[13px] font-medium text-slate-600 leading-relaxed tabular-nums bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                  Additional Recovery Lift over basic strategy: <strong className="text-purple-700 font-bold">+{latestResult.additional_recovery_percentage}%</strong>. Total Net Recovery Value: {formatCurrency(latestResult.sentinel_net_recovery)}.
                 </div>
               </div>
 
-              {/* Recovery Recovery Comparison table */}
-              <div className="bg-[#13151c] border border-[#202430] rounded-xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-[#202430] flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-purple-400" />
-                  <h3 className="text-sm font-semibold text-gray-200">Revenue Recovery Comparison</h3>
+              {/* Revenue Recovery Comparison table */}
+              <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
+                <h3 className="text-[17px] font-bold text-slate-900 mb-6 tracking-tight flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-purple-600" />
+                  Revenue Recovery Comparison
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-400">
+                        <th className="py-4 pl-4 text-[11px] font-bold uppercase tracking-wider">Recovery Policy Option</th>
+                        <th className="py-4 text-right text-[11px] font-bold uppercase tracking-wider">Recovered Amount</th>
+                        <th className="py-4 text-right pr-4 text-[11px] font-bold uppercase tracking-wider">Estimated Lift</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-[13px] tabular-nums">
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-5 pl-4 font-bold text-slate-500 font-sans uppercase tracking-tight">No Intervention (Baseline)</td>
+                        <td className="py-5 text-right font-medium text-slate-500">{formatCurrency(latestResult.no_intervention_recovered_amount)}</td>
+                        <td className="py-5 text-right font-medium text-slate-400 pr-4">0.00%</td>
+                      </tr>
+                      <tr className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-5 pl-4 font-bold text-slate-900 font-sans uppercase tracking-tight">Basic Retry Strategy</td>
+                        <td className="py-5 text-right font-medium text-slate-700">{formatCurrency(latestResult.basic_retry_recovered_amount)}</td>
+                        <td className="py-5 text-right text-purple-700 pr-4 font-bold tracking-tight">
+                          +{latestResult.basic_retry_recovered_amount > 0 ? '100' : '0'}%
+                        </td>
+                      </tr>
+                      <tr className="bg-purple-50/30 transition-colors">
+                        <td className="py-5 pl-4 text-purple-900 font-bold font-sans uppercase tracking-tight flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                          FLOWMINT Optimized
+                        </td>
+                        <td className="py-5 text-right text-emerald-600 font-bold tracking-tight">{formatCurrency(latestResult.sentinel_recovered_amount)}</td>
+                        <td className="py-5 text-right text-emerald-600 font-bold pr-4 tracking-tight">
+                          +{latestResult.sentinel_recovery_rate}%
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#202430] text-gray-400 font-medium">
-                      <th className="py-3 pl-5">Recovery Policy Option</th>
-                      <th className="py-3 text-right">Recovered Amount</th>
-                      <th className="py-3 text-right pr-5">Estimated Lift</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#202430] font-mono">
-                    <tr className="hover:bg-[#1a1c24]/30">
-                      <td className="py-3 pl-5 font-semibold text-gray-400">No Intervention (Baseline)</td>
-                      <td className="py-3 text-right text-gray-400">{formatCurrency(latestResult.no_intervention_recovered_amount)}</td>
-                      <td className="py-3 text-right text-gray-500 pr-5">0.00%</td>
-                    </tr>
-                    <tr className="hover:bg-[#1a1c24]/30">
-                      <td className="py-3 pl-5 font-semibold text-gray-300">Basic Retry Strategy</td>
-                      <td className="py-3 text-right text-gray-300">{formatCurrency(latestResult.basic_retry_recovered_amount)}</td>
-                      <td className="py-3 text-right text-purple-400 pr-5">
-                        +{latestResult.basic_retry_recovered_amount > 0 ? '100' : '0'}%
-                      </td>
-                    </tr>
-                    <tr className="bg-purple-950/10 font-bold border-l-2 border-purple-500">
-                      <td className="py-3 pl-4 text-purple-300">Revenue Sentinel Optimized</td>
-                      <td className="py-3 text-right text-emerald-400">{formatCurrency(latestResult.sentinel_recovered_amount)}</td>
-                      <td className="py-3 text-right text-emerald-400 pr-5">
-                        +{latestResult.sentinel_recovery_rate}%
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
               </div>
 
               {/* Case-level simulations table */}
-              <div className="bg-[#13151c] border border-[#202430] rounded-xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-[#202430]">
-                  <h3 className="text-sm font-semibold text-gray-200">Simulated Batch Cases log</h3>
-                </div>
+              <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
+                <h3 className="text-[17px] font-bold text-slate-900 mb-6 tracking-tight">Simulated Batch Cases log</h3>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                  <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[#202430] text-gray-400 font-medium">
-                        <th className="py-3 pl-5">Case Reference</th>
-                        <th className="py-3 text-right">Risk Amount</th>
-                        <th className="py-3 text-center">Risk Level</th>
-                        <th className="py-3">Sentinel Strategy</th>
-                        <th className="py-3 text-right">Net Recovery</th>
-                        <th className="py-3 text-right pr-5">Inspect</th>
+                      <tr className="border-b border-slate-200 text-slate-400">
+                        <th className="py-4 pl-4 text-[11px] font-bold uppercase tracking-wider">Case Reference</th>
+                        <th className="py-4 text-right text-[11px] font-bold uppercase tracking-wider">Risk Amount</th>
+                        <th className="py-4 text-center text-[11px] font-bold uppercase tracking-wider">Risk Level</th>
+                        <th className="py-4 text-[11px] font-bold uppercase tracking-wider">Sentinel Strategy</th>
+                        <th className="py-4 text-right text-[11px] font-bold uppercase tracking-wider">Net Recovery</th>
+                        <th className="py-4 text-right pr-4 text-[11px] font-bold uppercase tracking-wider">Inspect</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#202430]">
+                    <tbody className="divide-y divide-slate-100 text-[13px]">
                       {latestResult.cases.map((c: any) => {
                         const isInspected = inspectedCaseId === c.case_id
                         return (
                           <tr
                             key={c.case_id}
                             onClick={() => setInspectedCaseId(c.case_id)}
-                            className={`hover:bg-[#1a1c24]/50 cursor-pointer transition ${
-                              isInspected ? 'bg-purple-950/10' : ''
+                            className={`hover:bg-slate-50/50 cursor-pointer transition-colors ${
+                              isInspected ? 'bg-purple-50/30' : ''
                             }`}
                           >
-                            <td className="py-3 pl-5 font-mono text-purple-300 font-medium">
-                              #{c.case_id.substring(0, 8)}...
+                            <td className="py-5 pl-4 tabular-nums text-purple-700 font-bold uppercase tracking-widest">
+                              #{c.case_id.substring(0, 8)}
                             </td>
-                            <td className="py-3 text-right font-mono text-gray-300">
+                            <td className="py-5 text-right tabular-nums text-slate-900 font-medium">
                               {formatCurrency(c.amount_at_risk)}
                             </td>
-                            <td className="py-3 text-center">
-                              <span className="text-[10px] font-semibold text-gray-400 bg-gray-900 border border-gray-800 px-1.5 py-0.5 rounded uppercase">
+                            <td className="py-5 text-center">
+                              <span className="text-[9px] font-bold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded uppercase tracking-wider">
                                 {c.risk_level}
                               </span>
                             </td>
-                            <td className="py-3 font-semibold text-gray-200 text-[10px] uppercase">
+                            <td className="py-5 font-bold text-slate-900 uppercase tracking-tight">
                               {c.sentinel_strategy.replace(/_/g, ' ')}
                             </td>
-                            <td className="py-3 text-right font-mono text-emerald-400 font-bold">
+                            <td className="py-5 text-right tabular-nums text-emerald-600 font-bold tracking-tight">
                               {formatCurrency(c.sentinel_net_recovered)}
                             </td>
-                            <td className="py-3 text-right pr-5 text-purple-400">
-                              <ChevronRight className="w-4 h-4 ml-auto" />
+                            <td className="py-5 text-right pr-4 text-purple-600">
+                              <ChevronRight className="w-5 h-5 ml-auto" strokeWidth={2.5} />
                             </td>
                           </tr>
                         )
@@ -355,87 +353,88 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
 
         </div>
 
-        {/* Right Column (1/3 width) - Case diagnostics detail inspector */}
-        <div className="space-y-6">
-          <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-4 text-left">
-            <div className="border-b border-[#202430] pb-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-purple-400" />
-                <h3 className="text-sm font-semibold text-gray-200">Simulation Inspector</h3>
+        {/* Inspector detailed view */}
+        <div className="space-y-8">
+          <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm space-y-8 text-left">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-purple-600" />
+                <h3 className="text-[17px] font-bold text-slate-900 tracking-tight">Simulation Inspector</h3>
               </div>
             </div>
 
             {inspectedCaseDetail ? (
-              <div className="space-y-4 text-xs">
-                <div className="bg-[#1b1e28] rounded border border-[#2e3445] p-3 font-mono space-y-2 text-gray-300">
-                  <div className="border-b border-[#2e3445]/60 pb-1.5 text-[10px] text-gray-500">
-                    Case UUID: {inspectedCaseDetail.case_id}
+              <div className="space-y-8 text-[13px] pt-6 border-t border-slate-100">
+                <div className="bg-slate-50 rounded-xl border border-slate-200 p-6 tabular-nums space-y-4 shadow-sm">
+                  <div className="flex flex-col gap-1 border-b border-slate-200 pb-4">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Case UUID</span>
+                    <span className="text-[13px] font-medium text-slate-900">{inspectedCaseDetail.case_id}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Amount at Risk:</span>
-                    <span className="font-bold text-gray-200">{formatCurrency(inspectedCaseDetail.amount_at_risk)}</span>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-slate-500 uppercase tracking-wider font-bold text-[11px]">Amount at Risk:</span>
+                    <span className="font-bold text-slate-900 text-[15px]">{formatCurrency(inspectedCaseDetail.amount_at_risk)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Risk Severity:</span>
-                    <span className="font-bold text-gray-200">{inspectedCaseDetail.risk_level}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 uppercase tracking-wider font-bold text-[11px]">Risk Severity:</span>
+                    <span className="font-bold text-slate-900 text-[13px] uppercase tracking-widest">{inspectedCaseDetail.risk_level}</span>
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
-                  <span className="text-[10px] text-gray-500 font-bold block uppercase tracking-wider">Policy Comparison</span>
+                <div className="space-y-4">
+                  <span className="text-[11px] text-slate-400 font-bold block uppercase tracking-wider">Policy Comparison</span>
                   
-                  <div className="space-y-2 font-mono">
-                    <div className="bg-[#1b1e28]/40 border border-[#202430] p-2.5 rounded flex justify-between items-center">
-                      <div>
-                        <span className="text-[9px] text-gray-500 block uppercase">No Intervention</span>
-                        <span className="text-xs font-bold text-gray-300">{formatCurrency(inspectedCaseDetail.no_intervention_recovered)}</span>
+                  <div className="space-y-4 tabular-nums text-[13px]">
+                    <div className="bg-white border border-slate-200 p-5 rounded-xl flex justify-between items-center shadow-sm hover:border-slate-300 transition-colors">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] text-slate-400 block uppercase font-sans font-bold tracking-wider">No Intervention</span>
+                        <span className="text-[15px] font-bold text-slate-900">{formatCurrency(inspectedCaseDetail.no_intervention_recovered)}</span>
                       </div>
-                      <span className="text-[9px] text-gray-500">Rate: 0%</span>
+                      <span className="text-[11px] text-slate-400 font-sans font-bold uppercase tracking-wider">Rate: 0%</span>
                     </div>
 
-                    <div className="bg-[#1b1e28]/40 border border-[#202430] p-2.5 rounded flex justify-between items-center">
-                      <div>
-                        <span className="text-[9px] text-gray-500 block uppercase">Basic Retry Strategy</span>
-                        <span className="text-xs font-bold text-gray-300">{formatCurrency(inspectedCaseDetail.basic_retry_recovered)}</span>
+                    <div className="bg-white border border-slate-200 p-5 rounded-xl flex justify-between items-center shadow-sm hover:border-slate-300 transition-colors">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] text-slate-400 block uppercase font-sans font-bold tracking-wider">Basic Retry Strategy</span>
+                        <span className="text-[15px] font-bold text-slate-900">{formatCurrency(inspectedCaseDetail.basic_retry_recovered)}</span>
                       </div>
-                      <div className="text-right">
-                        <span className="text-[9px] text-gray-400 block uppercase">{inspectedCaseDetail.basic_retry_strategy.replace(/_/g, ' ')}</span>
-                        <span className="text-[9px] text-gray-500">Cost: {formatCurrency(inspectedCaseDetail.basic_retry_cost)}</span>
+                      <div className="flex flex-col text-right gap-1">
+                        <span className="text-[11px] text-slate-700 block uppercase font-sans font-bold tracking-wider">{inspectedCaseDetail.basic_retry_strategy.replace(/_/g, ' ')}</span>
+                        <span className="text-[11px] text-slate-400 font-sans font-bold uppercase tracking-wider">Cost: {formatCurrency(inspectedCaseDetail.basic_retry_cost)}</span>
                       </div>
                     </div>
 
-                    <div className="bg-purple-950/10 border border-purple-500/20 p-2.5 rounded flex justify-between items-center">
-                      <div>
-                        <span className="text-[9px] text-purple-400 block uppercase">Sentinel Optimized</span>
-                        <span className="text-xs font-bold text-emerald-400">{formatCurrency(inspectedCaseDetail.sentinel_recovered)}</span>
+                    <div className="bg-purple-50/50 border border-purple-200 p-5 rounded-xl flex justify-between items-center shadow-sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] text-purple-700 block uppercase font-sans font-bold tracking-wider">Sentinel Optimized</span>
+                        <span className="text-[15px] font-bold text-emerald-600 tracking-tight">{formatCurrency(inspectedCaseDetail.sentinel_recovered)}</span>
                       </div>
-                      <div className="text-right">
-                        <span className="text-[9px] text-purple-300 block uppercase">{inspectedCaseDetail.sentinel_strategy.replace(/_/g, ' ')}</span>
-                        <span className="text-[9px] text-purple-400 font-bold">Prob: {inspectedCaseDetail.sentinel_probability}%</span>
+                      <div className="flex flex-col text-right gap-1">
+                        <span className="text-[11px] text-purple-800 block uppercase font-sans font-bold tracking-wider">{inspectedCaseDetail.sentinel_strategy.replace(/_/g, ' ')}</span>
+                        <span className="text-[11px] text-purple-600 font-sans font-bold uppercase tracking-wider">Prob: {inspectedCaseDetail.sentinel_probability}%</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-purple-950/15 border border-purple-500/20 rounded p-3 font-mono space-y-1.5 text-[10px] text-purple-300">
-                  <div className="flex justify-between">
-                    <span>Sentinel Net Recovery:</span>
-                    <span>{formatCurrency(inspectedCaseDetail.sentinel_net_recovered)}</span>
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 tabular-nums space-y-4 text-[13px] text-purple-900 shadow-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-[11px] font-sans uppercase tracking-wider text-purple-700">Sentinel Net Recovery:</span>
+                    <span className="font-bold text-[15px] tracking-tight">{formatCurrency(inspectedCaseDetail.sentinel_net_recovered)}</span>
                   </div>
-                  <div className="flex justify-between border-t border-purple-500/10 pt-1">
-                    <span>Lift vs Basic Retry:</span>
-                    <span className="font-bold text-emerald-400">+{formatCurrency(inspectedCaseDetail.incremental_vs_basic_retry)}</span>
+                  <div className="flex justify-between items-center border-t border-purple-200 pt-4">
+                    <span className="font-bold text-[11px] font-sans uppercase tracking-wider text-purple-700">Lift vs Basic Retry:</span>
+                    <span className="font-bold text-emerald-600 text-[15px] tracking-tight">+{formatCurrency(inspectedCaseDetail.incremental_vs_basic_retry)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Outcome:</span>
-                    <span className={`px-1 rounded border text-[9px] uppercase font-bold ${getOutcomeBadge(inspectedCaseDetail.final_outcome)}`}>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="font-bold text-[11px] font-sans uppercase tracking-wider text-purple-700">Outcome:</span>
+                    <span className={`px-3 py-1.5 rounded text-[10px] font-sans uppercase font-bold tracking-wider ${getOutcomeBadge(inspectedCaseDetail.final_outcome)}`}>
                       {inspectedCaseDetail.final_outcome}
                     </span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-16 text-gray-500 italic text-xs">
+              <div className="text-center py-24 text-slate-400 italic text-[13px] font-medium border-t border-slate-100 pt-16">
                 Select a simulated case from the batch list to inspect baseline vs Sentinel recovery lifts.
               </div>
             )}

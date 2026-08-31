@@ -284,3 +284,27 @@ export async function runPolicyWhatIf(merchantId: string, proposedMaxRetries: nu
   }
   return res.json()
 }
+
+export async function createPaymentOrder(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/payment-order`, {
+    method: 'POST'
+  })
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.detail || 'Failed to create payment order')
+  }
+  return res.json()
+}
+
+export async function verifyPayment(caseId: string, payload: { razorpay_payment_id: string, razorpay_order_id: string, razorpay_signature: string }) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/verify-payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.detail || 'Failed to verify payment')
+  }
+  return res.json()
+}

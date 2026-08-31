@@ -423,3 +423,156 @@ async def get_provider_info():
         "key_id": settings.RAZORPAY_KEY_ID,
         "configured": bool(settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET)
     }
+
+from pydantic import BaseModel
+from fastapi import Request
+
+class VerifyPaymentRequest(BaseModel):
+    razorpay_payment_id: str
+    razorpay_order_id: str
+    razorpay_signature: str
+
+@router.post("/recovery-cases/{case_id}/payment-order")
+async def create_payment_order(case_id: uuid.UUID = Path(...)):
+    """
+    Creates a Razorpay Test Mode order.
+    """
+    from app.services.razorpay_service import razorpay_service
+    from app.services.guardrails import evaluate_guardrails
+    from app.models.domain import RecoveryActionType
+    
+    if case_id not in store.recovery_cases:
+        raise HTTPException(status_code=404, detail="Recovery case not found")
+        
+    case = store.recovery_cases[case_id]
+    
+    if case.status in [RecoveryCaseStatus.RECOVERED, RecoveryCaseStatus.STOPPED, RecoveryCaseStatus.ESCALATED]:
+        raise HTTPException(status_code=400, detail=f"Case is {case.status.value}, cannot create payment order")
+        
+    # Evaluate guardrails for retry
+    existing_actions = [a for a in store.recovery_actions.values() if a.recovery_case_id == case_id]
+    retry_count = sum(1 for a in existing_actions if a.action_type == RecoveryActionType.RETRY_PAYMENT and a.status != RecoveryActionStatus.BLOCKED)
+    
+    guardrail_result = evaluate_guardrails(
+        case=case,
+        action_type=RecoveryActionType.RETRY_PAYMENT,
+        attempt_number=retry_count + 1,
+        existing_actions=existing_actions,
+        current_time=datetime.now(timezone.utc)
+    )
+    
+    if not guardrail_result.is_allowed:
+        raise HTTPException(status_code=403, detail=f"Guardrail blocked: {guardrail_result.reason}")
+        
+    if not razorpay_service.is_configured():
+        raise HTTPException(status_code=500, detail="Razorpay is not configured")
+        
+    try:
+        order = razorpay_service.create_order(
+            amount=case.amount_at_risk,
+            currency="INR",
+            receipt=f"rcpt_{case_id.hex[:8]}"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create order: {str(e)}")
+        
+    # Persist the mapping
+    store.razorpay_orders[order['id']] = {
+        "case_id": case_id,
+        "amount": case.amount_at_risk,
+        "currency": "INR",
+        "status": "created",
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    # Audit log
+    log_audit_event(
+        recovery_case_id=case_id,
+        actor_type="SYSTEM",
+        action="RAZORPAY_ORDER_CREATED",
+        details={
+            "order_id": order['id'],
+            "amount_paise": order['amount']
+        }
+    )
+    
+    return {
+        "case_id": str(case_id),
+        "order_id": order['id'],
+        "amount_paise": order['amount'],
+        "currency": order['currency'],
+        "key_id": razorpay_service.key_id
+    }
+
+@router.post("/recovery-cases/{case_id}/verify-payment")
+async def verify_payment(
+    case_id: uuid.UUID = Path(...),
+    req: VerifyPaymentRequest = Body(...)
+):
+    """
+    Verifies payment signature and triggers centralized recovery.
+    """
+    from app.services.razorpay_service import razorpay_service
+    from app.services.outcomes import confirm_payment_recovery
+    
+    if case_id not in store.recovery_cases:
+        raise HTTPException(status_code=404, detail="Recovery case not found")
+        
+    case = store.recovery_cases[case_id]
+    
+    # Verify mapping exists
+    if req.razorpay_order_id not in store.razorpay_orders:
+        raise HTTPException(status_code=400, detail="Unknown order ID")
+        
+    order_info = store.razorpay_orders[req.razorpay_order_id]
+    if order_info["case_id"] != case_id:
+        raise HTTPException(status_code=400, detail="Order does not belong to this case")
+        
+    # Verify signature
+    is_valid = razorpay_service.verify_payment_signature(
+        payment_id=req.razorpay_payment_id,
+        order_id=req.razorpay_order_id,
+        signature=req.razorpay_signature
+    )
+    
+    if not is_valid:
+        # Audit fail
+        log_audit_event(
+            recovery_case_id=case_id,
+            actor_type="SYSTEM",
+            action="PAYMENT_VERIFICATION_FAILED",
+            details={"payment_id": req.razorpay_payment_id, "reason": "Invalid signature"}
+        )
+        raise HTTPException(status_code=400, detail="Invalid payment signature")
+        
+    payment = razorpay_service.fetch_payment(req.razorpay_payment_id)
+    if not payment or payment.get("status") != "captured":
+        log_audit_event(
+            recovery_case_id=case_id,
+            actor_type="SYSTEM",
+            action="PAYMENT_VERIFICATION_FAILED",
+            details={"payment_id": req.razorpay_payment_id, "reason": "Payment not captured"}
+        )
+        raise HTTPException(status_code=400, detail="Payment is not in captured status")
+        
+    expected_paise = int(order_info["amount"] * 100)
+    if payment.get("amount") != expected_paise:
+        raise HTTPException(status_code=400, detail="Payment amount does not match order amount")
+        
+    # Confirm recovery via centralized logic
+    current_time = datetime.now(timezone.utc)
+    did_recover = confirm_payment_recovery(
+        case=case,
+        transaction_id=req.razorpay_payment_id,
+        amount_recovered=order_info["amount"],
+        current_time=current_time,
+        source="frontend_verification"
+    )
+    
+    if did_recover:
+        order_info["status"] = "paid"
+        order_info["updated_at"] = current_time
+        
+    return {"status": "success", "recovered": did_recover, "case_status": case.status}
+
+

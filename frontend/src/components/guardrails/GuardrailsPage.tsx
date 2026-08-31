@@ -22,15 +22,15 @@ export default function GuardrailsPage({
   )
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-8 text-left pb-12 w-full max-w-6xl mx-auto">
       
       {/* Authoritative Warning Notice */}
-      <div className="bg-rose-950/20 border border-rose-500/20 text-rose-300 p-4 rounded-xl flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-        <div>
-          <h4 className="text-sm font-semibold uppercase tracking-wider font-mono text-rose-400">Deterministic Guardrails Control Area</h4>
-          <p className="text-xs text-rose-300/80 mt-1 leading-relaxed">
-            Guardrails are authoritative and represent the final safety authority. Recommendations are advisory and <strong>cannot bypass</strong> these constraints.
+      <div className="bg-rose-50/50 border border-rose-200 text-rose-700 p-6 rounded-xl flex items-start gap-4 shadow-sm">
+        <ShieldAlert className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" strokeWidth={2.5} />
+        <div className="flex flex-col gap-1.5">
+          <h4 className="text-[11px] font-bold uppercase tracking-widest text-rose-800">Deterministic Guardrails Control Area</h4>
+          <p className="text-[13px] font-medium text-rose-900 leading-relaxed">
+            Guardrails are authoritative and represent the final safety authority. Recommendations are advisory and <strong className="font-bold">cannot bypass</strong> these constraints.
             No execution bypass mechanisms exist.
           </p>
         </div>
@@ -40,46 +40,46 @@ export default function GuardrailsPage({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Max Retries */}
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-2">
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Retry Limit Policy</span>
-          <div className="flex justify-between items-baseline">
-            <span className="text-2xl font-bold text-gray-100 font-mono">{maxRetries}</span>
-            <span className="text-xs text-gray-400">Max Attempts</span>
+        <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm space-y-4 hover:border-slate-300 transition-colors">
+          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Retry Limit Policy</span>
+          <div className="flex justify-between items-baseline pt-4 border-t border-slate-100">
+            <span className="text-[32px] font-bold text-slate-900 tabular-nums tracking-tight">{maxRetries}</span>
+            <span className="text-[13px] text-slate-500 font-bold uppercase tracking-wider">Max Attempts</span>
           </div>
-          <p className="text-[10px] text-gray-500">
+          <p className="text-[13px] text-slate-600 font-medium leading-relaxed">
             Payment retries are strictly blocked once the attempt count reaches this limit.
           </p>
         </div>
 
         {/* Cooldown Period */}
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-2">
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Cooldown Policy</span>
-          <div className="flex justify-between items-baseline">
-            <span className="text-2xl font-bold text-gray-100 font-mono">{cooldownHours}h</span>
-            <span className="text-xs text-gray-400">Minimum Interval</span>
+        <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm space-y-4 hover:border-slate-300 transition-colors">
+          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Cooldown Policy</span>
+          <div className="flex justify-between items-baseline pt-4 border-t border-slate-100">
+            <span className="text-[32px] font-bold text-slate-900 tabular-nums tracking-tight">{cooldownHours}h</span>
+            <span className="text-[13px] text-slate-500 font-bold uppercase tracking-wider">Minimum Interval</span>
           </div>
-          <p className="text-[10px] text-gray-500">
+          <p className="text-[13px] text-slate-600 font-medium leading-relaxed">
             Enforces a mandatory quiet period between attempts to prevent processor alerts.
           </p>
         </div>
 
         {/* Global Enforcement Status */}
-        <div className="bg-[#13151c] border border-[#202430] rounded-xl p-5 space-y-2">
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Enforcement Status</span>
-          <div className="flex items-center gap-2 mt-1">
+        <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm space-y-4 hover:border-slate-300 transition-colors">
+          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Enforcement Status</span>
+          <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
             {recoveryEnabled ? (
               <>
-                <CheckCircle className="w-5 h-5 text-emerald-400" />
-                <span className="text-sm font-semibold text-emerald-400 font-mono">ACTIVE / ENFORCING</span>
+                <CheckCircle className="w-6 h-6 text-emerald-600" strokeWidth={2.5} />
+                <span className="text-[15px] font-bold text-emerald-700 tracking-tight">ACTIVE / ENFORCING</span>
               </>
             ) : (
               <>
-                <AlertTriangle className="w-5 h-5 text-rose-400" />
-                <span className="text-sm font-semibold text-rose-400 font-mono">DISABLED / BLOCKED</span>
+                <AlertTriangle className="w-6 h-6 text-rose-600" strokeWidth={2.5} />
+                <span className="text-[15px] font-bold text-rose-700 tracking-tight">DISABLED / BLOCKED</span>
               </>
             )}
           </div>
-          <p className="text-[10px] text-gray-500">
+          <p className="text-[13px] text-slate-600 font-medium leading-relaxed">
             {recoveryEnabled 
               ? 'Guardrails are live and actively filtering recovery action proposals.' 
               : 'All merchant recovery processes are currently paused.'}
@@ -88,52 +88,56 @@ export default function GuardrailsPage({
       </div>
 
       {/* Blocked Actions Log */}
-      <div className="bg-[#13151c] border border-[#202430] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#202430] flex items-center gap-2 bg-[#171922]">
-          <Info className="w-4 h-4 text-purple-400" />
-          <h3 className="text-sm font-semibold text-gray-200">Guardrail Enforcement Block Trace Logs</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+        <div className="px-8 py-6 border-b border-slate-100 flex items-center gap-3 bg-white rounded-t-xl">
+          <Info className="w-5 h-5 text-purple-600" strokeWidth={2.5} />
+          <h3 className="text-[17px] font-bold text-slate-900 tracking-tight">Guardrail Enforcement Block Trace Logs</h3>
         </div>
 
         {blockedLogs.length === 0 ? (
-          <div className="py-20 text-center text-gray-500 space-y-2">
-            <CheckCircle className="w-8 h-8 mx-auto text-gray-600" />
-            <h4 className="text-sm font-semibold text-gray-400">No Guardrail Block Traces</h4>
-            <p className="text-xs max-w-xs mx-auto">No recovery actions have been blocked by guardrail enforcement rules yet.</p>
+          <div className="py-24 text-center text-slate-400 space-y-4 flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 shadow-sm">
+              <CheckCircle className="w-8 h-8 text-slate-400" strokeWidth={2} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <h4 className="text-[17px] font-bold text-slate-600 tracking-tight">No Guardrail Block Traces</h4>
+              <p className="text-[13px] font-medium max-w-sm mx-auto leading-relaxed">No recovery actions have been blocked by guardrail enforcement rules yet.</p>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#202430] text-gray-400 font-medium">
-                  <th className="py-3 pl-4">Timestamp</th>
-                  <th className="py-3">Recovery Case ID</th>
-                  <th className="py-3">Action Blocked</th>
-                  <th className="py-3">Violation Reason</th>
-                  <th className="py-3 pr-4 text-right">Trigger Source</th>
+                <tr className="border-b border-slate-200 text-slate-400">
+                  <th className="py-4 pl-8 text-[11px] font-bold uppercase tracking-wider">Timestamp</th>
+                  <th className="py-4 text-[11px] font-bold uppercase tracking-wider">Recovery Case ID</th>
+                  <th className="py-4 text-[11px] font-bold uppercase tracking-wider">Action Blocked</th>
+                  <th className="py-4 text-[11px] font-bold uppercase tracking-wider">Violation Reason</th>
+                  <th className="py-4 pr-8 text-right text-[11px] font-bold uppercase tracking-wider">Trigger Source</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#202430]">
+              <tbody className="divide-y divide-slate-100 text-[13px]">
                 {blockedLogs.map((log) => (
                   <tr
                     key={log.id}
                     onClick={() => log.recovery_case_id && onSelectCase(log.recovery_case_id)}
-                    className="hover:bg-[#1a1c24]/50 cursor-pointer transition duration-150"
+                    className="hover:bg-slate-50/50 cursor-pointer transition-colors"
                   >
-                    <td className="py-3 pl-4 font-mono text-gray-400">
+                    <td className="py-5 pl-8 tabular-nums font-bold text-slate-500">
                       {new Date(log.created_at).toLocaleString()}
                     </td>
-                    <td className="py-3 font-mono text-purple-300">
-                      {log.recovery_case_id ? `${log.recovery_case_id.substring(0, 8)}...` : 'N/A'}
+                    <td className="py-5 tabular-nums font-bold text-purple-700 tracking-widest uppercase">
+                      {log.recovery_case_id ? log.recovery_case_id.substring(0, 8) : 'N/A'}
                     </td>
-                    <td className="py-3">
-                      <span className="bg-rose-950/20 text-rose-400 font-bold border border-rose-500/20 px-2 py-0.5 rounded uppercase text-[10px]">
+                    <td className="py-5">
+                      <span className="bg-rose-50 text-rose-700 font-bold border border-rose-200 px-3 py-1.5 rounded-md uppercase tracking-tight">
                         {log.details?.action_type?.replace(/_/g, ' ') || 'RECOVERY ACTION'}
                       </span>
                     </td>
-                    <td className="py-3 text-rose-300 font-medium">
+                    <td className="py-5 text-rose-600 font-bold tracking-tight">
                       {log.details?.reason || 'Guardrail restriction violated'}
                     </td>
-                    <td className="py-3 pr-4 text-right font-mono text-gray-500">
+                    <td className="py-5 pr-8 text-right tabular-nums font-bold text-slate-500 uppercase tracking-widest">
                       {log.actor_type}
                     </td>
                   </tr>

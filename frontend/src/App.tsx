@@ -7,7 +7,8 @@ import RecommendationsPage from './components/recommendations/RecommendationsPag
 import ActivityEventsPage from './components/events/ActivityEventsPage'
 import WebhooksPage from './components/webhooks/WebhooksPage'
 import GuardrailsPage from './components/guardrails/GuardrailsPage'
-import ConfigurationPage from './components/config/ConfigurationPage'
+import ConfigurationPage from './components/settings/ConfigurationPage'
+import MerchantSettingsPage from './components/settings/MerchantSettingsPage'
 import SimulationPage from './components/simulation/SimulationPage'
 import StrategyPerformancePage from './components/performance/StrategyPerformancePage'
 import DecisionExplanationPage from './components/explanation/DecisionExplanationPage'
@@ -42,7 +43,7 @@ import {
 } from './api'
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center' | 'what-if'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'config' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center' | 'what-if'>('overview')
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
 
   // Global Sync States
@@ -375,6 +376,10 @@ function App() {
           setSimulateFailure={setSimulateFailure}
           handleExecuteAction={handleExecuteAction}
           onBack={() => setSelectedCaseId(null)}
+          onRefreshData={() => {
+            fetchCaseDetailData(selectedCaseId)
+            fetchDashboardData()
+          }}
         />
       ) : activeTab === 'command-center' ? (
         <MerchantCommandCenterPage
@@ -435,6 +440,11 @@ function App() {
         />
       ) : activeTab === 'what-if' ? (
         <PolicyWhatIfPage />
+      ) : activeTab === 'config' ? (
+        <MerchantSettingsPage
+          merchantConfig={merchantConfig}
+          providerInfo={providerInfo}
+        />
       ) : (
         <ConfigurationPage
           merchantConfig={merchantConfig}
