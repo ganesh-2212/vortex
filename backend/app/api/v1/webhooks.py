@@ -343,6 +343,20 @@ async def razorpay_webhook(request: Request):
                     order_info["status"] = "paid"
                     order_info["updated_at"] = datetime.now(timezone.utc)
                     
+                    # Finalize the RecoveryAction created during payment-order
+                    from app.models.domain import RecoveryActionStatus
+                    action_id = order_info.get("action_id")
+                    if action_id and action_id in store.recovery_actions:
+                        act = store.recovery_actions[action_id]
+                        act.status = RecoveryActionStatus.EXECUTED
+                        act.executed_at = datetime.now(timezone.utc)
+                        act.result = {
+                            "provider": "razorpay",
+                            "payment_id": payment_id,
+                            "order_id": order_id,
+                            "outcome": "SUCCESS"
+                        }
+                    
     return {"status": "ok"}
 
 

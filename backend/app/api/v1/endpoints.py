@@ -439,7 +439,7 @@ async def create_payment_order(case_id: uuid.UUID = Path(...)):
     """
     from app.services.razorpay_service import razorpay_service
     from app.services.guardrails import evaluate_guardrails
-    from app.models.domain import RecoveryActionType
+    from app.models.domain import RecoveryActionType, RecoveryAction, RecoveryActionStatus
     
     if case_id not in store.recovery_cases:
         raise HTTPException(status_code=404, detail="Recovery case not found")
@@ -476,9 +476,23 @@ async def create_payment_order(case_id: uuid.UUID = Path(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create order: {str(e)}")
         
+    # Create the action representing this recovery attempt
+    action_id = uuid.uuid4()
+    action = RecoveryAction(
+        id=action_id,
+        recovery_case_id=case_id,
+        action_type=RecoveryActionType.RETRY_PAYMENT,
+        status=RecoveryActionStatus.ALLOWED,
+        attempt_number=retry_count + 1,
+        reason=guardrail_result.reason,
+        created_at=datetime.now(timezone.utc)
+    )
+    store.recovery_actions[action_id] = action
+        
     # Persist the mapping
     store.razorpay_orders[order['id']] = {
         "case_id": case_id,
+        "action_id": action_id,
         "amount": case.amount_at_risk,
         "currency": "INR",
         "status": "created",
