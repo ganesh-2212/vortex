@@ -96,6 +96,7 @@ class RecoveryCase(BaseModel):
     provider_transaction_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    ai_diagnosis: Optional[Dict[str, Any]] = None
 
 class RecoveryAction(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -340,3 +341,339 @@ class WebhookSimulateResponse(BaseModel):
     event_id: Optional[str] = None
     case_id: Optional[str] = None
     message: Optional[str] = None
+
+
+# --- F11 Strategy Optimization Models ---
+
+class StrategyOption(BaseModel):
+    strategy_name: str  # "IMMEDIATE_RETRY", "DELAYED_RETRY", "ALTERNATE_PAYMENT", "ESCALATE_TO_HUMAN", "NO_INTERVENTION"
+    eligible: bool
+    guardrail_status: str  # ALLOWED or BLOCKED
+    recovery_probability: int
+    expected_recovery_amount: Decimal
+    intervention_cost: Decimal
+    expected_net_recovery: Decimal
+    confidence: int
+    reasons: List[str]
+    executable: bool
+
+class StrategyOptimizationResponse(BaseModel):
+    case_id: uuid.UUID
+    amount_at_risk: Decimal
+    recommended_strategy: str
+    recovery_probability: int
+    expected_recovery_amount: Decimal
+    expected_net_recovery: Decimal
+    confidence: int
+    guardrail_status: str
+    reasons: List[str]
+    strategies: List[StrategyOption]
+    generated_at: datetime
+
+class StrategyStatistics(BaseModel):
+    cases_optimized: int
+    total_expected_recovery: Decimal
+    strategy_counts: Dict[str, int]
+    average_confidence: float
+
+
+# --- F12 Recovery Simulation Models ---
+
+class SimulatedCaseDetail(BaseModel):
+    case_id: uuid.UUID
+    amount_at_risk: Decimal
+    risk_level: str
+    no_intervention_recovered: Decimal
+    basic_retry_strategy: str
+    basic_retry_recovered: Decimal
+    basic_retry_cost: Decimal
+    sentinel_strategy: str
+    sentinel_probability: int
+    sentinel_recovered: Decimal
+    sentinel_cost: Decimal
+    sentinel_net_recovered: Decimal
+    incremental_vs_no_intervention: Decimal
+    incremental_vs_basic_retry: Decimal
+    final_outcome: str
+
+class SimulationRunRequest(BaseModel):
+    case_ids: List[uuid.UUID] = Field(default_factory=list)
+
+class SimulationRunResponse(BaseModel):
+    simulation_id: uuid.UUID
+    total_revenue_at_risk: Decimal
+    no_intervention_recovered_amount: Decimal
+    basic_retry_recovered_amount: Decimal
+    sentinel_recovered_amount: Decimal
+    sentinel_recovery_rate: float
+    incremental_recovery_vs_no_intervention: Decimal
+    incremental_recovery_vs_basic_retry: Decimal
+    additional_recovery_percentage: float
+    total_intervention_cost: Decimal
+    sentinel_net_recovery: Decimal
+    number_of_simulated_cases: int
+    number_of_simulated_successful_recoveries: int
+    escalations: int = 0
+    stopped_cases: int = 0
+    guardrail_blocks: int = 0
+    stopping_rule_compliance_pct: Optional[float] = None
+    total_attempts: int = 0
+    cases: List[SimulatedCaseDetail]
+    run_at: datetime
+
+
+class SimulationStatistics(BaseModel):
+    simulations_run: int
+    total_cases_simulated: int
+    average_sentinel_recovery_rate: float
+    total_incremental_recovered_vs_basic: Decimal
+
+# --- F13 Orchestration Models ---
+
+class OrchestrationDecisionType(str, Enum):
+    EXECUTE_NOW = "EXECUTE_NOW"
+    WAIT_COOLDOWN = "WAIT_COOLDOWN"
+    SCHEDULE_RETRY = "SCHEDULE_RETRY"
+    REEVALUATE = "REEVALUATE"
+    ESCALATE_TO_HUMAN = "ESCALATE_TO_HUMAN"
+    STOP_RECOVERY = "STOP_RECOVERY"
+    CASE_EXPIRED = "CASE_EXPIRED"
+    ALREADY_RECOVERED = "ALREADY_RECOVERED"
+
+class OrchestrationState(BaseModel):
+    case_id: uuid.UUID
+    decision: OrchestrationDecisionType
+    selected_strategy: str
+    next_action: Optional[RecoveryActionType] = None
+    scheduled_time: Optional[datetime] = None
+    attempt_number: int
+    cooldown_active: bool
+    reason: str
+    human_escalation_required: bool
+    evaluated_at: datetime
+
+
+# --- F14 Strategy Performance Models ---
+
+class StrategyOutcomeStatistics(BaseModel):
+    strategy_type: str
+    total_attempts: int
+    successful_attempts: int
+    failed_attempts: int
+    success_rate: float
+    total_recovered: Decimal
+    average_recovered: Decimal
+    total_cost: Decimal
+    net_recovery: Decimal
+    average_attempts_to_recovery: float
+    expected_recovery: Decimal
+    actual_recovery: Decimal
+    recovery_variance: Decimal
+
+class StrategyPerformance(BaseModel):
+    strategy_type: str
+    performance_score: float
+    success_rate: float
+    net_recovery: Decimal
+    confidence: int
+    sample_size: int
+    trend: str
+    recommended_usage: str
+
+class StrategyPerformanceResponse(BaseModel):
+    generated_at: datetime
+    total_cases_analyzed: int
+    total_revenue_at_risk: Decimal
+    total_revenue_recovered: Decimal
+    overall_recovery_rate: float
+    strategy_statistics: List[StrategyOutcomeStatistics]
+    best_strategy: str
+    strongest_strategy_by_revenue: str
+    strongest_strategy_by_success_rate: str
+
+class EventStrategyPerformance(BaseModel):
+    event_type: str
+    total_cases: int
+    best_strategy: str
+    best_strategy_success_rate: float
+    best_strategy_net_recovery: Decimal
+    strategy_breakdown: List[StrategyOutcomeStatistics]
+
+class StrategyPerformanceRecommendation(BaseModel):
+    case_id: uuid.UUID
+    f11_baseline_strategy: str
+    historical_best_strategy: str
+    combined_advisory_strategy: str
+    confidence: int
+    sample_size: int
+    explanation: str
+    fallback_reason: Optional[str] = None
+
+# F15 Decision Explainability Models
+class ExplanationEvidence(BaseModel):
+    source_type: str
+    source_id: Optional[str] = None
+    label: str
+    value: str
+    explanation: str
+
+class GuardrailExplanation(BaseModel):
+    guardrail: str
+    status: str
+    actual_value: Optional[str] = None
+    configured_limit: Optional[str] = None
+    explanation: str
+
+class DecisionTimelineEvent(BaseModel):
+    timestamp: datetime
+    event_type: str
+    title: str
+    description: str
+    status: str
+    source_id: Optional[str] = None
+
+class ExpectedVsActualOutcome(BaseModel):
+    expected_recovery: Decimal
+    actual_recovery: Decimal
+    variance: Decimal
+    outcome_status: str
+
+class DecisionExplanation(BaseModel):
+    case_id: uuid.UUID
+    generated_at: datetime
+    case_status: RecoveryCaseStatus
+    payment_event_type: RevenueEventType
+    payment_amount: Decimal
+    risk_level: RiskLevel
+    risk_reasons: List[str]
+    strategy_selected: str
+    strategy_reason: str
+    alternative_strategies: List[Dict[str, Any]]
+    orchestration_decision: str
+    orchestration_reason: str
+    guardrail_status: str
+    guardrail_checks: List[GuardrailExplanation]
+    historical_evidence: Optional[Dict[str, Any]] = None
+    expected_vs_actual: ExpectedVsActualOutcome
+    timeline: List[DecisionTimelineEvent]
+    evidence_references: List[ExplanationEvidence]
+    diagnosis: Optional[Dict[str, Any]] = None
+    analysis_source: Optional[str] = None
+
+# --- F16 Merchant Command Center Models ---
+
+class CommandCenterMetrics(BaseModel):
+    # Revenue
+    total_revenue_at_risk: Decimal
+    total_recoverable_revenue: Decimal
+    total_confirmed_recovered: Decimal
+    total_incremental_revenue: Decimal
+    recovery_rate: float
+    
+    # Cases
+    total_cases: int
+    active_cases: int
+    recovered_cases: int
+    stopped_cases: int
+    expired_cases: int
+    human_attention_cases: int
+    
+    # Recovery Operations
+    total_recovery_actions: int
+    successful_actions: int
+    failed_actions: int
+    blocked_actions: int
+    scheduled_actions: int
+    
+    # Strategy & Decision
+    best_performing_strategy: Optional[str] = None
+    average_expected_recovery: Decimal
+    average_actual_recovery: Decimal
+    average_recovery_variance: Decimal
+    
+class RevenueComparisonMetrics(BaseModel):
+    # Differentiating actual vs simulated clearly in names
+    scenario_type: str  # "NO_INTERVENTION", "BASIC_RETRY", "SENTINEL_OPTIMIZED"
+    is_simulated: bool
+    simulated_projected_recovery: Decimal
+    actual_recovered_value: Decimal
+    intervention_cost: Decimal
+    net_recovery: Decimal
+    recovery_rate_percentage: float
+    projected_incremental_revenue: Decimal
+
+class RecoveryQueueItem(BaseModel):
+    case_id: uuid.UUID
+    customer_id: Optional[uuid.UUID] = None
+    amount: Decimal
+    risk_level: RiskLevel
+    case_status: str
+    current_strategy: str
+    orchestration_decision: str
+    attempt_number: int
+    next_evaluation_or_action: Optional[datetime] = None
+    human_attention_required: bool
+    created_at: datetime
+    updated_at: datetime
+    priority_score: int  # For queue sorting
+
+class RecoveryQueueSummary(BaseModel):
+    items: List[RecoveryQueueItem]
+    total_queue_value: Decimal
+
+class HumanAttentionSummary(BaseModel):
+    case_id: uuid.UUID
+    amount: Decimal
+    reason: str
+    current_state: str
+    case_age_hours: float
+
+class RevenueTrendPoint(BaseModel):
+    timestamp: datetime
+    actual_revenue_at_risk: Decimal
+    actual_recovered_revenue: Decimal
+    actual_incremental_revenue: Decimal
+
+class StrategyPerformanceSummary(BaseModel):
+    strategy_name: str
+    attempts: int
+    success_rate: float
+    net_recovery: Decimal
+    avg_recovery: Decimal
+
+class MerchantCommandCenterResponse(BaseModel):
+    generated_at: datetime
+    merchant_id: uuid.UUID
+    
+    metrics: CommandCenterMetrics
+    revenue_comparison: List[RevenueComparisonMetrics]
+    recovery_queue: RecoveryQueueSummary
+    human_attention_cases: List[HumanAttentionSummary]
+    strategy_performance: List[StrategyPerformanceSummary]
+    revenue_trend: List[RevenueTrendPoint]
+    
+    # Simulation availability flag
+    simulation_available: bool
+
+class WhatIfPolicy(BaseModel):
+    current_max_retries: int
+    proposed_max_retries: int
+
+class WhatIfResult(BaseModel):
+    cases_evaluated: int
+    total_revenue_at_risk: Decimal
+    projected_recovery: Decimal
+    intervention_count: int
+    intervention_cost: Decimal
+    net_recovery: Decimal
+    recovery_rate: float
+
+class WhatIfComparison(BaseModel):
+    current_result: WhatIfResult
+    proposed_result: WhatIfResult
+    revenue_impact: Decimal
+    cost_impact: Decimal
+    net_recovery_impact: Decimal
+    recovery_rate_impact: float
+    assessment: str
+    explanation: str

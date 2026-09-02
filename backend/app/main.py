@@ -6,6 +6,15 @@ from app.api.v1.intelligence import router as intelligence_router
 from app.api.v1.webhooks import router as webhooks_router
 from app.api.v1.lifecycle import router as lifecycle_router
 from app.api.v1.recommendations import router as recommendations_router
+from app.api.v1.strategy_optimization import router as strategy_optimization_router
+from app.api.v1.strategy_performance import router as strategy_performance_router
+from app.api.v1.recovery_simulation import router as recovery_simulation_router
+from app.api.v1.recovery_orchestration import router as recovery_orchestration_router
+from app.api.v1.decision_explanation import router as decision_explanation_router
+from app.api.v1.merchant_command_center import router as merchant_command_center_router
+from app.api.v1.policy_what_if import router as policy_what_if_router
+from app.api.v1.benchmark import router as benchmark_router
+from app.api.v1.diagnosis import router as diagnosis_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -15,7 +24,7 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     from app.store import seed_store
-    seed_store()
+    seed_store(with_killer_scenario=False)
 
 # Setup CORS for development
 app.add_middleware(
@@ -31,6 +40,15 @@ app.include_router(intelligence_router, prefix=f"{settings.API_V1_STR}/intellige
 app.include_router(webhooks_router, prefix=f"{settings.API_V1_STR}/webhooks")
 app.include_router(lifecycle_router, prefix=settings.API_V1_STR)
 app.include_router(recommendations_router, prefix=settings.API_V1_STR)
+app.include_router(strategy_optimization_router, prefix=settings.API_V1_STR)
+app.include_router(strategy_performance_router, prefix="/api/v1", tags=["Strategy Performance"])
+app.include_router(recovery_simulation_router, prefix=f"{settings.API_V1_STR}/recovery-simulation")
+app.include_router(recovery_orchestration_router, prefix=settings.API_V1_STR)
+app.include_router(decision_explanation_router, prefix="/api/v1", tags=["Decision Explanation"])
+app.include_router(merchant_command_center_router, prefix="/api/v1", tags=["Command Center"])
+app.include_router(policy_what_if_router, prefix="/api/v1")
+app.include_router(benchmark_router, prefix="/api/v1/recovery-benchmark", tags=["benchmark"])
+app.include_router(diagnosis_router, prefix="/api/v1", tags=["Diagnosis"])
 
 @app.get(f"{settings.API_V1_STR}/health")
 async def health_check():

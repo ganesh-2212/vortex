@@ -30,6 +30,12 @@ export async function getCaseDetail(caseId: string) {
   return res.json()
 }
 
+export async function getCaseDiagnosis(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/diagnosis`)
+  if (!res.ok) throw new Error('Failed to fetch diagnosis')
+  return res.json()
+}
+
 export async function getCaseLifecycle(caseId: string) {
   const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/lifecycle`)
   if (!res.ok) throw new Error('Failed to fetch case lifecycle metrics')
@@ -157,4 +163,170 @@ export async function simulatePaymentEvent(payload: SimulatePaymentEventRequest)
     throw new Error(errData.detail || 'Failed to simulate payment webhook event')
   }
   return res.json() as Promise<SimulatePaymentEventResponse>
+}
+
+export async function getCaseStrategy(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/strategy`)
+  if (!res.ok) throw new Error('Failed to fetch case recovery strategy')
+  return res.json()
+}
+
+export async function getStrategyOptimization() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-optimization`)
+  if (!res.ok) throw new Error('Failed to fetch strategy optimizations')
+  return res.json()
+}
+
+export async function getStrategyStatistics() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-statistics`)
+  if (!res.ok) throw new Error('Failed to fetch strategy statistics')
+  return res.json()
+}
+
+export async function runRecoverySimulation(payload: { case_ids: string[] }) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-simulation/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error('Failed to run recovery simulation')
+  return res.json()
+}
+
+export async function getLatestSimulation() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-simulation/latest`)
+  if (!res.ok) throw new Error('Failed to fetch latest simulation')
+  return res.json()
+}
+
+export async function getSimulationStatistics() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-simulation/statistics`)
+  if (!res.ok) throw new Error('Failed to fetch simulation statistics')
+  return res.json()
+}
+
+export async function evaluateOrchestration(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/orchestration/evaluate`, {
+    method: 'POST'
+  })
+  if (!res.ok) throw new Error('Failed to evaluate recovery orchestration')
+  return res.json()
+}
+
+export async function getOrchestrationState(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/orchestration`)
+  if (!res.ok) throw new Error('Failed to fetch orchestration state')
+  return res.json()
+}
+
+export async function getStrategyPerformance() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-performance`)
+  if (!res.ok) throw new Error('Failed to fetch strategy performance')
+  return res.json()
+}
+
+export async function getStrategyPerformanceByType(strategyType: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-performance/${strategyType}`)
+  if (!res.ok) throw new Error('Failed to fetch detailed strategy performance')
+  return res.json()
+}
+
+export async function getStrategyPerformanceByEventType() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-performance/by-event-type`)
+  if (!res.ok) throw new Error('Failed to fetch strategy performance by event type')
+  return res.json()
+}
+
+export async function getStrategyPerformanceRecommendation(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/strategy-performance/recommendation/${caseId}`)
+  if (!res.ok) throw new Error('Failed to fetch historical strategy recommendation')
+  return res.json()
+}
+
+export async function getDecisionExplanation(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/explanation`)
+  if (!res.ok) throw new Error('Failed to fetch decision explanation')
+  return res.json()
+}
+
+export async function getDecisionTimeline(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/explanation/timeline`)
+  if (!res.ok) throw new Error('Failed to fetch decision timeline')
+  return res.json()
+}
+
+export async function getDecisionGuardrails(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/explanation/guardrails`)
+  if (!res.ok) throw new Error('Failed to fetch decision guardrails')
+  return res.json()
+}
+
+export async function getMerchantCommandCenter(merchantId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/merchant-command-center?merchant_id=${merchantId}`)
+  if (!res.ok) throw new Error('Failed to fetch merchant command center data')
+  return res.json()
+}
+
+export async function getPolicyWhatIfCurrent(merchantId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/policy-what-if/current?merchant_id=${merchantId}`)
+  if (!res.ok) throw new Error('Failed to fetch current policy')
+  return res.json()
+}
+
+export async function runPolicyWhatIf(merchantId: string, proposedMaxRetries: number) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/policy-what-if/run`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      merchant_id: merchantId,
+      proposed_max_retries: proposedMaxRetries
+    })
+  })
+  if (!res.ok) {
+    const errorData = await res.json()
+    throw new Error(errorData.detail || 'Failed to run policy what-if')
+  }
+  return res.json()
+}
+
+export async function runRecoveryBenchmark(case_count: number = 500, seed: number = 42) {
+  const response = await fetch(`${API_BASE_URL}/api/v1/recovery-benchmark/run`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ case_count, seed }),
+  })
+
+  if (!response.ok) {
+    const data = await response.json()
+    throw new Error(data.detail || 'Failed to execute recovery benchmark')
+  }
+  return response.json()
+}
+
+export async function createPaymentOrder(caseId: string) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/payment-order`, {
+    method: 'POST'
+  })
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.detail || 'Failed to create payment order')
+  }
+  return res.json()
+}
+
+export async function verifyPayment(caseId: string, payload: { razorpay_payment_id: string, razorpay_order_id: string, razorpay_signature: string }) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/recovery-cases/${caseId}/verify-payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.detail || 'Failed to verify payment')
+  }
+  return res.json()
 }

@@ -84,6 +84,7 @@ def build_razorpay_webhook_payload(
 def process_razorpay_webhook_payload(
     payload: dict,
     merchant_id: Optional[uuid.UUID] = None,
+    source: str = "razorpay_webhook",
 ) -> dict:
     """
     Shared Razorpay webhook ingestion pipeline used by both the live webhook
@@ -186,7 +187,7 @@ def process_razorpay_webhook_payload(
         metadata={
             "razorpay_payment_id": payment_id,
             "raw_payload": payload,
-            "source": "razorpay_webhook",
+            "source": source,
         },
         created_at=datetime.now(timezone.utc),
     )
@@ -242,7 +243,7 @@ def process_razorpay_webhook_payload(
                 "reason": risk_result.reason,
                 "amount": float(event.amount),
                 "event_id": str(event.id),
-                "source": "webhook",
+                "source": source,
             },
         )
 
@@ -305,26 +306,58 @@ def ingest_signed_razorpay_webhook(
 
 
 @router.post("/razorpay")
-async def razorpay_webhook(
-    request: Request,
-    x_razorpay_signature: Optional[str] = Header(None),
-    merchant_id: Optional[uuid.UUID] = Query(None),
-):
+async def razorpay_webhook(request: Request):
     """
-    Ingests, validates, and processes Razorpay payment webhook notifications.
+    Handles Razorpay Webhooks idempotently using centralized recovery confirmation.
     """
-    if not x_razorpay_signature:
-        log_audit_event(
-            recovery_case_id=None,
-            actor_type="SYSTEM",
-            action="WEBHOOK_FAILED",
-            details={"reason": "Missing X-Razorpay-Signature header"},
-        )
-        raise HTTPException(status_code=400, detail="Missing signature header")
-
-    body = await request.body()
-    result = ingest_signed_razorpay_webhook(body, x_razorpay_signature, merchant_id=merchant_id)
-    return result
+    from app.services.razorpay_service import razorpay_service
+    from app.services.outcomes import confirm_payment_recovery
+    
+    raw_body = await request.body()
+    signature = request.headers.get("x-razorpay-signature")
+    
+    if not signature or not razorpay_service.verify_webhook_signature(raw_body, signature):
+        raise HTTPException(status_code=400, detail="Invalid webhook signature")
+        
+    payload = await request.json()
+    event_type = payload.get("event")
+    
+    if event_type in ["payment.captured", "order.paid"]:
+        payment_entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
+        order_id = payment_entity.get("order_id")
+        payment_id = payment_entity.get("id")
+        
+        if order_id and order_id in store.razorpay_orders:
+            order_info = store.razorpay_orders[order_id]
+            case_id = order_info["case_id"]
+            if case_id in store.recovery_cases:
+                case = store.recovery_cases[case_id]
+                did_recover = confirm_payment_recovery(
+                    case=case,
+                    transaction_id=payment_id,
+                    amount_recovered=order_info["amount"],
+                    current_time=datetime.now(timezone.utc),
+                    source="webhook"
+                )
+                if did_recover:
+                    order_info["status"] = "paid"
+                    order_info["updated_at"] = datetime.now(timezone.utc)
+                    
+                    # Finalize the RecoveryAction created during payment-order
+                    from app.models.domain import RecoveryActionStatus
+                    action_id = order_info.get("action_id")
+                    if action_id and action_id in store.recovery_actions:
+                        act = store.recovery_actions[action_id]
+                        act.status = RecoveryActionStatus.EXECUTED
+                        act.executed_at = datetime.now(timezone.utc)
+                        act.result = {
+                            "provider": "razorpay",
+                            "payment_id": payment_id,
+                            "order_id": order_id,
+                            "outcome": "SUCCESS"
+                        }
+                    
+    return {"status": "ok"}
 
 
 @router.post("/simulate", response_model=WebhookSimulateResponse)
@@ -337,12 +370,6 @@ async def simulate_webhook(
     the configured webhook secret, and routes it through the same signed ingestion
     pipeline as the live webhook endpoint.
     """
-    if settings.PAYMENT_PROVIDER_MODE != "mock":
-        raise HTTPException(
-            status_code=403,
-            detail="Webhook simulator is only available when PAYMENT_PROVIDER_MODE=mock",
-        )
-
     if request.event not in SUPPORTED_WEBHOOK_EVENTS:
         raise HTTPException(
             status_code=400,
@@ -357,10 +384,12 @@ async def simulate_webhook(
         email=request.email,
         contact=request.contact,
     )
-    body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
-    signature = compute_razorpay_signature(body)
 
-    result = ingest_signed_razorpay_webhook(body, signature, merchant_id=merchant_id)
+    result = process_razorpay_webhook_payload(
+        payload=payload, 
+        merchant_id=merchant_id, 
+        source="demo_simulator"
+    )
 
     amount = result.get("amount", request.amount)
     currency = result.get("currency", request.currency)

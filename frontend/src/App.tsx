@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import AppShell from './components/layout/AppShell'
-import type { Tab } from './components/layout/AppShell'
 import OverviewPage from './components/dashboard/OverviewPage'
 import RecoveryCasesPage from './components/cases/RecoveryCasesPage'
 import CaseDetailExperience from './components/cases/CaseDetailExperience'
@@ -8,7 +7,13 @@ import RecommendationsPage from './components/recommendations/RecommendationsPag
 import ActivityEventsPage from './components/events/ActivityEventsPage'
 import WebhooksPage from './components/webhooks/WebhooksPage'
 import GuardrailsPage from './components/guardrails/GuardrailsPage'
-import ConfigurationPage from './components/config/ConfigurationPage'
+import ConfigurationPage from './components/settings/ConfigurationPage'
+import MerchantSettingsPage from './components/settings/MerchantSettingsPage'
+import SimulationPage from './components/simulation/SimulationPage'
+import StrategyPerformancePage from './components/performance/StrategyPerformancePage'
+import DecisionExplanationPage from './components/explanation/DecisionExplanationPage'
+import { MerchantCommandCenterPage } from './components/command-center/MerchantCommandCenterPage'
+import { PolicyWhatIfPage } from './components/whatif/PolicyWhatIfPage'
 import { LoadingState, ErrorState } from './components/common/LoaderAndStates'
 
 import {
@@ -28,11 +33,17 @@ import {
   executeRecoveryAction,
   getMerchantConfig,
   updateMerchantConfig,
-  getProviderInfo
+  getProviderInfo,
+  getCaseStrategy,
+  getOrchestrationState,
+  getStrategyPerformance,
+  getStrategyPerformanceByEventType,
+  getStrategyPerformanceRecommendation,
+  getDecisionExplanation
 } from './api'
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'cases' | 'recommendations' | 'events' | 'webhooks' | 'guardrails' | 'config' | 'configuration' | 'simulation' | 'performance' | 'explanation' | 'command-center' | 'what-if'>('overview')
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
 
   // Global Sync States
@@ -52,6 +63,8 @@ function App() {
   const [auditLogs, setAuditLogs] = useState<any[]>([])
   const [merchantConfig, setMerchantConfig] = useState<any>(null)
   const [providerInfo, setProviderInfo] = useState<any>(null)
+  const [performance, setPerformance] = useState<any>(null)
+  const [eventPerformance, setEventPerformance] = useState<any[]>([])
 
   // Selected Case Telemetry Detail States
   const [detailLoading, setDetailLoading] = useState(false)
@@ -63,6 +76,10 @@ function App() {
   const [caseLifecycle, setCaseLifecycle] = useState<any>(null)
   const [caseAttempts, setCaseAttempts] = useState<any[]>([])
   const [caseRecommendation, setCaseRecommendation] = useState<any>(null)
+  const [caseStrategy, setCaseStrategy] = useState<any>(null)
+  const [orchestrationState, setOrchestrationState] = useState<any>(null)
+  const [historicalEvidence, setHistoricalEvidence] = useState<any>(null)
+  const [decisionExplanation, setDecisionExplanation] = useState<any>(null)
   const [auditHistory, setAuditHistory] = useState<any[]>([])
 
   // Action proposing / executing states
@@ -86,7 +103,9 @@ function App() {
         eventsData,
         logsData,
         configData,
-        providerData
+        providerData,
+        perfData,
+        eventPerfData
       ] = await Promise.all([
         getIntelligenceSummary(),
         getLeakage(),
@@ -97,7 +116,9 @@ function App() {
         getRevenueEvents(),
         getAuditLogs(),
         getMerchantConfig("11111111-1111-1111-1111-111111111111"),
-        getProviderInfo()
+        getProviderInfo(),
+        getStrategyPerformance(),
+        getStrategyPerformanceByEventType()
       ])
 
       setSummary(summaryData)
@@ -110,6 +131,8 @@ function App() {
       setAuditLogs(logsData)
       setMerchantConfig(configData)
       setProviderInfo(providerData)
+      setPerformance(perfData)
+      setEventPerformance(eventPerfData)
       setLastRefreshed(new Date())
       setApiConnected(true)
     } catch (err: any) {
@@ -147,6 +170,38 @@ function App() {
         // Suppress errors for resolved cases since they don't have recommendations
       }
 
+      // Load optimized strategy (F11)
+      let strategyData = null
+      try {
+        strategyData = await getCaseStrategy(caseId)
+      } catch (e) {
+        // Suppress errors for resolved cases
+      }
+
+      // Load orchestration state (F13)
+      let orchestrationData = null
+      try {
+        orchestrationData = await getOrchestrationState(caseId)
+      } catch (e) {
+        // Suppress errors
+      }
+
+      // Load historical strategy evidence (F14)
+      let histData = null
+      try {
+        histData = await getStrategyPerformanceRecommendation(caseId)
+      } catch (e) {
+        // Suppress errors
+      }
+
+      // Load decision explanation (F15)
+      let explData = null
+      try {
+        explData = await getDecisionExplanation(caseId)
+      } catch (e) {
+        // Suppress errors
+      }
+
       setSelectedCaseDetail(intelData.case ? {
         case_id: intelData.case.id,
         amount_at_risk: intelData.case.amount_at_risk,
@@ -172,6 +227,10 @@ function App() {
       setCaseLifecycle(lifecycleData)
       setCaseAttempts(attemptsData || [])
       setCaseRecommendation(recData)
+      setCaseStrategy(strategyData)
+      setOrchestrationState(orchestrationData)
+      setHistoricalEvidence(histData)
+      setDecisionExplanation(explData)
       setAuditHistory(detailRes.audit_history || [])
       setApiConnected(true)
     } catch (err: any) {
@@ -260,6 +319,10 @@ function App() {
       setCaseLifecycle(null)
       setCaseAttempts([])
       setCaseRecommendation(null)
+      setCaseStrategy(null)
+      setOrchestrationState(null)
+      setHistoricalEvidence(null)
+      setDecisionExplanation(null)
       setAuditHistory([])
     }
   }, [selectedCaseId, fetchCaseDetailData])
@@ -297,6 +360,10 @@ function App() {
           caseLifecycle={caseLifecycle}
           caseAttempts={caseAttempts}
           caseRecommendation={caseRecommendation}
+          caseStrategy={caseStrategy}
+          orchestrationState={orchestrationState}
+          historicalEvidence={historicalEvidence}
+          decisionExplanation={decisionExplanation}
           auditHistory={auditHistory}
           detailError={detailError}
           detailSuccess={detailSuccess}
@@ -309,6 +376,18 @@ function App() {
           setSimulateFailure={setSimulateFailure}
           handleExecuteAction={handleExecuteAction}
           onBack={() => setSelectedCaseId(null)}
+          onRefreshData={() => {
+            fetchCaseDetailData(selectedCaseId)
+            fetchDashboardData()
+          }}
+        />
+      ) : activeTab === 'command-center' ? (
+        <MerchantCommandCenterPage
+          onViewCase={(id) => {
+            setSelectedCaseId(id)
+            setActiveTab('cases')
+          }}
+          onNavigate={(tab) => setActiveTab(tab as any)}
         />
       ) : activeTab === 'overview' ? (
         <OverviewPage
@@ -345,6 +424,26 @@ function App() {
           merchantConfig={merchantConfig}
           auditLogs={auditLogs}
           onSelectCase={handleInspectCase}
+        />
+      ) : activeTab === 'simulation' ? (
+        <SimulationPage
+          cases={cases}
+        />
+      ) : activeTab === 'performance' ? (
+        <StrategyPerformancePage
+          performance={performance}
+          eventPerformance={eventPerformance}
+        />
+      ) : activeTab === 'explanation' ? (
+        <DecisionExplanationPage
+          cases={cases}
+        />
+      ) : activeTab === 'what-if' ? (
+        <PolicyWhatIfPage />
+      ) : activeTab === 'config' ? (
+        <MerchantSettingsPage
+          merchantConfig={merchantConfig}
+          providerInfo={providerInfo}
         />
       ) : (
         <ConfigurationPage

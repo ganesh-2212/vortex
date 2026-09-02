@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     PAYMENT_PROVIDER_MODE: str = "mock"
     RAZORPAY_KEY_ID: str = ""
     RAZORPAY_KEY_SECRET: str = ""
+    
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
 
     from pydantic import field_validator
 
