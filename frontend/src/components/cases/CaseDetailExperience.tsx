@@ -269,7 +269,7 @@ export default function CaseDetailExperience({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex flex-col gap-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Recoverable Revenue At Risk</span>
-              <FinancialValue value={formatCurrency(selectedCaseDetail.amount_at_risk)} size="hero" className="text-slate-900" />
+              <FinancialValue value={formatCurrency(selectedCaseDetail.amount_at_risk)} size="hero" className="text-slate-900 dark:text-white" />
             </div>
             
             <div className="flex flex-col gap-1 md:items-end">
@@ -295,11 +295,11 @@ export default function CaseDetailExperience({
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" /> VORTEX Recommendation
             </span>
-            <div className={`p-5 rounded-lg border transition-colors duration-200 ${recTitle === 'RETRY PAYMENT' ? 'bg-purple-50 dark:bg-brand-accent-dark/10 border-purple-200 dark:border-purple-500/20' : 'bg-slate-50 dark:bg-brand-card-dark border-slate-200 dark:border-brand-border-dark'}`}>
-              <span className={`text-[16px] font-bold uppercase tracking-tight block mb-2 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-900 dark:text-purple-300' : 'text-slate-900 dark:text-slate-100'}`}>
+            <div className={`p-5 rounded-lg border transition-colors duration-200 ${recTitle === 'RETRY PAYMENT' ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200'} dark:bg-brand-card-dark dark:border-brand-border-dark`}>
+              <span className={`text-[16px] font-bold uppercase tracking-tight block mb-2 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-900 dark:text-purple-400' : 'text-slate-900 dark:text-slate-100'}`}>
                 {recTitle}
               </span>
-              <div className={`text-[13px] font-medium space-y-1 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-800 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'}`}>
+              <div className={`text-[13px] font-medium space-y-1 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-800' : 'text-slate-700'} dark:text-slate-300`}>
                 <span className={`block font-bold text-[11px] uppercase tracking-wider mb-1 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-600 dark:text-purple-500' : 'text-slate-500 dark:text-slate-400'}`}>Why VORTEX recommends this</span>
                 <p>{recExplanation}</p>
               </div>
@@ -312,35 +312,35 @@ export default function CaseDetailExperience({
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                 <Activity className="w-4 h-4 text-purple-600" /> Decision Intelligence
               </span>
-              <div className="bg-white border border-slate-200 rounded-lg p-5">
-                <p className="text-[12px] text-slate-500 font-medium mb-4">
+              <div className="bg-white dark:bg-brand-card-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-5 transition-colors duration-200">
+                <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium mb-4">
                   VORTEX evaluates eligible recovery strategies using expected recovery, intervention cost, retry history, and merchant guardrails.
                 </p>
                 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recommended Strategy</span>
-                    <span className="text-[13px] font-bold text-purple-900 uppercase tracking-tight">{caseStrategy.recommended_strategy.replace(/_/g, ' ')}</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Recommended Strategy</span>
+                    <span className="text-[13px] font-bold text-purple-900 dark:text-purple-400 uppercase tracking-tight">{caseStrategy.recommended_strategy.replace(/_/g, ' ')}</span>
                   </div>
                   
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Probability</span>
-                    <span className="text-[14px] font-bold text-slate-900 tabular-nums">{caseStrategy.recovery_probability}%</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Probability</span>
+                    <span className="text-[14px] font-bold text-slate-900 dark:text-white tabular-nums">{caseStrategy.recovery_probability}%</span>
                   </div>
                   
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expected Recovery</span>
-                    <span className="text-[14px] font-bold text-slate-900 tabular-nums">{formatCurrency(caseStrategy.expected_recovery_amount)}</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Expected Recovery</span>
+                    <span className="text-[14px] font-bold text-slate-900 dark:text-white tabular-nums">{formatCurrency(caseStrategy.expected_recovery_amount)}</span>
                   </div>
                   
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expected Net Recovery</span>
-                    <span className="text-[14px] font-bold text-slate-900 tabular-nums">{formatCurrency(caseStrategy.expected_net_recovery)}</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Expected Net Recovery</span>
+                    <span className="text-[14px] font-bold text-slate-900 dark:text-white tabular-nums">{formatCurrency(caseStrategy.expected_net_recovery)}</span>
                   </div>
                   
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confidence</span>
-                    <span className="text-[14px] font-bold text-slate-900 tabular-nums">{caseStrategy.confidence}%</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Confidence</span>
+                    <span className="text-[14px] font-bold text-slate-900 dark:text-white tabular-nums">{caseStrategy.confidence}%</span>
                   </div>
                 </div>
               </div>
