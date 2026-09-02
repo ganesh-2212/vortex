@@ -47,7 +47,7 @@ def run_benchmark(request: BenchmarkRequest) -> BenchmarkResponse:
     merchant_id = uuid.uuid4()
     isolated_store.merchants[merchant_id] = Merchant(
         id=merchant_id,
-        name="FLOWMINT Synthetic Benchmark Merchant",
+        name="VORTEX Synthetic Benchmark Merchant",
         email="benchmark@flowmint.test",
         recovery_enabled=True,
         max_retry_attempts=3,
@@ -181,7 +181,7 @@ def run_benchmark(request: BenchmarkRequest) -> BenchmarkResponse:
         strategy_comparisons=[
             StrategyComparison(name="Baseline (No Action)", recovered_revenue=baseline_recovered, recovery_rate=baseline_rate, successful_recoveries=0),
             StrategyComparison(name="Static Retry", recovered_revenue=static_recovered, recovery_rate=static_rate, successful_recoveries=int(successful_recoveries * 0.6)),
-            StrategyComparison(name="FLOWMINT", recovered_revenue=flowmint_recovered, recovery_rate=flowmint_rate, successful_recoveries=successful_recoveries)
+            StrategyComparison(name="VORTEX", recovered_revenue=flowmint_recovered, recovery_rate=flowmint_rate, successful_recoveries=successful_recoveries)
         ],
         safety=BenchmarkSafety(
             guardrail_violations=guardrail_violations,

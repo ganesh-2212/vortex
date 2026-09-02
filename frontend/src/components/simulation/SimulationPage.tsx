@@ -271,6 +271,37 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
                 </div>
               </div>
 
+              {/* Batch Execution & Safety Proof (F20) */}
+              <div className="bg-white dark:bg-brand-surface-dark rounded-xl p-8 border border-slate-200 dark:border-brand-border-dark shadow-sm transition-colors duration-200">
+                <h3 className="text-[17px] font-bold text-slate-900 dark:text-brand-text-primary tracking-tight mb-6">Batch Execution & Safety Proof</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] text-slate-400 dark:text-brand-text-muted font-bold uppercase tracking-wider">Total Attempts</span>
+                    <span className="text-xl font-bold text-slate-900 dark:text-brand-text-primary proportional-nums">{latestResult.total_attempts}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] text-slate-400 dark:text-brand-text-muted font-bold uppercase tracking-wider">Escalations</span>
+                    <span className="text-xl font-bold text-amber-600 dark:text-amber-500 proportional-nums">{latestResult.escalations}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] text-slate-400 dark:text-brand-text-muted font-bold uppercase tracking-wider">Stopped Cases</span>
+                    <span className="text-xl font-bold text-slate-900 dark:text-brand-text-primary proportional-nums">{latestResult.stopped_cases}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] text-slate-400 dark:text-brand-text-muted font-bold uppercase tracking-wider">Guardrail Blocks</span>
+                    <span className="text-xl font-bold text-rose-600 dark:text-rose-500 proportional-nums">{latestResult.guardrail_blocks}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] text-slate-400 dark:text-brand-text-muted font-bold uppercase tracking-wider">Rule Compliance</span>
+                    <span className="text-xl font-bold text-emerald-600 dark:text-brand-success proportional-nums">
+                      {latestResult.stopping_rule_compliance_pct !== null && latestResult.stopping_rule_compliance_pct !== undefined 
+                        ? `${latestResult.stopping_rule_compliance_pct}%` 
+                        : <span className="text-[13px] text-slate-400 dark:text-brand-text-muted italic font-normal">N/A (No Applicable Rules)</span>}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Revenue Recovery Comparison table */}
               <div className="bg-white dark:bg-brand-surface-dark rounded-xl p-8 border border-slate-200 dark:border-brand-border-dark shadow-sm transition-colors duration-200">
                 <h3 className="text-[17px] font-bold text-slate-900 dark:text-brand-text-primary mb-6 tracking-tight flex items-center gap-2">

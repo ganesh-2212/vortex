@@ -413,6 +413,11 @@ class SimulationRunResponse(BaseModel):
     sentinel_net_recovery: Decimal
     number_of_simulated_cases: int
     number_of_simulated_successful_recoveries: int
+    escalations: int = 0
+    stopped_cases: int = 0
+    guardrail_blocks: int = 0
+    stopping_rule_compliance_pct: Optional[float] = None
+    total_attempts: int = 0
     cases: List[SimulatedCaseDetail]
     run_at: datetime
 

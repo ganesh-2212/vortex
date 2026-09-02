@@ -8,7 +8,7 @@ router = APIRouter()
 @router.post("/run", response_model=BenchmarkResponse)
 def execute_recovery_benchmark(request: BenchmarkRequest):
     """
-    Executes a quantitative synthetic benchmark against FLOWMINT's Risk Engine, 
+    Executes a quantitative synthetic benchmark against VORTEX's Risk Engine, 
     Strategy Optimizer, and Guardrails.
     Returns deterministic aggregated metrics demonstrating recovery proof.
     """
