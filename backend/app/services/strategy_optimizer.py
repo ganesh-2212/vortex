@@ -305,7 +305,31 @@ def optimize_strategy(
             )
         )
 
-    # 4. Strategy Selection & Ranking
+    # 4. Learning Loop Injection (Historical Data Influence)
+    from app.services.strategy_performance import _calculate_base_stats
+    try:
+        stats_map, _, _, _ = _calculate_base_stats(store)
+        
+        for opt in strategy_options:
+            hist_stat = stats_map.get(opt.strategy_name)
+            # Minimum data requirement: >= 5 attempts
+            if hist_stat and hist_stat.total_attempts >= 5:
+                empirical_prob = max(0, min(100, int(hist_stat.success_rate)))
+                old_prob = opt.recovery_probability
+                
+                # Update probability and economics deterministically based on real outcome evidence
+                opt.recovery_probability = empirical_prob
+                opt.expected_recovery_amount = (case.amount_at_risk * Decimal(str(empirical_prob)) / Decimal("100")).quantize(Decimal("0.01"))
+                opt.expected_net_recovery = (opt.expected_recovery_amount - opt.intervention_cost).quantize(Decimal("0.01"))
+                
+                opt.reasons.append(
+                    f"Strategy performance updated from recovery outcome. Next recommendation uses this historical evidence: "
+                    f"{hist_stat.total_attempts} attempts, {hist_stat.success_rate}% success rate (adjusted from {old_prob}% heuristic)."
+                )
+    except Exception as e:
+        pass # Safe fallback to F11 heuristic if stats fail
+
+    # 5. Strategy Selection & Ranking
     # Filter to eligible/ALLOWED strategies only
     eligible_options = [opt for opt in strategy_options if opt.guardrail_status == "ALLOWED"]
 

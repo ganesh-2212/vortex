@@ -87,17 +87,25 @@ def _calculate_base_stats(store: MemoryStore) -> Tuple[Dict[str, StrategyOutcome
             stat.total_cost += cost
             
             if act.status == RecoveryActionStatus.EXECUTED:
-                stat.successful_attempts += 1
-                rec_amount = case.amount_at_risk  # Assume full recovery on success for simplicity
-                stat.total_recovered += rec_amount
-                total_recovered += rec_amount
-                # Expected recovery logic: a simplification for variance tracking
-                expected_rec = (rec_amount * Decimal("0.70")).quantize(Decimal("0.01"))
-                stat.expected_recovery += expected_rec
-                stat.actual_recovery += rec_amount
-                
-                # average attempts to recovery sum
-                stat.average_attempts_to_recovery += act.attempt_number
+                # To consider an action genuinely successful, the case must be RECOVERED
+                # AND this action must be the final executed action (the causal action).
+                if is_recovered and idx == len(actions) - 1:
+                    stat.successful_attempts += 1
+                    rec_amount = case.amount_at_risk  # Assume full recovery on success for simplicity
+                    stat.total_recovered += rec_amount
+                    total_recovered += rec_amount
+                    # Expected recovery logic: a simplification for variance tracking
+                    expected_rec = (rec_amount * Decimal("0.70")).quantize(Decimal("0.01"))
+                    stat.expected_recovery += expected_rec
+                    stat.actual_recovery += rec_amount
+                    
+                    # average attempts to recovery sum
+                    stat.average_attempts_to_recovery += act.attempt_number
+                else:
+                    stat.failed_attempts += 1
+                    stat.actual_recovery += Decimal("0.00")
+                    expected_rec = (case.amount_at_risk * Decimal("0.70")).quantize(Decimal("0.01"))
+                    stat.expected_recovery += expected_rec
             else:
                 stat.failed_attempts += 1
                 stat.actual_recovery += Decimal("0.00")
