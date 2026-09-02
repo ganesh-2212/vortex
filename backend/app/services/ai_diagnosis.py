@@ -145,7 +145,7 @@ Return a valid JSON object matching this schema exactly:
   "root_cause": "Detailed human-readable explanation of the root cause.",
   "evidence": ["list", "of", "evidence", "points"],
   "risk_explanation": "Explanation of the risk of recovery.",
-  "recommended_action": "RETRY_PAYMENT" | "SEND_PAYMENT_LINK" | "SEND_REMINDER" | "OFFER_ALTERNATIVE_METHOD" | "ESCALATE_TO_HUMAN" | "STOP_RECOVERY",
+  "recommended_action": "RETRY_PAYMENT" | "SEND_REMINDER" | "OFFER_ALTERNATIVE_METHOD" | "ESCALATE_TO_HUMAN" | "STOP_RECOVERY",
   "action_reason": "Reason for the recommended action.",
   "confidence": integer between 0 and 100
 }}
@@ -164,6 +164,11 @@ Return a valid JSON object matching this schema exactly:
         
         guardrail_status = "SAFE TO PROCEED"
         action = result_dict.get("recommended_action", "ESCALATE_TO_HUMAN")
+        
+        # F19 Safety Fix: Ensure recommendation is genuinely executable
+        supported_executable_actions = ["RETRY_PAYMENT", "SEND_REMINDER", "OFFER_ALTERNATIVE_METHOD", "ESCALATE_TO_HUMAN", "STOP_RECOVERY"]
+        if action not in supported_executable_actions or action == "SEND_PAYMENT_LINK":
+            return _deterministic_fallback(case, event)
         
         if action == "RETRY_PAYMENT":
             existing_actions = [a for a in store.recovery_actions.values() if a.recovery_case_id == case.id]

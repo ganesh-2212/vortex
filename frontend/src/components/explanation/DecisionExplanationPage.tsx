@@ -148,12 +148,12 @@ export default function DecisionExplanationPage({ cases }: DecisionExplanationPa
                      )}
                   </div>
                   
-                  <div className="bg-purple-50 dark:bg-brand-accent-dark/10 border border-purple-200 dark:border-purple-500/20 p-4 rounded-xl flex items-center justify-between">
+                  <div className="bg-purple-50 dark:bg-brand-card-dark border border-purple-200 dark:border-purple-500/30 p-4 rounded-xl flex items-center justify-between">
                     <div>
                       <span className="text-[11px] text-purple-700 dark:text-purple-400 block uppercase font-bold tracking-wider mb-0.5">Suggested Strategy</span>
                       <span className="text-[15px] font-bold text-purple-900 dark:text-purple-300 block tracking-tight">{(explanation.diagnosis?.recommended_action || explanation.strategy_selected).replace(/_/g, ' ')}</span>
                     </div>
-                    <span className="text-[11px] font-bold text-purple-600/60 dark:text-purple-400/60 uppercase tracking-widest text-right">AI<br/>Output</span>
+                    <span className="text-[11px] font-bold text-purple-600/60 dark:text-purple-400/80 uppercase tracking-widest text-right">AI<br/>Output</span>
                   </div>
                 </div>
               </div>
@@ -171,10 +171,10 @@ export default function DecisionExplanationPage({ cases }: DecisionExplanationPa
                   <span className="text-[17px] font-bold text-slate-900 dark:text-white block uppercase tracking-tight">{explanation.risk_level}</span>
                   <p className="text-[13px] text-slate-600 dark:text-slate-300 mt-3 leading-relaxed font-medium">{explanation.risk_reasons.join(', ')}</p>
                 </div>
-                <div className="bg-purple-50/50 dark:bg-brand-accent-dark/10 border border-purple-200 dark:border-purple-500/20 p-6 rounded-xl shadow-sm flex flex-col hover:border-purple-300 dark:hover:border-purple-500/40 transition-colors duration-200">
+                <div className="bg-purple-50/50 dark:bg-brand-card-dark border border-purple-200 dark:border-brand-border-dark p-6 rounded-xl shadow-sm flex flex-col hover:border-purple-300 dark:hover:border-slate-500 transition-colors duration-200">
                   <span className="text-[11px] text-purple-700 dark:text-purple-400 block uppercase font-bold tracking-wider mb-2">Recommended Strategy</span>
-                  <span className="text-[17px] font-bold text-purple-900 dark:text-purple-300 block uppercase tracking-tight">{explanation.strategy_selected.replace(/_/g, ' ')}</span>
-                  <p className="text-[13px] text-purple-800 dark:text-purple-200 mt-3 leading-relaxed font-medium">{explanation.strategy_reason}</p>
+                  <span className="text-[17px] font-bold text-purple-900 dark:text-purple-400 block uppercase tracking-tight">{explanation.strategy_selected.replace(/_/g, ' ')}</span>
+                  <p className="text-[13px] text-purple-800 dark:text-slate-300 mt-3 leading-relaxed font-medium">{explanation.strategy_reason}</p>
                 </div>
               </div>
               </div>

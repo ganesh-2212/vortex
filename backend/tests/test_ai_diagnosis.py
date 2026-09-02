@@ -222,3 +222,33 @@ def test_ai_diagnosis_temporary_failure_not_cached(mock_client, setup_diagnosis_
     assert response2.status_code == 200
     assert response2.json()["analysis_source"] == "gemini"
     assert store.recovery_cases[case_id].ai_diagnosis is not None
+
+@patch("app.config.settings.GEMINI_API_KEY", "fake_key")
+@patch("google.genai.Client")
+def test_ai_diagnosis_unsupported_action_fallback(mock_client, setup_diagnosis_case):
+    case_id = setup_diagnosis_case
+    
+    mock_instance = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = """
+    {
+      "root_cause_category": "TRANSIENT_PAYMENT_FAILURE",
+      "root_cause": "Test",
+      "evidence": [],
+      "risk_explanation": "Test",
+      "recommended_action": "SEND_PAYMENT_LINK",
+      "action_reason": "Unsupported",
+      "confidence": 99
+    }
+    """
+    mock_instance.models.generate_content.return_value = mock_response
+    mock_client.return_value = mock_instance
+    
+    response = client.get(f"/api/v1/recovery-cases/{case_id}/diagnosis")
+    assert response.status_code == 200
+    
+    data = response.json()
+    # Should fall back to deterministic because SEND_PAYMENT_LINK is not executable
+    assert data["analysis_source"] == "Deterministic analysis"
+    assert data["recommended_action"] != "SEND_PAYMENT_LINK"
+
