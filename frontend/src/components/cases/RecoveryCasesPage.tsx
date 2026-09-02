@@ -90,61 +90,61 @@ export default function RecoveryCasesPage({
       {/* 1. Header (Compact) */}
       <div className="flex items-center justify-between pb-2">
         <div>
-          <h2 className="text-[19px] font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h2 className="text-[19px] font-bold text-slate-900 dark:text-brand-text-primary tracking-tight flex items-center gap-2">
             Recovery Cases
-            <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider">{activeCases} ACTIVE</span>
+            <span className="bg-slate-100 dark:bg-brand-surface-dark text-slate-600 dark:text-brand-text-secondary px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider border border-transparent dark:border-brand-border-dark">{activeCases} ACTIVE</span>
           </h2>
-          <p className="text-[13px] text-slate-500 mt-1 font-medium">Manage and monitor revenue recovery operations and orchestration paths.</p>
+          <p className="text-[13px] text-slate-500 dark:text-brand-text-muted mt-1 font-medium">Manage and monitor revenue recovery operations and orchestration paths.</p>
         </div>
-        <button className="flex items-center gap-2 px-3 py-1.5 text-[12px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-100 rounded transition-colors border border-transparent hover:border-slate-200">
+        <button className="flex items-center gap-2 px-3 py-1.5 text-[12px] font-bold uppercase tracking-wider text-slate-600 dark:text-brand-text-secondary hover:bg-slate-100 dark:hover:bg-brand-surface-dark rounded transition-colors border border-transparent hover:border-slate-200 dark:hover:border-brand-border-dark">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>
 
       {/* 2. KPI Metrics Row (Horizontal) */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
-          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Revenue at Risk</span>
-          <FinancialValue value={formatCurrency(revenueAtRisk)} size="metric" className="text-rose-600" />
+        <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-3.5 shadow-sm transition-colors duration-200">
+          <span className="text-[10px] text-slate-500 dark:text-brand-text-muted font-bold uppercase tracking-wider block mb-1">Revenue at Risk</span>
+          <FinancialValue value={formatCurrency(revenueAtRisk)} size="metric" className="text-rose-600 dark:text-brand-danger" />
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
-          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Recovery Potential</span>
-          <FinancialValue value={formatCurrency(potentialRecovery)} size="metric" className="text-purple-700" />
+        <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-3.5 shadow-sm transition-colors duration-200">
+          <span className="text-[10px] text-slate-500 dark:text-brand-text-muted font-bold uppercase tracking-wider block mb-1">Recovery Potential</span>
+          <FinancialValue value={formatCurrency(potentialRecovery)} size="metric" className="text-purple-700 dark:text-brand-ai" />
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
-          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Confirmed Recovery</span>
-          <FinancialValue value={formatCurrency(confirmedRecovery)} size="metric" className="text-emerald-600" />
+        <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-3.5 shadow-sm transition-colors duration-200">
+          <span className="text-[10px] text-slate-500 dark:text-brand-text-muted font-bold uppercase tracking-wider block mb-1">Confirmed Recovery</span>
+          <FinancialValue value={formatCurrency(confirmedRecovery)} size="metric" className="text-emerald-600 dark:text-brand-success" />
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
-          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Active Cases</span>
-          <FinancialValue value={activeCases} size="metric" className="text-slate-900" />
+        <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-3.5 shadow-sm transition-colors duration-200">
+          <span className="text-[10px] text-slate-500 dark:text-brand-text-muted font-bold uppercase tracking-wider block mb-1">Active Cases</span>
+          <FinancialValue value={activeCases} size="metric" className="text-slate-900 dark:text-brand-text-primary" />
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-sm">
-          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Recovery Rate</span>
-          <FinancialValue value={`${recoveryRate}%`} size="metric" className="text-slate-900" />
+        <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-3.5 shadow-sm transition-colors duration-200">
+          <span className="text-[10px] text-slate-500 dark:text-brand-text-muted font-bold uppercase tracking-wider block mb-1">Recovery Rate</span>
+          <FinancialValue value={`${recoveryRate}%`} size="metric" className="text-slate-900 dark:text-brand-text-primary" />
         </div>
       </div>
 
       {/* 3. Compact Toolbar (Filters) */}
-      <div className="bg-white border border-slate-200 rounded-lg p-2 flex flex-col md:flex-row gap-2 justify-between items-center shadow-sm">
+      <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-2 flex flex-col md:flex-row gap-2 justify-between items-center shadow-sm transition-colors duration-200">
         <div className="relative w-full md:w-80 h-9">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 dark:text-brand-text-muted" />
           <input
             type="text"
             placeholder="Search Case or Customer ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-full bg-slate-50 text-[13px] text-slate-900 rounded-md pl-9 pr-3 outline-none border border-transparent focus:border-purple-300 focus:bg-white transition-all font-medium placeholder:text-slate-400"
+            className="w-full h-full bg-slate-50 dark:bg-brand-bg-dark text-[13px] text-slate-900 dark:text-brand-text-primary rounded-md pl-9 pr-3 outline-none border border-transparent focus:border-purple-300 dark:focus:border-brand-border-dark focus:bg-white dark:focus:bg-brand-card-dark transition-all font-medium placeholder:text-slate-400 dark:placeholder:text-brand-text-muted"
           />
         </div>
         
         <div className="flex items-center gap-2 w-full md:w-auto h-9">
-          <div className="flex items-center gap-2 h-full bg-slate-50 px-3 rounded-md border border-slate-100 hover:border-slate-200 transition-colors">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
+          <div className="flex items-center gap-2 h-full bg-slate-50 dark:bg-brand-bg-dark px-3 rounded-md border border-slate-100 dark:border-brand-border-dark hover:border-slate-200 dark:hover:border-brand-border-subtle transition-colors">
+            <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-brand-text-muted" />
             <select
               value={riskFilter}
               onChange={(e) => setRiskFilter(e.target.value)}
-              className="bg-transparent text-[12px] font-bold text-slate-600 outline-none cursor-pointer uppercase tracking-wider h-full py-2"
+              className="bg-transparent text-[12px] font-bold text-slate-600 dark:text-brand-text-primary outline-none cursor-pointer uppercase tracking-wider h-full py-2"
             >
               <option value="ALL">All Risks</option>
               <option value="CRITICAL">Critical</option>
@@ -154,12 +154,12 @@ export default function RecoveryCasesPage({
             </select>
           </div>
 
-          <div className="flex items-center gap-2 h-full bg-slate-50 px-3 rounded-md border border-slate-100 hover:border-slate-200 transition-colors">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
+          <div className="flex items-center gap-2 h-full bg-slate-50 dark:bg-brand-bg-dark px-3 rounded-md border border-slate-100 dark:border-brand-border-dark hover:border-slate-200 dark:hover:border-brand-border-subtle transition-colors">
+            <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-brand-text-muted" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent text-[12px] font-bold text-slate-600 outline-none cursor-pointer uppercase tracking-wider h-full py-2"
+              className="bg-transparent text-[12px] font-bold text-slate-600 dark:text-brand-text-primary outline-none cursor-pointer uppercase tracking-wider h-full py-2"
             >
               <option value="ALL">All Statuses</option>
               <option value="OPEN">Open</option>
@@ -173,57 +173,57 @@ export default function RecoveryCasesPage({
       </div>
 
       {/* 4. Case Table (The Hero) */}
-      <div className="bg-white border border-slate-200 rounded-xl flex-grow overflow-hidden shadow-sm flex flex-col">
+      <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-xl flex-grow overflow-hidden shadow-sm flex flex-col transition-colors duration-200">
         {sortedCases.length === 0 ? (
-          <div className="flex-grow flex flex-col items-center justify-center py-16 text-slate-500 space-y-3">
-            <AlertCircle className="w-10 h-10 text-slate-300" strokeWidth={1.5} />
-            <h4 className="text-[15px] font-bold text-slate-900 tracking-tight">No active recovery cases</h4>
+          <div className="flex-grow flex flex-col items-center justify-center py-16 text-slate-500 dark:text-brand-text-muted space-y-3">
+            <AlertCircle className="w-10 h-10 text-slate-300 dark:text-brand-text-muted" strokeWidth={1.5} />
+            <h4 className="text-[15px] font-bold text-slate-900 dark:text-brand-text-primary tracking-tight">No active recovery cases</h4>
             <p className="text-[13px] max-w-sm text-center">Trigger a payment failure from Webhooks to create a recovery case.</p>
           </div>
         ) : (
           <div className="overflow-x-auto flex-grow h-[400px]">
             <table className="w-full text-left border-collapse sticky-header">
-              <thead className="bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm border-b border-slate-200">
-                <tr className="text-slate-500">
-                  <th className="py-3 pl-5 cursor-pointer select-none hover:text-slate-900 transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('id')}>
+              <thead className="bg-slate-50/80 dark:bg-brand-bg-dark/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm border-b border-slate-200 dark:border-brand-border-dark transition-colors duration-200">
+                <tr className="text-slate-500 dark:text-brand-text-muted">
+                  <th className="py-3 pl-5 cursor-pointer select-none hover:text-slate-900 dark:hover:text-brand-text-primary transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('id')}>
                     Case ID {renderSortArrow('id')}
                   </th>
                   <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Risk</th>
-                  <th className="py-3 px-4 cursor-pointer select-none text-right hover:text-slate-900 transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('amount_at_risk')}>
+                  <th className="py-3 px-4 cursor-pointer select-none text-right hover:text-slate-900 dark:hover:text-brand-text-primary transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('amount_at_risk')}>
                     Amount {renderSortArrow('amount_at_risk')}
                   </th>
-                  <th className="py-3 px-4 cursor-pointer select-none text-center hover:text-slate-900 transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('priority_score')}>
+                  <th className="py-3 px-4 cursor-pointer select-none text-center hover:text-slate-900 dark:hover:text-brand-text-primary transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('priority_score')}>
                     Score {renderSortArrow('priority_score')}
                   </th>
                   <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Age</th>
-                  <th className="py-3 px-4 cursor-pointer select-none hover:text-slate-900 transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('status')}>
+                  <th className="py-3 px-4 cursor-pointer select-none hover:text-slate-900 dark:hover:text-brand-text-primary transition text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" onClick={() => handleSort('status')}>
                     Status {renderSortArrow('status')}
                   </th>
                   <th className="py-3 pr-5 text-right text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Recovered Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-brand-border-dark">
                 {sortedCases.map((c) => (
                   <tr
                     key={c.id}
                     onClick={() => onSelectCase(c.id)}
-                    className="hover:bg-slate-50/70 cursor-pointer transition-colors group"
+                    className="hover:bg-slate-50/70 dark:hover:bg-brand-card-dark cursor-pointer group transition-colors"
                   >
-                    <td className="py-3 pl-5 text-slate-900 group-hover:text-purple-700 transition-colors">
+                    <td className="py-3 pl-5 text-slate-900 dark:text-brand-text-primary transition-colors">
                       <FinancialValue value={c.id.substring(0, 8)} size="table" className="text-inherit" />
                     </td>
                     <td className="py-3 px-4">
                       <div className="scale-90 origin-left"><RiskBadge level={c.risk_level} /></div>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <FinancialValue value={formatCurrency(c.amount_at_risk)} size="table" className="text-slate-900" />
+                      <FinancialValue value={formatCurrency(c.amount_at_risk)} size="table" className="text-slate-900 dark:text-brand-text-primary" />
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <span className="bg-purple-50 border border-purple-100 text-purple-700 font-bold px-2 py-1 rounded">
+                      <span className="bg-purple-50 dark:bg-brand-ai/10 border border-purple-100 dark:border-brand-ai/30 text-purple-700 dark:text-brand-ai font-bold px-2 py-1 rounded transition-colors">
                         <FinancialValue value={formatNumber(c.priority_score)} size="table" className="text-inherit" />
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-500 text-[12px] font-medium capitalize">
+                    <td className="py-3 px-4 text-slate-500 dark:text-brand-text-secondary text-[12px] font-medium capitalize">
                       {c.time_category.replace(/_/g, ' ').toLowerCase()}
                     </td>
                     <td className="py-3 px-4">
@@ -231,11 +231,11 @@ export default function RecoveryCasesPage({
                     </td>
                     <td className="py-3 pr-5 text-right">
                       {c.status === 'RECOVERED' ? (
-                        <span className="text-emerald-600">
+                        <span className="text-emerald-600 dark:text-brand-success">
                           <FinancialValue value={formatCurrency(c.recovered_amount || c.amount_at_risk)} size="table" className="text-inherit" />
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-[11px] font-medium italic">Unresolved</span>
+                        <span className="text-slate-400 dark:text-brand-text-muted text-[11px] font-medium italic">Unresolved</span>
                       )}
                     </td>
                   </tr>

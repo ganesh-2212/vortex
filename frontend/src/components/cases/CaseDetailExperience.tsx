@@ -100,9 +100,9 @@ export default function CaseDetailExperience({
 
   if (detailLoading || !selectedCaseDetail) {
     return (
-      <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center text-slate-500">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-600 mb-4" />
+      <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-xl p-8 shadow-sm flex items-center justify-center min-h-[400px] transition-colors duration-200">
+        <div className="flex flex-col items-center text-slate-500 dark:text-slate-400">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-600 dark:text-purple-400 mb-4" />
           <p className="text-[13px] font-bold uppercase tracking-widest">Fetching case operational telemetry logs...</p>
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function CaseDetailExperience({
         key: order.key_id,
         amount: order.amount_paise,
         currency: order.currency,
-        name: 'FLOWMINT',
+        name: 'VORTEX',
         description: 'Revenue Recovery',
         order_id: order.order_id,
         handler: async function (response: any) {
@@ -250,13 +250,13 @@ export default function CaseDetailExperience({
       {/* ========================================== */}
       {/* HERO SECTION */}
       {/* ========================================== */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-brand-surface-dark rounded-xl border border-slate-200 dark:border-brand-border-dark shadow-sm overflow-hidden transition-colors duration-200">
         
         {/* CASE HEADER */}
-        <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50">
+        <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-brand-border-dark bg-slate-50 dark:bg-brand-card-dark transition-colors duration-200">
           <div>
-            <h2 className="text-[14px] font-bold text-slate-900 tracking-tight uppercase">Case Reference: {caseId}</h2>
-            <p className="text-[13px] text-slate-500 font-medium">{selectedCaseDetail.customer?.name || 'Acme Corp'}</p>
+            <h2 className="text-[14px] font-bold text-slate-900 dark:text-white tracking-tight uppercase">Case Reference: {caseId}</h2>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">{selectedCaseDetail.customer?.name || 'Acme Corp'}</p>
           </div>
           <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${getStatusColor(caseStatus)}`}>
             {caseStatus || 'OPEN'}
@@ -282,25 +282,25 @@ export default function CaseDetailExperience({
 
           {/* WHY THIS CASE MATTERS */}
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Activity className="w-4 h-4 text-purple-600" /> Why This Case Matters
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Activity className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Why This Case Matters
             </span>
-            <p className="text-[15px] font-medium text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100">
+            <p className="text-[15px] font-medium text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-brand-card-dark p-4 rounded-lg border border-slate-100 dark:border-brand-border-dark transition-colors duration-200">
               {whyMatters}
             </p>
           </div>
 
-          {/* FLOWMINT RECOMMENDATION */}
+          {/* VORTEX RECOMMENDATION */}
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-purple-600" /> FLOWMINT Recommendation
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" /> VORTEX Recommendation
             </span>
-            <div className={`p-5 rounded-lg border ${recTitle === 'RETRY PAYMENT' ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200'}`}>
-              <span className={`text-[16px] font-bold uppercase tracking-tight block mb-2 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-900' : 'text-slate-900'}`}>
+            <div className={`p-5 rounded-lg border transition-colors duration-200 ${recTitle === 'RETRY PAYMENT' ? 'bg-purple-50 dark:bg-brand-accent-dark/10 border-purple-200 dark:border-purple-500/20' : 'bg-slate-50 dark:bg-brand-card-dark border-slate-200 dark:border-brand-border-dark'}`}>
+              <span className={`text-[16px] font-bold uppercase tracking-tight block mb-2 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-900 dark:text-purple-300' : 'text-slate-900 dark:text-slate-100'}`}>
                 {recTitle}
               </span>
-              <div className={`text-[13px] font-medium space-y-1 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-800' : 'text-slate-700'}`}>
-                <span className={`block font-bold text-[11px] uppercase tracking-wider mb-1 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-600' : 'text-slate-500'}`}>Why FLOWMINT recommends this</span>
+              <div className={`text-[13px] font-medium space-y-1 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-800 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                <span className={`block font-bold text-[11px] uppercase tracking-wider mb-1 ${recTitle === 'RETRY PAYMENT' ? 'text-purple-600 dark:text-purple-500' : 'text-slate-500 dark:text-slate-400'}`}>Why VORTEX recommends this</span>
                 <p>{recExplanation}</p>
               </div>
             </div>
@@ -314,7 +314,7 @@ export default function CaseDetailExperience({
               </span>
               <div className="bg-white border border-slate-200 rounded-lg p-5">
                 <p className="text-[12px] text-slate-500 font-medium mb-4">
-                  FLOWMINT evaluates eligible recovery strategies using expected recovery, intervention cost, retry history, and merchant guardrails.
+                  VORTEX evaluates eligible recovery strategies using expected recovery, intervention cost, retry history, and merchant guardrails.
                 </p>
                 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -350,24 +350,24 @@ export default function CaseDetailExperience({
           {/* AI ROOT-CAUSE DIAGNOSIS */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Activity className="w-4 h-4 text-purple-600" /> AI Root-Cause Diagnosis
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Activity className="w-4 h-4 text-purple-600 dark:text-purple-400" /> AI Root-Cause Diagnosis
               </span>
               {diagnosis && (
-                <span className="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                <span className="text-[9px] bg-slate-100 dark:bg-brand-card-dark text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
                   {diagnosis.analysis_source || 'AI-assisted diagnosis'}
                 </span>
               )}
             </div>
             
-            <div className="bg-white border border-slate-200 rounded-lg p-5">
+            <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-5 transition-colors duration-200">
               {loadingDiagnosis ? (
-                <div className="flex items-center gap-3 text-slate-500 py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+                <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-purple-600 dark:text-purple-400" />
                   <span className="text-[13px] font-bold uppercase tracking-widest">Analyzing payment failure...</span>
                 </div>
               ) : diagnosisError ? (
-                <div className="text-amber-700 text-[13px] font-medium py-2">
+                <div className="text-amber-700 dark:text-amber-500 text-[13px] font-medium py-2">
                   {diagnosisError}
                 </div>
               ) : diagnosis ? (
@@ -375,13 +375,13 @@ export default function CaseDetailExperience({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Root Cause</span>
-                        <span className="text-[14px] font-bold text-slate-900 leading-snug">{diagnosis.root_cause}</span>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Root Cause</span>
+                        <span className="text-[14px] font-bold text-slate-900 dark:text-white leading-snug">{diagnosis.root_cause}</span>
                       </div>
                       
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Evidence</span>
-                        <ul className="list-disc pl-4 text-[13px] text-slate-700 font-medium space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Evidence</span>
+                        <ul className="list-disc pl-4 text-[13px] text-slate-700 dark:text-slate-300 font-medium space-y-1">
                           {diagnosis.evidence.map((ev: string, idx: number) => (
                             <li key={idx}>{ev}</li>
                           ))}
@@ -389,32 +389,32 @@ export default function CaseDetailExperience({
                       </div>
                       
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Risk Explanation</span>
-                        <span className="text-[13px] text-slate-700 font-medium leading-snug">{diagnosis.risk_explanation}</span>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Risk Explanation</span>
+                        <span className="text-[13px] text-slate-700 dark:text-slate-300 font-medium leading-snug">{diagnosis.risk_explanation}</span>
                       </div>
                     </div>
                     
                     <div className="space-y-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next-Best Action</span>
-                        <span className="text-[14px] font-bold text-purple-700 uppercase tracking-tight">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Next-Best Action</span>
+                        <span className="text-[14px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-tight">
                           {diagnosis.recommended_action.replace(/_/g, ' ')}
                         </span>
                       </div>
                       
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Why This Action</span>
-                        <span className="text-[13px] text-slate-700 font-medium leading-snug">{diagnosis.action_reason}</span>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Why This Action</span>
+                        <span className="text-[13px] text-slate-700 dark:text-slate-300 font-medium leading-snug">{diagnosis.action_reason}</span>
                       </div>
 
                       <div className="flex items-center gap-6 pt-2">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confidence</span>
-                          <span className="text-[16px] font-bold text-slate-900 tabular-nums">{diagnosis.confidence}%</span>
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Confidence</span>
+                          <span className="text-[16px] font-bold text-slate-900 dark:text-white tabular-nums">{diagnosis.confidence}%</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guardrail</span>
-                          <span className={`text-[12px] font-bold uppercase tracking-wider ${diagnosis.guardrail_status.includes('SAFE') ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Guardrail</span>
+                          <span className={`text-[12px] font-bold uppercase tracking-wider ${diagnosis.guardrail_status.includes('SAFE') ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                             {diagnosis.guardrail_status}
                           </span>
                         </div>
@@ -428,10 +428,10 @@ export default function CaseDetailExperience({
 
           {/* GUARDRAILS */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Lock className="w-4 h-4 text-slate-600" /> FLOWMINT Guardrails
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Lock className="w-4 h-4 text-slate-600 dark:text-slate-500" /> VORTEX Guardrails
             </span>
-            <div className="bg-white border border-slate-200 rounded-lg p-5">
+            <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-5 transition-colors duration-200">
               <div className="space-y-3">
                 {decisionExplanation?.guardrail_checks?.map((g: any, i: number) => {
                   const isAllowed = g.status === 'ALLOWED'
@@ -443,8 +443,8 @@ export default function CaseDetailExperience({
                         <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
                       )}
                       <div className="flex flex-col">
-                        <span className={`text-[13px] font-bold ${isAllowed ? 'text-slate-900' : 'text-rose-700'}`}>{g.guardrail}</span>
-                        {!isAllowed && <span className="text-[11px] text-rose-600 font-medium mt-0.5">{g.explanation}</span>}
+                        <span className={`text-[13px] font-bold ${isAllowed ? 'text-slate-900 dark:text-slate-100' : 'text-rose-700 dark:text-rose-400'}`}>{g.guardrail}</span>
+                        {!isAllowed && <span className="text-[11px] text-rose-600 dark:text-rose-500 font-medium mt-0.5">{g.explanation}</span>}
                       </div>
                     </div>
                   )
@@ -455,20 +455,20 @@ export default function CaseDetailExperience({
 
           {/* RECOVERY ACTION CENTER */}
           <div className="pt-8 flex flex-col space-y-4">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Activity className="w-4 h-4 text-purple-600" /> Recovery Action Center
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Activity className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Recovery Action Center
             </span>
-            <div className="w-full flex flex-col bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+            <div className="w-full flex flex-col bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-xl p-8 shadow-sm transition-colors duration-200">
               
               {/* Recommended Action */}
                 <div className="mb-8">
-                  <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-widest mb-5">Recommended Action</h3>
+                  <h3 className="text-[12px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-5">Recommended Action</h3>
                   
                   {isRecoveryReady ? (
                     <div className="flex flex-col md:flex-row items-center gap-6">
                       <div className="flex flex-col flex-1">
-                        <span className="text-[14px] font-bold text-purple-900 uppercase tracking-tight mb-1">RETRY PAYMENT</span>
-                        <span className="text-[13px] text-slate-500 font-medium">Ready to recover {formatCurrency(selectedCaseDetail.amount_at_risk)} through the approved retry strategy.</span>
+                        <span className="text-[14px] font-bold text-purple-900 dark:text-purple-300 uppercase tracking-tight mb-1">RETRY PAYMENT</span>
+                        <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Ready to recover {formatCurrency(selectedCaseDetail.amount_at_risk)} through the approved retry strategy.</span>
                       </div>
                       
                       <div className="flex flex-col items-center gap-2 w-full md:w-auto">
@@ -483,7 +483,7 @@ export default function CaseDetailExperience({
                         
                         {(paymentState === 'processing' || paymentState === 'verifying') && (
                           <div className="flex flex-col items-center text-center space-y-1">
-                            <span className="bg-slate-100 text-slate-600 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded">RAZORPAY TEST MODE</span>
+                            <span className="bg-slate-100 dark:bg-brand-card-dark text-slate-600 dark:text-slate-300 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded">RAZORPAY TEST MODE</span>
                             <span className="text-[10px] text-slate-400 font-medium">Secret credentials remain server-side.</span>
                           </div>
                         )}
@@ -491,8 +491,8 @@ export default function CaseDetailExperience({
                     </div>
                   ) : (
                     <div className="flex flex-col gap-1">
-                      <span className="text-[14px] font-bold text-slate-700 uppercase tracking-tight">RECOVER REVENUE UNAVAILABLE</span>
-                      <span className="text-[13px] text-slate-500 font-medium">
+                      <span className="text-[14px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight">RECOVER REVENUE UNAVAILABLE</span>
+                      <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                         {guardrailStatus !== 'ALLOWED' 
                           ? 'Blocked by guardrails.' 
                           : 'Automated retry is not recommended or not executable at this time.'}
@@ -509,8 +509,8 @@ export default function CaseDetailExperience({
                 
                 {/* Secondary Actions */}
               {isRecoverableState && (
-                <div className="border-t border-slate-100 pt-6">
-                  <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-widest mb-4">Other Available Actions</h3>
+                <div className="border-t border-slate-100 dark:border-brand-border-dark pt-6">
+                  <h3 className="text-[12px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Other Available Actions</h3>
                   
                   <div className="flex flex-col md:flex-row gap-4">
                     <button
@@ -531,7 +531,7 @@ export default function CaseDetailExperience({
                         handleProposeAction()
                       }}
                       disabled={proposing}
-                      className="flex-1 px-6 py-3 bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 font-bold text-[13px] uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-2"
+                      className="flex-1 px-6 py-3 bg-white dark:bg-brand-surface-dark hover:bg-rose-50 dark:hover:bg-rose-900/20 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-brand-border-dark hover:border-rose-200 dark:hover:border-rose-700 font-bold text-[13px] uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-2"
                     >
                       {proposing && proposedActionType === 'STOP_RECOVERY' && <Loader2 className="w-4 h-4 animate-spin" />}
                       Stop Recovery
@@ -547,12 +547,12 @@ export default function CaseDetailExperience({
               )}
 
               {!isRecoverableState && (
-                <div className="border-t border-slate-100 pt-6">
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-6 flex flex-col items-center text-center">
-                    <span className="text-[14px] font-bold text-slate-700 uppercase tracking-tight mb-2">
+                <div className="border-t border-slate-100 dark:border-brand-border-dark pt-6">
+                  <div className="bg-slate-50 dark:bg-brand-card-dark border border-slate-200 dark:border-brand-border-dark rounded-lg p-6 flex flex-col items-center text-center transition-colors duration-200">
+                    <span className="text-[14px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight mb-2">
                       CASE {caseStatus}
                     </span>
-                    <span className="text-[13px] text-slate-500 font-medium">
+                    <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                       No further automated recovery actions are available for this case.
                     </span>
                   </div>
@@ -564,27 +564,27 @@ export default function CaseDetailExperience({
 
           {/* SUCCESS STATE */}
           {paymentState === 'success' && (
-            <div className="pt-6 border-t border-slate-100 animate-in fade-in zoom-in duration-500">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-8 flex flex-col items-center text-center shadow-sm">
-                <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
+            <div className="pt-6 border-t border-slate-100 dark:border-brand-border-dark animate-in fade-in zoom-in duration-500">
+              <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30 rounded-xl p-8 flex flex-col items-center text-center shadow-sm">
+                <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-800/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-4 shadow-sm">
                   <CheckCircle className="w-8 h-8" />
                 </div>
-                <h3 className="text-[14px] font-bold text-emerald-800 uppercase tracking-widest mb-2">RECOVERY CONFIRMED</h3>
-                <FinancialValue value={formatCurrency(selectedCaseDetail.recovered_amount || selectedCaseDetail.amount_at_risk)} size="hero" className="text-emerald-900 mb-2" />
-                <span className="text-[12px] font-medium text-emerald-700 mb-6">Recovered revenue</span>
+                <h3 className="text-[14px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-widest mb-2">RECOVERY CONFIRMED</h3>
+                <FinancialValue value={formatCurrency(selectedCaseDetail.recovered_amount || selectedCaseDetail.amount_at_risk)} size="hero" className="text-emerald-900 dark:text-emerald-100 mb-2" />
+                <span className="text-[12px] font-medium text-emerald-700 dark:text-emerald-400 mb-6">Recovered revenue</span>
                 
-                <div className="w-full max-w-sm text-left bg-white rounded-lg border border-emerald-100 p-4 space-y-3">
-                  <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700">
-                    <Check className="w-4 h-4 text-emerald-500" /> Payment captured
+                <div className="w-full max-w-sm text-left bg-white dark:bg-brand-surface-dark rounded-lg border border-emerald-100 dark:border-emerald-800/30 p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700 dark:text-slate-200">
+                    <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Payment captured
                   </div>
-                  <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700">
-                    <Check className="w-4 h-4 text-emerald-500" /> Payment verified
+                  <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700 dark:text-slate-200">
+                    <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Payment verified
                   </div>
-                  <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700">
-                    <Check className="w-4 h-4 text-emerald-500" /> Recovery confirmed
+                  <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700 dark:text-slate-200">
+                    <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Recovery confirmed
                   </div>
-                  <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700">
-                    <Check className="w-4 h-4 text-emerald-500" /> Audit recorded
+                  <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700 dark:text-slate-200">
+                    <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Audit recorded
                   </div>
                 </div>
               </div>
@@ -597,33 +597,33 @@ export default function CaseDetailExperience({
       {/* ========================================== */}
       {/* AUDIT / TIMELINE */}
       {/* ========================================== */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
-          <FileText className="w-5 h-5 text-purple-600" />
-          <h3 className="text-[14px] font-bold text-slate-900 uppercase tracking-widest">Case Audit Timeline</h3>
+      <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-xl p-6 shadow-sm overflow-hidden transition-colors duration-200">
+        <div className="flex items-center gap-2 mb-6 border-b border-slate-100 dark:border-brand-border-dark pb-4">
+          <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          <h3 className="text-[14px] font-bold text-slate-900 dark:text-white uppercase tracking-widest">Case Audit Timeline</h3>
         </div>
-        <div className="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-4">
+        <div className="relative border-l-2 border-slate-100 dark:border-brand-border-dark ml-3 space-y-8 pb-4">
           {auditHistory.map((log, i) => (
             <div key={log.id} className="relative pl-6 animate-in slide-in-from-left-4 fade-in duration-500" style={{animationDelay: `${i * 100}ms`}}>
-              <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-white bg-slate-300"></div>
+              <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-white dark:border-brand-surface-dark bg-slate-300 dark:bg-slate-600"></div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-slate-500 tabular-nums tracking-widest uppercase">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 tabular-nums tracking-widest uppercase">
                   {new Date(log.created_at).toLocaleString()}
                 </span>
-                <span className="text-[13px] font-bold text-slate-900 uppercase tracking-tight">{log.action.replace(/_/g, ' ')}</span>
+                <span className="text-[13px] font-bold text-slate-900 dark:text-white uppercase tracking-tight">{log.action.replace(/_/g, ' ')}</span>
                 {log.details && (
-                  <span className="text-[12px] text-slate-600 font-medium">
+                  <span className="text-[12px] text-slate-600 dark:text-slate-300 font-medium">
                     {typeof log.details === 'string' ? log.details : JSON.stringify(log.details)}
                   </span>
                 )}
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">
                   Actor: {log.actor_type}
                 </span>
               </div>
             </div>
           ))}
           {auditHistory.length === 0 && (
-             <div className="pl-6 text-[12px] font-medium text-slate-500 italic">No events recorded yet.</div>
+             <div className="pl-6 text-[12px] font-medium text-slate-500 dark:text-slate-400 italic">No events recorded yet.</div>
           )}
         </div>
       </div>

@@ -92,33 +92,33 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
   return (
     <div className="space-y-8 text-left pb-12 w-full max-w-7xl mx-auto">
       {/* Payment Event Simulator */}
-      <div className="bg-white rounded-xl shadow-sm p-8 space-y-8 border border-slate-200">
+      <div className="bg-white dark:bg-brand-surface-dark rounded-xl shadow-sm p-8 space-y-8 border border-slate-200 dark:border-brand-border-dark transition-colors duration-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Zap className="w-6 h-6 text-purple-600" strokeWidth={2.5} />
-            <h3 className="text-[22px] font-bold text-slate-900 tracking-tight">Payment Event Simulator</h3>
+            <Zap className="w-6 h-6 text-purple-600 dark:text-brand-ai" strokeWidth={2.5} />
+            <h3 className="text-[22px] font-bold text-slate-900 dark:text-brand-text-primary tracking-tight">Payment Event Simulator</h3>
           </div>
           <span className={`text-[11px] font-bold px-3 py-1.5 rounded uppercase tracking-widest ${
             isMockMode
-              ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
-              : 'text-slate-600 bg-slate-50 border border-slate-200'
+              ? 'text-emerald-700 dark:text-brand-success bg-emerald-50 dark:bg-brand-success/10 border border-emerald-200 dark:border-brand-success/30'
+              : 'text-slate-600 dark:text-brand-text-secondary bg-slate-50 dark:bg-brand-card-dark border border-slate-200 dark:border-brand-border-dark'
           }`}>
             {isMockMode ? 'Mock Mode' : 'Production Mode'}
           </span>
         </div>
 
-        <div className="bg-sky-50 border border-sky-200 text-sky-900 p-5 rounded-xl text-[13px] font-medium shadow-sm">
-          Demo event generator — creates a FLOWMINT sandbox event. Real recovery execution uses Razorpay Test Mode.
+        <div className="bg-sky-50 dark:bg-brand-ai/10 border border-sky-200 dark:border-brand-ai/20 text-sky-900 dark:text-brand-ai p-5 rounded-xl text-[13px] font-medium shadow-sm transition-colors duration-200">
+          Demo event generator — creates a VORTEX sandbox event. Real recovery execution uses Razorpay Test Mode.
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pt-6 border-t border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pt-6 border-t border-slate-100 dark:border-brand-border-dark">
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Event Type</label>
+            <label className="text-[11px] font-bold text-slate-500 dark:text-brand-text-muted uppercase tracking-wider">Event Type</label>
             <select
               value={eventType}
               onChange={(e) => setEventType(e.target.value as 'payment.failed' | 'payment.captured')}
               disabled={simulating}
-              className="w-full bg-slate-50 text-[15px] font-medium text-slate-900 rounded-lg border border-slate-200 p-3 outline-none focus:border-purple-500 focus:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:bg-slate-50 shadow-sm"
+              className="w-full bg-slate-50 dark:bg-brand-card-dark text-[15px] font-medium text-slate-900 dark:text-brand-text-primary rounded-lg border border-slate-200 dark:border-brand-border-dark p-3 outline-none focus:border-purple-500 dark:focus:border-brand-ai/50 focus:bg-white dark:focus:bg-brand-surface-dark transition-all cursor-pointer disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-brand-card-dark shadow-sm"
             >
               <option value="payment.failed">Payment Failed</option>
               <option value="payment.captured">Payment Captured</option>
@@ -126,56 +126,56 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Amount (INR)</label>
+            <label className="text-[11px] font-bold text-slate-500 dark:text-brand-text-muted uppercase tracking-wider">Amount (INR)</label>
             <input
               type="number"
               min="1"
               value={amount}
               onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
               disabled={simulating}
-              className="w-full bg-slate-50 text-[15px] text-slate-900 rounded-lg border border-slate-200 p-3 outline-none focus:border-purple-500 focus:bg-white transition-all tabular-nums disabled:opacity-50 disabled:bg-slate-50 shadow-sm"
+              className="w-full bg-slate-50 dark:bg-brand-card-dark text-[15px] text-slate-900 dark:text-brand-text-primary rounded-lg border border-slate-200 dark:border-brand-border-dark p-3 outline-none focus:border-purple-500 dark:focus:border-brand-ai/50 focus:bg-white dark:focus:bg-brand-surface-dark transition-all tabular-nums disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-brand-card-dark shadow-sm"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Customer Email</label>
+            <label className="text-[11px] font-bold text-slate-500 dark:text-brand-text-muted uppercase tracking-wider">Customer Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={simulating}
-              className="w-full bg-slate-50 text-[15px] text-slate-900 rounded-lg border border-slate-200 p-3 outline-none focus:border-purple-500 focus:bg-white transition-all disabled:opacity-50 disabled:bg-slate-50 shadow-sm"
+              className="w-full bg-slate-50 dark:bg-brand-card-dark text-[15px] text-slate-900 dark:text-brand-text-primary rounded-lg border border-slate-200 dark:border-brand-border-dark p-3 outline-none focus:border-purple-500 dark:focus:border-brand-ai/50 focus:bg-white dark:focus:bg-brand-surface-dark transition-all disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-brand-card-dark shadow-sm"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Customer Phone</label>
+            <label className="text-[11px] font-bold text-slate-500 dark:text-brand-text-muted uppercase tracking-wider">Customer Phone</label>
             <input
               type="text"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
               disabled={simulating}
-              className="w-full bg-slate-50 text-[15px] text-slate-900 rounded-lg border border-slate-200 p-3 outline-none focus:border-purple-500 focus:bg-white transition-all tabular-nums disabled:opacity-50 disabled:bg-slate-50 shadow-sm"
+              className="w-full bg-slate-50 dark:bg-brand-card-dark text-[15px] text-slate-900 dark:text-brand-text-primary rounded-lg border border-slate-200 dark:border-brand-border-dark p-3 outline-none focus:border-purple-500 dark:focus:border-brand-ai/50 focus:bg-white dark:focus:bg-brand-surface-dark transition-all tabular-nums disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-brand-card-dark shadow-sm"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Payment ID</label>
+            <label className="text-[11px] font-bold text-slate-500 dark:text-brand-text-muted uppercase tracking-wider">Payment ID</label>
             <input
               type="text"
               value={paymentId}
               readOnly
-              className="w-full bg-slate-100 text-[15px] font-bold text-slate-500 rounded-lg border border-slate-200 p-3 tabular-nums shadow-sm"
+              className="w-full bg-slate-100 dark:bg-[#0f1117] text-[15px] font-bold text-slate-500 dark:text-brand-text-muted rounded-lg border border-slate-200 dark:border-brand-border-dark p-3 tabular-nums shadow-sm"
             />
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-100">
+        <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-100 dark:border-brand-border-dark">
           <button
             type="button"
             onClick={() => handleSimulate('payment.failed')}
             disabled={simulating}
-            className="inline-flex items-center gap-3 px-6 py-3.5 text-[13px] uppercase tracking-wider font-bold rounded-lg bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 hover:border-rose-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-3 px-6 py-3.5 text-[13px] uppercase tracking-wider font-bold rounded-lg bg-white dark:bg-brand-surface-dark border border-rose-200 dark:border-brand-danger/30 text-rose-700 dark:text-brand-danger hover:bg-rose-50 dark:hover:bg-brand-danger/20 hover:border-rose-300 dark:hover:border-brand-danger/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             {simulating && eventType === 'payment.failed' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -186,7 +186,7 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
             type="button"
             onClick={() => handleSimulate('payment.captured')}
             disabled={simulating}
-            className="inline-flex items-center gap-3 px-6 py-3.5 text-[13px] uppercase tracking-wider font-bold rounded-lg bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-3 px-6 py-3.5 text-[13px] uppercase tracking-wider font-bold rounded-lg bg-white dark:bg-brand-surface-dark border border-emerald-200 dark:border-brand-success/30 text-emerald-700 dark:text-brand-success hover:bg-emerald-50 dark:hover:bg-brand-success/20 hover:border-emerald-300 dark:hover:border-brand-success/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             {simulating && eventType === 'payment.captured' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -202,35 +202,35 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
         )}
 
         {simulateResult && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 space-y-5 shadow-sm">
-            <div className="flex items-center gap-3 text-emerald-700">
+          <div className="bg-emerald-50 dark:bg-brand-success/10 border border-emerald-200 dark:border-brand-success/30 rounded-xl p-6 space-y-5 shadow-sm transition-colors duration-200">
+            <div className="flex items-center gap-3 text-emerald-700 dark:text-brand-success">
               <CheckCircle2 className="w-6 h-6" strokeWidth={2.5} />
               <span className="text-[15px] font-bold tracking-tight">Webhook Accepted</span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 border-t border-emerald-200/50 pt-5">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 border-t border-emerald-200/50 dark:border-brand-success/30 pt-5">
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-emerald-800 uppercase font-bold tracking-wider">Event Type</span>
-                <span className="text-emerald-900 tabular-nums font-bold text-[13px]">{simulateResult.event}</span>
+                <span className="text-[11px] text-emerald-800 dark:text-brand-success uppercase font-bold tracking-wider">Event Type</span>
+                <span className="text-emerald-900 dark:text-brand-text-primary tabular-nums font-bold text-[13px]">{simulateResult.event}</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-emerald-800 uppercase font-bold tracking-wider">Payment ID</span>
-                <span className="text-emerald-900 tabular-nums font-bold text-[13px]">{simulateResult.payment_id}</span>
+                <span className="text-[11px] text-emerald-800 dark:text-brand-success uppercase font-bold tracking-wider">Payment ID</span>
+                <span className="text-emerald-900 dark:text-brand-text-primary tabular-nums font-bold text-[13px]">{simulateResult.payment_id}</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-emerald-800 uppercase font-bold tracking-wider">Amount</span>
-                <span className="text-emerald-900 tabular-nums font-bold text-[13px]">₹{formatCurrency(simulateResult.amount)}</span>
+                <span className="text-[11px] text-emerald-800 dark:text-brand-success uppercase font-bold tracking-wider">Amount</span>
+                <span className="text-emerald-900 dark:text-brand-text-primary tabular-nums font-bold text-[13px]">₹{formatCurrency(simulateResult.amount)}</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-emerald-800 uppercase font-bold tracking-wider">Result Status</span>
+                <span className="text-[11px] text-emerald-800 dark:text-brand-success uppercase font-bold tracking-wider">Result Status</span>
                 <span className={`text-[13px] font-bold uppercase tracking-widest ${
-                  simulateResult.result_status === 'processed' ? 'text-emerald-700' : 'text-amber-700'
+                  simulateResult.result_status === 'processed' ? 'text-emerald-700 dark:text-brand-success' : 'text-amber-700 dark:text-brand-warning'
                 }`}>
                   {simulateResult.result_status}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-emerald-800 uppercase font-bold tracking-wider">Case ID</span>
-                <span className="text-emerald-900 tabular-nums font-bold text-[13px]">{simulateResult.case_id || 'N/A'}</span>
+                <span className="text-[11px] text-emerald-800 dark:text-brand-success uppercase font-bold tracking-wider">Case ID</span>
+                <span className="text-emerald-900 dark:text-brand-text-primary tabular-nums font-bold text-[13px]">{simulateResult.case_id || 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -239,19 +239,19 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Webhook Events Table */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200">
-          <div className="px-8 py-6 border-b border-slate-100 flex items-center gap-3 bg-white rounded-t-xl">
-            <Activity className="w-5 h-5 text-purple-600" strokeWidth={2.5} />
-            <h3 className="text-[17px] font-bold text-slate-900 tracking-tight">Webhook Operations Log</h3>
+        <div className="lg:col-span-2 bg-white dark:bg-brand-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-brand-border-dark transition-colors duration-200">
+          <div className="px-8 py-6 border-b border-slate-100 dark:border-brand-border-dark flex items-center gap-3 bg-white dark:bg-brand-surface-dark rounded-t-xl transition-colors duration-200">
+            <Activity className="w-5 h-5 text-purple-600 dark:text-brand-ai" strokeWidth={2.5} />
+            <h3 className="text-[17px] font-bold text-slate-900 dark:text-brand-text-primary tracking-tight">Webhook Operations Log</h3>
           </div>
 
           {webhookEvents.length === 0 ? (
-            <div className="py-24 text-center text-slate-400 space-y-4 flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 shadow-sm">
-                <AlertCircle className="w-8 h-8 text-slate-400" strokeWidth={2} />
+            <div className="py-24 text-center text-slate-400 dark:text-brand-text-muted space-y-4 flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-brand-card-dark flex items-center justify-center border border-slate-200 dark:border-brand-border-dark shadow-sm">
+                <AlertCircle className="w-8 h-8 text-slate-400 dark:text-brand-text-muted" strokeWidth={2} />
               </div>
               <div className="flex flex-col gap-2">
-                <h4 className="text-[17px] font-bold text-slate-600 tracking-tight">No Webhook Events Registered</h4>
+                <h4 className="text-[17px] font-bold text-slate-600 dark:text-brand-text-secondary tracking-tight">No Webhook Events Registered</h4>
                 <p className="text-[13px] font-medium max-w-sm mx-auto leading-relaxed">Use the Payment Event Simulator above to trigger signed webhook events in mock mode.</p>
               </div>
             </div>
@@ -259,14 +259,14 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-400">
+                  <tr className="border-b border-slate-200 dark:border-brand-border-dark text-slate-400 dark:text-brand-text-muted">
                     <th className="py-4 pl-8 text-[11px] font-bold uppercase tracking-wider">Received Time</th>
                     <th className="py-4 text-[11px] font-bold uppercase tracking-wider">Webhook Event Type</th>
                     <th className="py-4 text-[11px] font-bold uppercase tracking-wider">Payment / Txn ID</th>
                     <th className="py-4 pr-8 text-right text-[11px] font-bold uppercase tracking-wider">Ingest Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-[13px]">
+                <tbody className="divide-y divide-slate-100 dark:divide-brand-border-dark text-[13px]">
                   {webhookEvents.map((ev) => {
                     const payloadId = ev.metadata?.razorpay_payment_id || ev.metadata?.transaction_id || ev.id.substring(0, 18)
                     const isSelected = selectedEvent?.id === ev.id
@@ -274,16 +274,16 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
                       <tr
                         key={ev.id}
                         onClick={() => setSelectedEvent(ev)}
-                        className={`hover:bg-slate-50/50 cursor-pointer transition-colors ${isSelected ? 'bg-purple-50/30' : ''
+                        className={`hover:bg-slate-50/50 dark:hover:bg-brand-card-dark cursor-pointer transition-colors ${isSelected ? 'bg-purple-50/30 dark:bg-brand-ai/10' : ''
                           }`}
                       >
-                        <td className="py-5 pl-8 tabular-nums font-bold text-slate-500">
+                        <td className="py-5 pl-8 tabular-nums font-bold text-slate-500 dark:text-brand-text-muted">
                           {new Date(ev.occurred_at).toLocaleTimeString()}
                         </td>
-                        <td className="py-5 font-bold text-slate-900 uppercase tracking-tight">
+                        <td className="py-5 font-bold text-slate-900 dark:text-brand-text-primary uppercase tracking-tight">
                           {ev.event_type.replace(/_/g, ' ')}
                         </td>
-                        <td className="py-5 tabular-nums font-medium text-slate-600">
+                        <td className="py-5 tabular-nums font-medium text-slate-600 dark:text-brand-text-secondary">
                           {payloadId}
                         </td>
                         <td className="py-5 pr-8 text-right">
@@ -302,16 +302,16 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
         </div>
 
         {/* Raw Payload Inspector Panel */}
-        <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="bg-white dark:bg-brand-surface-dark rounded-xl p-8 border border-slate-200 dark:border-brand-border-dark shadow-sm space-y-6 transition-colors duration-200">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-brand-border-dark pb-4">
             <div className="flex items-center gap-3">
-              <Code className="w-5 h-5 text-purple-600" strokeWidth={2.5} />
-              <h3 className="text-[17px] font-bold text-slate-900 tracking-tight">Payload Inspector</h3>
+              <Code className="w-5 h-5 text-purple-600 dark:text-brand-ai" strokeWidth={2.5} />
+              <h3 className="text-[17px] font-bold text-slate-900 dark:text-brand-text-primary tracking-tight">Payload Inspector</h3>
             </div>
             {selectedEvent && (
               <button
                 onClick={() => handleCopyJson(JSON.stringify(selectedEvent, null, 2))}
-                className="text-[11px] font-bold uppercase tracking-wider text-purple-600 hover:text-purple-800 flex items-center gap-2 transition-colors cursor-pointer"
+                className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-brand-ai hover:text-purple-800 dark:hover:text-brand-ai/80 flex items-center gap-2 transition-colors cursor-pointer"
               >
                 <Copy className="w-4 h-4" />
                 {copied ? 'Copied' : 'Copy JSON'}
@@ -323,19 +323,19 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
             <div className="space-y-6">
               <div className="space-y-4">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Event UUID</span>
-                  <span className="tabular-nums text-slate-900 font-bold text-[13px]">{selectedEvent.id}</span>
+                  <span className="text-[11px] text-slate-400 dark:text-brand-text-muted uppercase font-bold tracking-wider">Event UUID</span>
+                  <span className="tabular-nums text-slate-900 dark:text-brand-text-primary font-bold text-[13px]">{selectedEvent.id}</span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Verification Metadata</span>
-                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl tabular-nums text-[13px] text-slate-700 space-y-2 shadow-sm">
+                  <span className="text-[11px] text-slate-400 dark:text-brand-text-muted uppercase font-bold tracking-wider">Verification Metadata</span>
+                  <div className="bg-slate-50 dark:bg-brand-card-dark border border-slate-200 dark:border-brand-border-dark p-4 rounded-xl tabular-nums text-[13px] text-slate-700 dark:text-brand-text-secondary space-y-2 shadow-sm transition-colors duration-200">
                     <div className="flex justify-between items-center">
                       <span className="font-bold">Signature Valid:</span>
-                      <span className="text-emerald-700 font-bold">TRUE</span>
+                      <span className="text-emerald-700 dark:text-brand-success font-bold">TRUE</span>
                     </div>
-                    <div className="flex justify-between items-center border-t border-slate-200 pt-2">
+                    <div className="flex justify-between items-center border-t border-slate-200 dark:border-brand-border-dark pt-2 mt-2">
                       <span className="font-bold">Duplicate Match:</span>
-                      <span className={`font-bold ${selectedEvent.status === 'DUPLICATE' ? 'text-amber-700' : 'text-slate-700'}`}>
+                      <span className={`font-bold ${selectedEvent.status === 'DUPLICATE' ? 'text-amber-700 dark:text-brand-warning' : 'text-slate-700 dark:text-brand-text-secondary'}`}>
                         {selectedEvent.status === 'DUPLICATE' ? 'YES' : 'NO'}
                       </span>
                     </div>
@@ -344,18 +344,18 @@ export default function WebhooksPage({ events, providerInfo, onRefresh }: Webhoo
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Full Event Payload</span>
-                <pre className="bg-slate-50 border border-slate-200 text-[13px] tabular-nums text-slate-800 p-5 rounded-xl overflow-x-auto max-h-80 leading-relaxed shadow-sm max-w-full overflow-x-auto whitespace-pre-wrap break-words text-[11px]">
+                <span className="text-[11px] text-slate-400 dark:text-brand-text-muted uppercase font-bold tracking-wider">Full Event Payload</span>
+                <pre className="bg-slate-50 dark:bg-[#0f1117] border border-slate-200 dark:border-brand-border-dark text-[13px] tabular-nums text-slate-800 dark:text-brand-text-secondary p-5 rounded-xl overflow-x-auto max-h-80 leading-relaxed shadow-sm max-w-full overflow-x-auto whitespace-pre-wrap break-words text-[11px] transition-colors duration-200">
                   {JSON.stringify(selectedEvent, null, 2)}
                 </pre>
               </div>
             </div>
           ) : (
-            <div className="py-24 text-center text-slate-400 flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 shadow-sm">
-                <ShieldCheck className="w-8 h-8 text-slate-400" strokeWidth={2} />
+            <div className="py-24 text-center text-slate-400 dark:text-brand-text-muted flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-brand-card-dark flex items-center justify-center border border-slate-200 dark:border-brand-border-dark shadow-sm">
+                <ShieldCheck className="w-8 h-8 text-slate-400 dark:text-brand-text-muted" strokeWidth={2} />
               </div>
-              <p className="text-[13px] font-medium max-w-[200px] mx-auto text-slate-500 leading-relaxed">Select a webhook row from the left log to inspect its raw payload fields and verification metadata.</p>
+              <p className="text-[13px] font-medium max-w-[200px] mx-auto text-slate-500 dark:text-brand-text-muted leading-relaxed">Select a webhook row from the left log to inspect its raw payload fields and verification metadata.</p>
             </div>
           )}
         </div>
