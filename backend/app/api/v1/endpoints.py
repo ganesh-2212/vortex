@@ -307,11 +307,8 @@ async def propose_recovery_action(
         reason=guardrail_result.reason
     )
 
-@router.post(
-    "/recovery-cases/{case_id}/actions/{action_id}/execute",
-    response_model=ActionExecutionResponse
-)
-async def execute_case_action(
+@router.post("/recovery-cases/{case_id}/actions/{action_id}/execute", response_model=ActionExecutionResponse)
+def execute_case_action(
     case_id: uuid.UUID = Path(...),
     action_id: uuid.UUID = Path(...),
     req_in: ActionExecutionRequest = Body(...)
@@ -433,7 +430,7 @@ class VerifyPaymentRequest(BaseModel):
     razorpay_signature: str
 
 @router.post("/recovery-cases/{case_id}/payment-order")
-async def create_payment_order(case_id: uuid.UUID = Path(...)):
+def create_payment_order(case_id: uuid.UUID = Path(...)):
     """
     Creates a Razorpay Test Mode order.
     """
@@ -519,7 +516,7 @@ async def create_payment_order(case_id: uuid.UUID = Path(...)):
     }
 
 @router.post("/recovery-cases/{case_id}/verify-payment")
-async def verify_payment(
+def verify_payment(
     case_id: uuid.UUID = Path(...),
     req: VerifyPaymentRequest = Body(...)
 ):

@@ -98,13 +98,25 @@ export default function CaseDetailExperience({
     }
   }, [caseStatus, paymentState])
 
-  if (detailLoading || !selectedCaseDetail) {
+  if (detailLoading || (!selectedCaseDetail && !detailError)) {
     return (
       <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-xl p-8 shadow-sm flex items-center justify-center min-h-[400px] transition-colors duration-200">
         <div className="flex flex-col items-center text-slate-500 dark:text-slate-400">
           <Loader2 className="w-8 h-8 animate-spin text-purple-600 dark:text-purple-400 mb-4" />
           <p className="text-[13px] font-bold uppercase tracking-widest">Fetching case operational telemetry logs...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (detailError && !selectedCaseDetail) {
+    return (
+      <div className="bg-white dark:bg-brand-surface-dark border border-slate-200 dark:border-brand-border-dark rounded-xl p-8 shadow-sm flex flex-col items-center justify-center min-h-[400px] transition-colors duration-200">
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-lg text-sm font-medium flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <span>{detailError}</span>
+        </div>
+        <button onClick={onBack} className="mt-6 text-purple-600 hover:text-purple-700 font-bold text-sm">Return to Queues</button>
       </div>
     )
   }
@@ -135,6 +147,42 @@ export default function CaseDetailExperience({
     setPaymentState('processing');
     setPaymentErrorMessage(null);
     try {
+      const isLoaded = await new Promise((resolve) => {
+        if (window.Razorpay) {
+          resolve(true);
+          return;
+        }
+        
+        const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+        if (existingScript) {
+          existingScript.addEventListener('load', () => resolve(!!window.Razorpay));
+          existingScript.addEventListener('error', () => resolve(false));
+          
+          // If document is complete and it was the initial script, it already failed or loaded without Razorpay
+          if (document.readyState === 'complete' && !existingScript.hasAttribute('data-loading')) {
+            resolve(false);
+          }
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.setAttribute('data-loading', 'true');
+        script.onload = () => {
+          script.removeAttribute('data-loading');
+          resolve(!!window.Razorpay);
+        };
+        script.onerror = () => {
+          script.removeAttribute('data-loading');
+          resolve(false);
+        };
+        document.body.appendChild(script);
+      });
+
+      if (!isLoaded || !window.Razorpay) {
+        throw new Error("Razorpay Checkout failed to load. Please check your connection and try again.");
+      }
+
       const order = await createPaymentOrder(caseId);
       const options = {
         key: order.key_id,
