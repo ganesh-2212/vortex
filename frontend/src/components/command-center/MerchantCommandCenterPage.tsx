@@ -378,7 +378,7 @@ export function MerchantCommandCenterPage({
             <div className="mt-auto pt-2">
               <button 
                 onClick={() => onNavigate('explanation')}
-                className="w-full py-3.5 bg-slate-900 dark:bg-brand-card-dark hover:bg-slate-800 dark:hover:bg-brand-border-dark text-white dark:text-brand-text-primary border border-transparent dark:border-brand-border-dark rounded-lg text-[13px] font-bold uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 dark:bg-brand-ai dark:hover:bg-brand-ai/80 text-white rounded-lg text-[13px] font-bold uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2"
               >
                 <Cpu className="w-4 h-4" />
                 View Decision Intelligence
