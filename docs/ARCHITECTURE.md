@@ -107,7 +107,9 @@ The external payment event is treated as the source of truth for the recovery ou
 
 The core recovery lifecycle is:
 
+```mermaid
 flowchart TD
+
     A["Failed Payment / Revenue Event"]
     B["Risk Assessment"]
     C["AI Diagnosis"]
@@ -146,6 +148,7 @@ flowchart TD
     C -.->|"AI advises"| D
     E -.->|"Deterministic control"| H
     J -.->|"Verified payment evidence"| M
+```
 
 ## Step-by-Step Flow
 
