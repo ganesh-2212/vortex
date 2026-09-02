@@ -1,4 +1,5 @@
 import uuid
+import json
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -6,21 +7,11 @@ from app.store import store
 from app.models.diagnosis import DiagnosisResult
 from app.services.guardrails import evaluate_guardrails
 from app.models.domain import RecoveryActionType
+from app.config import settings
+from app.services.audit import log_audit_event
 
-def generate_diagnosis(case_id: uuid.UUID) -> Optional[DiagnosisResult]:
-    """
-    Generates an AI Root-Cause Diagnosis using deterministic rules based on event metadata.
-    This is a completely read-only operation.
-    """
-    case = store.recovery_cases.get(case_id)
-    if not case:
-        return None
-        
-    event = store.revenue_events.get(case.revenue_event_id)
-    if not event:
-        return None
-
-    # Collect Evidence
+def _deterministic_fallback(case, event) -> DiagnosisResult:
+    # Existing deterministic logic
     evidence = []
     error_reason = event.metadata.get("error_reason") or event.metadata.get("razorpay_error_reason", "unknown")
     method = event.metadata.get("method", "unknown")
@@ -29,7 +20,6 @@ def generate_diagnosis(case_id: uuid.UUID) -> Optional[DiagnosisResult]:
     evidence.append(f"payment method = {method}")
     evidence.append(f"currency = {event.currency}")
 
-    # Default to Unknown
     category = "UNKNOWN_PAYMENT_FAILURE"
     root_cause = "The payment failed due to an unidentified or missing error reason from the payment gateway."
     risk_explanation = "The cause of failure cannot be definitively identified from the available payment metadata."
@@ -37,7 +27,6 @@ def generate_diagnosis(case_id: uuid.UUID) -> Optional[DiagnosisResult]:
     reason = "Manual review is required because the automated system cannot safely determine a retry path."
     confidence = 60
     
-    # Deterministic mapping
     if error_reason == "international_transaction_not_allowed":
         category = "INTERNATIONAL_CARD_RESTRICTION"
         root_cause = "International card transaction rejected because the merchant accepts domestic Indian card payments only."
@@ -78,7 +67,6 @@ def generate_diagnosis(case_id: uuid.UUID) -> Optional[DiagnosisResult]:
         reason = "Using a different card, UPI, or netbanking bypasses the issuing bank's block."
         confidence = 85
         
-    # Check Guardrails
     guardrail_status = "SAFE TO PROCEED"
     if action == "RETRY_PAYMENT":
         existing_actions = [a for a in store.recovery_actions.values() if a.recovery_case_id == case.id]
@@ -109,3 +97,125 @@ def generate_diagnosis(case_id: uuid.UUID) -> Optional[DiagnosisResult]:
         guardrail_status=guardrail_status,
         analysis_source="Deterministic analysis"
     )
+
+def generate_diagnosis(case_id: uuid.UUID) -> Optional[DiagnosisResult]:
+    """
+    Generates an AI Root-Cause Diagnosis using Google Gemini based on event metadata,
+    falling back to deterministic rules if AI is unavailable or fails.
+    """
+    case = store.recovery_cases.get(case_id)
+    if not case:
+        return None
+        
+    event = store.revenue_events.get(case.revenue_event_id)
+    if not event:
+        return None
+        
+    # Check if a cached diagnosis already exists
+    if case.ai_diagnosis:
+        try:
+            return DiagnosisResult(**case.ai_diagnosis)
+        except Exception as e:
+            # If the cached format is invalid, we will regenerate
+            print(f"Failed to parse cached diagnosis: {e}")
+        
+    # Check if Gemini API Key is available
+    if not settings.GEMINI_API_KEY:
+        return _deterministic_fallback(case, event)
+        
+    try:
+        from google import genai
+        from google.genai import types
+        
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        
+        prompt = f'''
+You are an expert AI payment recovery diagnostician. Analyze the following payment failure context and provide a structured diagnosis.
+
+Context:
+- Payment Amount: {event.amount} {event.currency}
+- Payment Method: {event.metadata.get("method", "unknown")}
+- Error Reason: {event.metadata.get("error_reason") or event.metadata.get("razorpay_error_reason", "unknown")}
+- Previous failures for this case: {len([a for a in store.recovery_actions.values() if a.recovery_case_id == case.id and a.status.value in ("FAILED", "EXECUTED")])}
+- Risk Level assessed: {case.risk_level.value}
+
+Return a valid JSON object matching this schema exactly:
+{{
+  "root_cause_category": "TRANSIENT_PAYMENT_FAILURE" | "CUSTOMER_PAYMENT_METHOD_ISSUE" | "INSUFFICIENT_FUNDS" | "GATEWAY_FAILURE" | "AUTHENTICATION_FAILURE" | "EXPIRED_PAYMENT_METHOD" | "REPEATED_FAILURE" | "HIGH_VALUE_RISK" | "UNKNOWN",
+  "root_cause": "Detailed human-readable explanation of the root cause.",
+  "evidence": ["list", "of", "evidence", "points"],
+  "risk_explanation": "Explanation of the risk of recovery.",
+  "recommended_action": "RETRY_PAYMENT" | "SEND_PAYMENT_LINK" | "SEND_REMINDER" | "OFFER_ALTERNATIVE_METHOD" | "ESCALATE_TO_HUMAN" | "STOP_RECOVERY",
+  "action_reason": "Reason for the recommended action.",
+  "confidence": integer between 0 and 100
+}}
+'''
+        
+        response = client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.2,
+            )
+        )
+        
+        result_dict = json.loads(response.text)
+        
+        guardrail_status = "SAFE TO PROCEED"
+        action = result_dict.get("recommended_action", "ESCALATE_TO_HUMAN")
+        
+        if action == "RETRY_PAYMENT":
+            existing_actions = [a for a in store.recovery_actions.values() if a.recovery_case_id == case.id]
+            completed_retries = [
+                a for a in existing_actions
+                if a.action_type == RecoveryActionType.RETRY_PAYMENT and a.status.value in ("EXECUTED", "FAILED")
+            ]
+            attempt_number = len(completed_retries) + 1
+            
+            gr = evaluate_guardrails(
+                case=case,
+                action_type=RecoveryActionType.RETRY_PAYMENT,
+                attempt_number=attempt_number,
+                existing_actions=existing_actions,
+                current_time=datetime.now(timezone.utc)
+            )
+            if not gr.is_allowed:
+                guardrail_status = f"BLOCKED BY GUARDRAIL: {gr.reason}"
+                
+        diagnosis = DiagnosisResult(
+            root_cause_category=result_dict.get("root_cause_category", "UNKNOWN"),
+            root_cause=result_dict.get("root_cause", "Unknown cause"),
+            evidence=result_dict.get("evidence", []),
+            risk_explanation=result_dict.get("risk_explanation", ""),
+            recommended_action=action,
+            action_reason=result_dict.get("action_reason", ""),
+            confidence=int(result_dict.get("confidence", 50)),
+            guardrail_status=guardrail_status,
+            analysis_source="gemini"
+        )
+        
+        # Log Audit Event
+        log_audit_event(
+            actor_type="SYSTEM",
+            action="AI_DIAGNOSIS_GENERATED",
+            recovery_case_id=case.id,
+            details={
+                "diagnosis": diagnosis.root_cause_category,
+                "confidence": diagnosis.confidence,
+                "suggested_strategy": diagnosis.recommended_action,
+                "analysis_source": "gemini"
+            }
+        )
+        
+        # Persist to store
+        case.ai_diagnosis = diagnosis.model_dump()
+        
+        return diagnosis
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Exception in generate_diagnosis: {e}")
+        # Fall back to deterministic analysis
+        return _deterministic_fallback(case, event)

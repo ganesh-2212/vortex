@@ -96,6 +96,7 @@ class RecoveryCase(BaseModel):
     provider_transaction_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    ai_diagnosis: Optional[Dict[str, Any]] = None
 
 class RecoveryAction(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -551,6 +552,8 @@ class DecisionExplanation(BaseModel):
     expected_vs_actual: ExpectedVsActualOutcome
     timeline: List[DecisionTimelineEvent]
     evidence_references: List[ExplanationEvidence]
+    diagnosis: Optional[Dict[str, Any]] = None
+    analysis_source: Optional[str] = None
 
 # --- F16 Merchant Command Center Models ---
 

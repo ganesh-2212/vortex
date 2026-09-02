@@ -22,6 +22,7 @@ from app.services.strategy_optimizer import optimize_strategy
 from app.services.recovery_orchestrator import evaluate_orchestration
 from app.services.guardrails import evaluate_guardrails
 from app.services.strategy_performance import get_strategy_recommendation
+from app.services.ai_diagnosis import generate_diagnosis
 
 def build_decision_explanation(case_id: uuid.UUID, store: MemoryStore, current_time: datetime) -> DecisionExplanation:
     if current_time.tzinfo is None:
@@ -222,6 +223,17 @@ def build_decision_explanation(case_id: uuid.UUID, store: MemoryStore, current_t
         )
     ]
 
+    # 9. AI Diagnosis (F19)
+    diagnosis_obj = None
+    analysis_source = None
+    try:
+        diag = generate_diagnosis(case_id)
+        if diag:
+            diagnosis_obj = diag.model_dump()
+            analysis_source = diag.analysis_source
+    except Exception as e:
+        print(f"Failed to generate diagnosis: {e}")
+
     return DecisionExplanation(
         case_id=case_id,
         generated_at=current_time,
@@ -240,5 +252,7 @@ def build_decision_explanation(case_id: uuid.UUID, store: MemoryStore, current_t
         historical_evidence=hist_ev,
         expected_vs_actual=expected_vs_actual,
         timeline=timeline,
-        evidence_references=refs
+        evidence_references=refs,
+        diagnosis=diagnosis_obj,
+        analysis_source=analysis_source
     )

@@ -91,11 +91,81 @@ export default function DecisionExplanationPage({ cases }: DecisionExplanationPa
           {/* Main Explanations (2/3 width) */}
           <div className="space-y-8">
             
-            <div className="bg-white dark:bg-brand-surface-dark rounded-xl p-8 border border-slate-200 dark:border-brand-border-dark shadow-sm space-y-8 transition-colors duration-200">
-              <h3 className="text-[17px] font-bold text-slate-900 dark:text-white tracking-tight">Why VORTEX Made This Decision</h3>
+            <div className="space-y-8">
               
-              {/* Risk & Strategy */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100 dark:border-brand-border-dark">
+              {/* AI Diagnosis (F19) */}
+              <div className="bg-white dark:bg-brand-surface-dark rounded-xl p-8 border border-purple-200 dark:border-brand-ai/30 shadow-[0_4px_20px_-4px_rgba(147,51,234,0.1)] dark:shadow-[0_4px_20px_-4px_rgba(147,51,234,0.15)] relative overflow-hidden transition-colors duration-200">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-transparent dark:from-brand-ai/5 dark:to-transparent pointer-events-none" />
+                <div className="relative z-10 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[17px] font-bold text-slate-900 dark:text-white flex items-center gap-2 tracking-tight">
+                      <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)] animate-pulse" />
+                      AI DIAGNOSIS
+                    </h3>
+                    {explanation.analysis_source === 'gemini' ? (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-700/50">Powered by Gemini</span>
+                    ) : (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Deterministic Fallback</span>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <div className="space-y-1">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider">Root Cause</span>
+                      <span className="text-[15px] font-bold text-slate-900 dark:text-white block tracking-tight">{explanation.diagnosis?.root_cause_category || explanation.risk_reasons?.[0] || 'UNKNOWN'}</span>
+                      <p className="text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed mt-1">
+                        {explanation.diagnosis?.root_cause || 'Analyzed via standard deterministic rules.'}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider">Confidence</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden flex-1">
+                          <div 
+                            className={`h-full rounded-full ${explanation.diagnosis?.confidence >= 80 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : explanation.diagnosis?.confidence >= 60 ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`} 
+                            style={{ width: `${explanation.diagnosis?.confidence || 100}%` }}
+                          />
+                        </div>
+                        <span className="text-[15px] tabular-nums font-bold text-slate-900 dark:text-white shrink-0">{explanation.diagnosis?.confidence || 100}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 pt-4 border-t border-purple-100 dark:border-purple-900/30">
+                     <span className="text-[11px] text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider">Evidence</span>
+                     {explanation.diagnosis?.evidence && explanation.diagnosis.evidence.length > 0 ? (
+                       <ul className="space-y-1.5">
+                         {explanation.diagnosis.evidence.map((ev: string, idx: number) => (
+                           <li key={idx} className="text-[13px] text-slate-600 dark:text-slate-300 font-medium flex gap-2">
+                             <span className="text-purple-500">•</span>
+                             {ev}
+                           </li>
+                         ))}
+                       </ul>
+                     ) : (
+                       <p className="text-[13px] text-slate-500 italic">No structured evidence provided.</p>
+                     )}
+                  </div>
+                  
+                  <div className="bg-purple-50 dark:bg-brand-accent-dark/10 border border-purple-200 dark:border-purple-500/20 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] text-purple-700 dark:text-purple-400 block uppercase font-bold tracking-wider mb-0.5">Suggested Strategy</span>
+                      <span className="text-[15px] font-bold text-purple-900 dark:text-purple-300 block tracking-tight">{(explanation.diagnosis?.recommended_action || explanation.strategy_selected).replace(/_/g, ' ')}</span>
+                    </div>
+                    <span className="text-[11px] font-bold text-purple-600/60 dark:text-purple-400/60 uppercase tracking-widest text-right">AI<br/>Output</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Policy & Safety */}
+              <div className="bg-white dark:bg-brand-surface-dark rounded-xl p-8 border border-slate-200 dark:border-brand-border-dark shadow-sm space-y-8 transition-colors duration-200">
+                <h3 className="text-[17px] font-bold text-slate-900 dark:text-white flex items-center gap-2 tracking-tight">
+                  <span className="w-1.5 h-4 rounded-full bg-slate-300 dark:bg-slate-600" />
+                  POLICY & SAFETY
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100 dark:border-brand-border-dark">
                 <div className="bg-slate-50 dark:bg-brand-card-dark border border-slate-200 dark:border-brand-border-dark p-6 rounded-xl shadow-sm flex flex-col hover:border-slate-300 dark:hover:border-slate-500 transition-colors duration-200">
                   <span className="text-[11px] text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider mb-2">Risk Assessed</span>
                   <span className="text-[17px] font-bold text-slate-900 dark:text-white block uppercase tracking-tight">{explanation.risk_level}</span>
@@ -106,6 +176,7 @@ export default function DecisionExplanationPage({ cases }: DecisionExplanationPa
                   <span className="text-[17px] font-bold text-purple-900 dark:text-purple-300 block uppercase tracking-tight">{explanation.strategy_selected.replace(/_/g, ' ')}</span>
                   <p className="text-[13px] text-purple-800 dark:text-purple-200 mt-3 leading-relaxed font-medium">{explanation.strategy_reason}</p>
                 </div>
+              </div>
               </div>
 
               {/* Orchestration */}
