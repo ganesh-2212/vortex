@@ -26,9 +26,10 @@ INTERVENTION_COSTS = {
     "NO_INTERVENTION": Decimal("0.00")
 }
 
-def _calculate_base_stats(store: MemoryStore) -> Tuple[Dict[str, StrategyOutcomeStatistics], int, Decimal, Decimal]:
+def _calculate_base_stats(store: MemoryStore, event_filter: Optional[str] = None) -> Tuple[Dict[str, StrategyOutcomeStatistics], int, Decimal, Decimal]:
     """
     Computes base historical statistics directly from store actions and cases.
+    Optionally filters by the originating revenue event type.
     """
     stats_map = {
         strat: StrategyOutcomeStatistics(
@@ -65,6 +66,11 @@ def _calculate_base_stats(store: MemoryStore) -> Tuple[Dict[str, StrategyOutcome
         if not case:
             continue
             
+        if event_filter:
+            evt = store.revenue_events.get(case.revenue_event_id)
+            if not evt or evt.event_type.value != event_filter:
+                continue
+                
         analyzed_cases.add(case_id)
         is_recovered = case.status == RecoveryCaseStatus.RECOVERED
         
@@ -180,23 +186,23 @@ def get_strategy_performance_by_event(store: MemoryStore) -> List[EventStrategyP
         if evt:
             events_found.add(evt.event_type.value)
             
-    # For now, return a generic list since filtering per event type logic is identical but segmented
-    # We will just generate an empty/baseline breakdown per event type found
+    # Filter per event type logic
     result = []
-    stats_map, _, _, _ = _calculate_base_stats(store)
-    stats_list = list(stats_map.values())
     
-    best = "NO_INTERVENTION"
-    valid = [s for s in stats_list if s.total_attempts >= 3]
-    if valid:
-        best = max(valid, key=lambda x: x.success_rate).strategy_type
-        rate = max(valid, key=lambda x: x.success_rate).success_rate
-        net = max(valid, key=lambda x: x.success_rate).net_recovery
-    else:
-        rate = 0.0
-        net = Decimal("0.00")
-        
     for evt in events_found:
+        stats_map, _, _, _ = _calculate_base_stats(store, event_filter=evt)
+        stats_list = list(stats_map.values())
+        
+        valid = [s for s in stats_list if s.total_attempts >= 3]
+        if valid:
+            best = max(valid, key=lambda x: x.success_rate).strategy_type
+            rate = max(valid, key=lambda x: x.success_rate).success_rate
+            net = max(valid, key=lambda x: x.success_rate).net_recovery
+        else:
+            best = "NO_INTERVENTION"
+            rate = 0.0
+            net = Decimal("0.00")
+            
         result.append(EventStrategyPerformance(
             event_type=evt,
             total_cases=len([c for c in store.recovery_cases.values() if store.revenue_events.get(c.revenue_event_id) and store.revenue_events[c.revenue_event_id].event_type.value == evt]),
