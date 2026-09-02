@@ -154,7 +154,7 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
                 <button
                   onClick={handleRunSimulation}
                   disabled={simulating || selectedCaseIds.length === 0}
-                  className="w-full bg-slate-900 dark:bg-brand-ai hover:bg-black dark:hover:bg-brand-ai/80 disabled:bg-slate-400 dark:disabled:bg-slate-700 text-white text-[13px] font-bold uppercase tracking-wider px-6 py-3.5 rounded-lg transition-all flex items-center justify-center gap-3 shadow-sm"
+                  className="w-full bg-purple-600 dark:bg-brand-ai hover:bg-purple-700 dark:hover:bg-brand-ai/80 disabled:bg-purple-400 dark:disabled:bg-slate-700 text-white text-[13px] font-bold uppercase tracking-wider px-6 py-3.5 rounded-lg transition-all flex items-center justify-center gap-3 shadow-sm"
                 >
                   <Play className="w-4 h-4 fill-current" />
                   {simulating ? 'Simulating Projections...' : 'Execute Recovery Simulation'}
