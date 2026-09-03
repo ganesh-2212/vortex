@@ -1,115 +1,219 @@
 # VORTEX
 
-**AI-Powered Revenue Recovery & Decision Intelligence**
+## AI-Powered Revenue Recovery & Decision Intelligence
 
-VORTEX is an AI-assisted revenue recovery control plane designed to detect payment failures, diagnose their likely causes, determine bounded recovery actions, enforce deterministic safety policies, execute recovery through Razorpay Test Mode, verify outcomes through payment events, and continuously learn from those outcomes.
+VORTEX is an AI-assisted revenue recovery control plane designed for the Razorpay AI Buildathon (Track 03). It addresses the critical challenge of revenue leakage caused by failed payments, abandoned checkouts, and overdue invoices.
 
-## Overview
-Instead of blindly retrying failed payments, VORTEX treats recovery as a governed decision lifecycle. It proves that AI is incredibly powerful at unstructured diagnosis, while deterministic code remains strictly necessary for safe financial execution.
+Failed payments are a major source of lost revenue, but blindly retrying payments can be ineffective, frustrate customers, and violate payment gateway safety limits. VORTEX solves this by introducing context-aware, bounded intervention. 
+
+VORTEX combines deterministic risk assessment, Google Gemini AI diagnosis, historical strategy intelligence, and strict deterministic guardrails to securely execute Razorpay Test Mode recovery actions, verifying outcomes via webhooks to measure recovered revenue mathematically.
+
+---
+
+> **AI recommends. Deterministic policy decides. Verified payment events determine the outcome.**
+
+- **AI Diagnosis**: Gemini provides root cause analysis and contextual recommendations.
+- **Deterministic Policy**: Strict backend logic enforces financial rules, limits, and executes bounded actions.
+- **Verified Outcomes**: External Razorpay webhooks establish cryptographic evidence of successful recovery.
+
+---
 
 ## The Problem
-Payment failures create revenue leakage. However, blindly retrying payments alienates customers, violates gateway spam rules, and wastes resources. Merchants need an intelligent, context-aware recovery mechanism that maximizes revenue without jeopardizing the customer relationship or violating safety constraints.
+
+Merchants face significant revenue leakage from failed payments. Attempting to recover this revenue introduces operational and financial risks:
+- Repeated blind retries can trigger spam limits or cardholder friction.
+- Recovery interventions lack context (e.g., retrying an "Insufficient Funds" error immediately vs. waiting).
+- Measuring the exact ROI of recovery efforts is difficult without verified external payment evidence.
+- Fully autonomous AI agents executing financial payments represent an unacceptable regulatory and safety risk.
+
+---
 
 ## What VORTEX Does
-The VORTEX recovery lifecycle follows a strict sequence:
 
-**Detect** (revenue event) → **Diagnose** (AI) → **Decide** (optimizer) → **Guard** (policy limits) → **Recover** (checkout) → **Verify** (webhook) → **Measure** (revenue math) → **Learn** (strategy history)
+VORTEX operates on a strictly governed lifecycle:
 
-## What the Demo Proves
-
-| Capability | Evidence Demonstrated in VORTEX |
+| Stage | What VORTEX Does |
 |---|---|
-| Revenue risk detection | Failed payments are converted into structured cases with deterministic risk assessment. |
-| AI diagnosis | Payment context is analyzed by AI to produce a structured diagnosis and recommendation. |
-| Deterministic decisioning | Executable actions are evaluated by deterministic policy. AI cannot force execution. |
-| Guardrails | Bounded recovery enforcement (max attempts, cooldowns) before actions are allowed. |
-| Razorpay Test Mode recovery | Genuine checkout execution using Razorpay Test Mode integration. |
-| Webhook verification | Outcomes are verified via cryptographic signature validation of `payment.captured` webhooks. |
-| Recovery measurement | Revenue is accurately measured and tracked through verified states. |
-| Strategy intelligence | Historical recovery attempts and successes are segmented by event type to boost future routing. |
-| Auditability | Immutable timelines exist for every case documenting exactly what happened and why. |
+| **Detect** | Detects revenue events and assesses risk deterministically |
+| **Diagnose** | Analyzes likely failure causes using Google Gemini AI |
+| **Decide** | Selects/recommends an optimal recovery strategy based on historical success |
+| **Guard** | Applies strict deterministic policies to block unsafe or excessive actions |
+| **Recover** | Executes an approved recovery action (e.g., creates Razorpay Order) |
+| **Verify** | Verifies payment outcome using cryptographically signed Razorpay webhooks |
+| **Measure** | Measures recovered revenue against total risk exposure |
+| **Learn** | Uses historical verified outcomes for future strategy intelligence |
 
-## Architecture
-VORTEX strictly separates its probabilistic intelligence layer from its execution engine, using a React/FastAPI stack connected to Razorpay.
-[Read the Architecture Deep Dive](docs/ARCHITECTURE.md)
+---
 
-## Recovery Workflow
-A case progresses from `OPEN` to `RECOVERING`, but is only marked `RECOVERED` when accompanied by a valid external payment verification. Actions alone do not constitute recovery.
-[Read the Recovery Engine Docs](docs/RECOVERY_ENGINE.md) | [Follow the Demo Runbook](docs/DEMO_RUNBOOK.md)
+## End-to-End Architecture
 
-## AI + Deterministic Decisioning
-**AI may only advise and diagnose. Deterministic code decides, limits, executes, and verifies.** The AI cannot directly modify monetary values, bypass retry limits, or override a case state.
-[Read the AI Diagnosis Docs](docs/AI_DIAGNOSIS.md) | [Read the Guardrails Docs](docs/GUARDRAILS.md)
+```mermaid
+flowchart TD
+    User((User / Merchant)) --> Frontend[VORTEX Frontend]
+    Frontend --> Backend[FastAPI Backend]
+    
+    subgraph VORTEX Control Plane
+        Backend --> Risk[Risk Engine]
+        Risk --> AI[AI Diagnosis Gemini]
+        AI --> Strategy[Strategy Intelligence]
+        Strategy --> Guardrails[Deterministic Guardrails]
+        Guardrails --> Orchestrator[Recovery Orchestration]
+    end
+    
+    Orchestrator --> Razorpay[Razorpay Test Mode]
+    Razorpay --> Webhook[Webhook Verification]
+    Webhook --> Outcome[Recovery Outcome]
+    Outcome --> Measurement[Revenue Measurement]
+    Measurement --> History[Strategy History]
+```
 
-## Razorpay Test Mode Integration
-Recovery actions operate within a genuine Razorpay Test Mode checkout flow. VORTEX does not assume an intervention was successful until a webhook arrives.
-[Read the Razorpay Integration Docs](docs/RAZORPAY_INTEGRATION.md) | [Read the Webhook Verification Docs](docs/WEBHOOK_VERIFICATION.md)
+VORTEX structurally isolates intelligence from execution. Read the full architecture design:
+- [**Architecture Specification**](docs/ARCHITECTURE.md)
 
-## Revenue & Strategy Intelligence
-VORTEX tracks revenue at risk, actual recovered revenue, and recovery attempts. The system feeds back verified outcomes into Strategy Performance statistics to evaluate strategy effectiveness continuously.
-[Read the Revenue Evaluation Docs](docs/REVENUE_EVALUATION.md) | [Read the Strategy Learning Docs](docs/STRATEGY_LEARNING.md)
+---
+
+## Why the Architecture Is Safe
+
+AI cannot bypass deterministic safety controls or directly authorize financial execution.
+
+| Component | Role | Authority |
+|---|---|---|
+| **AI Diagnosis** | Failure analysis and recommendation | *Advisory* |
+| **Risk Engine** | Risk severity classification | *Deterministic* |
+| **Strategy Intelligence**| Strategy evaluation/recommendation | *Bounded* |
+| **Guardrails** | Action authorization (e.g., retry limits) | *Deterministic* |
+| **Recovery Orchestrator**| Executes allowed actions | *Controlled* |
+| **Razorpay** | Payment processing (Test Mode) | *External Truth* |
+| **Webhook Verification** | Payment evidence validation | *Verification* |
+| **Revenue Evaluation** | Outcome measurement | *Deterministic* |
+
+---
+
+## What the Buildathon Demo Proves
+
+| Capability | Evaluator Evidence |
+|---|---|
+| **Risk Detection** | Cases are created deterministically based on value and recurrence. |
+| **AI Diagnosis** | Gemini generates contextual failure explanations (e.g., "Insufficient Funds"). |
+| **Deterministic Decisioning** | Baselines fallback cleanly when historical data is insufficient. |
+| **Guardrails** | The system explicitly `BLOCKS` actions exceeding the 3-retry limit. |
+| **Bounded Recovery** | Authorized actions execute via Razorpay Test Mode Orders. |
+| **Test Mode Checkout** | The frontend smoothly handles the Razorpay UI integration. |
+| **Webhook Verification** | The backend verifies `x-razorpay-signature` and updates case states asynchronously. |
+| **Verified Recovery** | Cases transition to `RECOVERED` only upon successful external webhook receipt. |
+| **Revenue Measurement** | The Command Center accurately attributes actual recovered revenue. |
+| **Strategy Performance** | Success rates update dynamically based on verified outcomes. |
+| **Event-Type Segmentation**| Strategies are independently tracked for different failure types (e.g., payments vs. invoices). |
+| **Auditability** | A clear, event-driven timeline traces every action from creation to recovery. |
+| **Recovery Simulation** | Synthetically models expected revenue without conflating with real outcomes. |
+| **What-If Analysis** | Allows real-time policy modeling without altering production execution bounds. |
+
+---
 
 ## Product Modules
-- **Merchant Command Center**: Aggregated actual revenue metrics.
-- **Recovery Cases**: The governed lifecycle queue and AI decision intelligence views.
-- **Strategy Performance**: Historical strategy attempts and success rates.
-- **Recovery Simulation**: Batch projection of recovery potential without mutating cases.
-- **Policy What-If Lab**: A deep-cloned sandbox to test changing policy constraints safely.
 
-## Technology
-**Frontend:** React, TypeScript, Vite, Tailwind CSS
-**Backend:** Python, FastAPI
-**Integration:** Razorpay SDK, Webhooks, Google Gemini (GenAI)
+VORTEX is divided into several purpose-built evaluator modules:
 
-## Getting Started
-Ensure you have `GEMINI_API_KEY`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET` in your `backend/.env`.
+### Merchant Command Center
+Provides an operational overview of revenue risk, recovery rates, and top-performing strategies.
 
-```bash
-# Terminal 1: Backend
-cd backend
-python -m venv .venv
-# activate virtual environment (e.g. .\.venv\Scripts\Activate.ps1)
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+### Recovery Cases
+The governed pipeline for viewing failed payments, AI diagnoses, recommended strategies, guardrail evaluations, and action histories.
 
-# Terminal 2: Frontend
-cd frontend
-npm install
-npm run dev
-```
-[Read the Full Deployment Guide](docs/DEPLOYMENT.md)
+### Decision Intelligence
+Surfaces underlying AI/contextual decision metrics driving specific case recommendations.
 
-## Testing & Validation
-The VORTEX backend includes a test suite covering API boundaries, deterministic guardrails, event segmentation, and core logic. 
-Run the test suite using: `cd backend && pytest`
+### Strategy Performance
+Tracks historical strategy attempts, success rates, recovered revenue, and event-type segmentation.
 
-## Demo
-Start the app and open a high-value case in Recovery Cases to view AI diagnosis and Guardrails. Execute the retry, complete the test payment, and watch the case update based on genuine webhook evidence.
-[Follow the Evaluator Demo Runbook](docs/DEMO_RUNBOOK.md)
+### Recovery Simulation
+Evaluates projected recovery outcomes (Organic vs. Basic Retry vs. Sentinel Optimized) mathematically, without executing real Razorpay transactions.
 
-## Buildathon Alignment
-VORTEX perfectly targets Razorpay AI Buildathon Track 03 (AI Revenue Recovery) by focusing not just on identifying failure, but safely bridging the gap between AI reasoning and actual financial execution constraints.
-[Read the Evaluator Buildathon Review](docs/BUILDATHON_REVIEW.md)
+### Policy What-If Lab
+Allows merchants to evaluate the potential financial impact of changing safety policies (e.g., altering retry limits).
 
-## Scope & Limitations
-- **Test Mode Only**: All payments use Razorpay Test Mode.
-- **Simulation**: The Recovery Simulation page processes synthetic batch evaluations. It explicitly separates its projections from actual recovered metrics.
-- **In-Memory Store**: Data is volatile and stored in memory for the duration of the demo.
+### Activity / Audit
+Provides granular operational visibility into recovery actions, webhook receipts, and state transitions.
 
-## Documentation
-| Document | Purpose |
+---
+
+## Technical Documentation
+
+To keep this README focused, detailed engineering documentation is modularized below:
+
+### AI Intelligence
+Explains how Gemini provides contextual reasoning, diagnosis, and explainability without possessing financial execution authority. 
+- [**AI Diagnosis**](docs/AI_DIAGNOSIS.md)
+
+### Recovery Engine
+Explains the state machine converting revenue-risk events into bounded, executed, and verified outcomes.
+- [**Recovery Engine**](docs/RECOVERY_ENGINE.md)
+
+### Guardrails
+Documents the strict deterministic policies (retry limits, case statuses) that enforce financial safety.
+- [**Guardrails**](docs/GUARDRAILS.md)
+
+### Razorpay Integration & Verification
+Details how Razorpay Test Mode handles external execution and how the `/api/v1/webhooks/razorpay` endpoint establishes cryptographic payment evidence.
+- [**Razorpay Integration**](docs/RAZORPAY_INTEGRATION.md)
+- [**Webhook Verification**](docs/WEBHOOK_VERIFICATION.md)
+
+### Revenue Evaluation
+Defines exactly what VORTEX measures, enforcing the rule that *Attempted recovery ≠ verified recovery*.
+- [**Revenue Evaluation**](docs/REVENUE_EVALUATION.md)
+
+### Strategy Intelligence & Learning
+Explains how VORTEX learns from verified historical outcomes, applying statistical analytics rather than autonomous model retraining.
+- [**Strategy Learning**](docs/STRATEGY_LEARNING.md)
+
+---
+
+## Simulation & What-If Analysis
+
+- **Recovery Simulation**: Generates synthetic/projected recovery evaluations. Simulation results are **not** real Razorpay transactions and are not counted as verified recovered revenue.
+- **Policy What-If**: Safely projects the outcome of hypothetical policy adjustments (e.g., expanding retry limits) against existing open cases without modifying the actual guardrail engine.
+
+## Auditability
+VORTEX logs every relevant recovery action, guardrail validation, and webhook receipt. The audit timeline clearly associates Razorpay `order_id` and `payment_id` values with `RecoveryCase` and `RecoveryAction` states, ensuring evaluator visibility from initial risk to final verification.
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
 |---|---|
-| [Architecture](docs/ARCHITECTURE.md) | System architecture and data flow |
-| [Demo Runbook](docs/DEMO_RUNBOOK.md) | Reproduce the evaluator demo |
-| [AI Diagnosis](docs/AI_DIAGNOSIS.md) | AI intelligence layer |
-| [Recovery Engine](docs/RECOVERY_ENGINE.md) | Recovery lifecycle |
-| [Guardrails](docs/GUARDRAILS.md) | Safety and execution controls |
-| [Razorpay Integration](docs/RAZORPAY_INTEGRATION.md) | Razorpay Test Mode flow |
-| [Webhook Verification](docs/WEBHOOK_VERIFICATION.md) | Webhook security and verification |
-| [Revenue Evaluation](docs/REVENUE_EVALUATION.md) | Recovery/revenue proof |
-| [Strategy Learning](docs/STRATEGY_LEARNING.md) | Strategy performance and learning |
-| [Deployment](docs/DEPLOYMENT.md) | Deployment requirements |
-| [Buildathon Review](docs/BUILDATHON_REVIEW.md) | Evaluator-focused technical summary |
+| **Frontend** | React, TypeScript, Vite, Tailwind CSS |
+| **Backend** | Python, FastAPI, Pydantic |
+| **AI** | Google Gemini API (`gemini-2.5-flash` / `gemini-1.5-flash`) |
+| **Payments** | Razorpay SDK (Test Mode) |
+| **Events** | Razorpay Webhooks (HMAC SHA-256) |
+| **State** | In-Memory Volatile Data Store (`store.py`) |
 
-## Project Status
-VORTEX is a final submission project for the Razorpay AI Buildathon.
+---
+
+## Project Structure
+
+```text
+revenue-sentinel/
+├── backend/
+│   ├── app/
+│   │   ├── api/          # FastAPI Routes (Intelligence, Cases, Webhooks)
+│   │   ├── models/       # Pydantic Domain Models
+│   │   ├── services/     # Risk, Guardrails, Orchestration, AI, Razorpay
+│   │   ├── main.py       # FastAPI Entrypoint
+│   │   └── store.py      # In-Memory State
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # React Components (UI, Metrics, Recovery)
+│   │   ├── pages/        # Command Center, Cases, Strategy, Simulation
+│   │   └── App.tsx       # Routing
+├── docs/                 # Detailed Technical Architecture Docs
+└── README.md
+```
+
+## Evaluator Guide & Setup
+
+To reproduce the workflow, view the evaluator demonstration guide and deployment instructions:
+- [**Demo Runbook**](docs/DEMO_RUNBOOK.md)
+- [**Deployment Guide**](docs/DEPLOYMENT.md)
+- [**Buildathon Review**](docs/BUILDATHON_REVIEW.md)
