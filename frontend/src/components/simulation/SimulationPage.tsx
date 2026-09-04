@@ -457,7 +457,7 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
 
                     <div className="bg-purple-50/50 dark:bg-brand-ai/10 border border-purple-200 dark:border-brand-ai/30 p-5 rounded-xl flex justify-between items-center shadow-sm transition-colors">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[11px] text-purple-700 dark:text-brand-ai block uppercase font-sans font-bold tracking-wider">Sentinel Optimized</span>
+                        <span className="text-[11px] text-purple-700 dark:text-brand-ai block uppercase font-sans font-bold tracking-wider">Vortex Optimized</span>
                         <span className="text-[15px] font-bold text-emerald-600 dark:text-brand-success tracking-tight">{formatCurrency(inspectedCaseDetail.sentinel_recovered)}</span>
                       </div>
                       <div className="flex flex-col text-right gap-1">
@@ -470,7 +470,7 @@ export default function SimulationPage({ cases }: SimulationPageProps) {
 
                 <div className="bg-purple-50 dark:bg-brand-ai/10 border border-purple-200 dark:border-brand-ai/30 rounded-xl p-6 tabular-nums space-y-4 text-[13px] text-purple-900 dark:text-brand-text-primary shadow-sm transition-colors">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-[11px] font-sans uppercase tracking-wider text-purple-700 dark:text-brand-text-secondary">Sentinel Net Recovery:</span>
+                    <span className="font-bold text-[11px] font-sans uppercase tracking-wider text-purple-700 dark:text-brand-text-secondary">Vortex Net Recovery:</span>
                     <span className="font-bold text-[15px] tracking-tight">{formatCurrency(inspectedCaseDetail.sentinel_net_recovered)}</span>
                   </div>
                   <div className="flex justify-between items-center border-t border-purple-200 dark:border-brand-ai/30 pt-4 transition-colors">

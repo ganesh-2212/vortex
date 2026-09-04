@@ -155,7 +155,7 @@ export function MerchantCommandCenterPage({
                     </div>
                   )}
                   <h3 className="text-sm font-bold text-slate-900 dark:text-brand-text-primary mb-4 flex items-center justify-between tracking-tight">
-                    {comp.scenario_type.replace('_', ' ')}
+                    {comp.scenario_type === 'SENTINEL_OPTIMIZED' ? 'VORTEX OPTIMIZED' : comp.scenario_type.replace('_', ' ')}
                     <span className="text-[9px] px-2 py-0.5 bg-white dark:bg-brand-bg-dark border border-slate-200 dark:border-brand-border-dark font-bold tracking-wider text-slate-500 dark:text-brand-text-muted rounded uppercase transition-colors">SIMULATED</span>
                   </h3>
                   <div className="space-y-3">
